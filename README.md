@@ -46,7 +46,7 @@ Infrastruktur kjører i kind (Kubernetes), applikasjoner kjører som lokale pros
 | mock-oauth2-server | kind | 8090 |
 | watson-admin-api | lokal (`bootRun`) | 8080 |
 
-Tilt restarter watson-admin-api automatisk ved kildekodeendringer.
+watson-admin-api restartes **manuelt** via Tilt UI eller `tilt trigger watson-admin-api`.
 
 ## Nyttige lenker (når Tilt er oppe)
 
