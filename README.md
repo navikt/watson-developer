@@ -84,10 +84,11 @@ Infrastruktur kjører i kind (Kubernetes), applikasjoner som lokale prosesser:
 | PostgreSQL | kind | 5432 |
 | mock-oauth2-server | kind | 8090 |
 | watson-admin-api | lokal (`bootRun`) | 8080 |
+| watson-sak-frontend | lokal (`pnpm run dev:local`) | 5174 |
 
-> Alle Watson-tjenester skal på sikt startes via Tilt. `Tiltfile` utvides gradvis.
+> Token til watson-sak-frontend hentes automatisk fra mock-oauth2-server ved Tilt-oppstart.
 
-`watson-admin-api` restartes **manuelt** via Tilt UI eller `tilt trigger watson-admin-api`.
+`watson-admin-api` og `watson-sak-frontend` restartes **manuelt** via Tilt UI eller `tilt trigger <navn>`.
 
 ### Nyttige lenker (når Tilt er oppe)
 
@@ -95,6 +96,7 @@ Infrastruktur kjører i kind (Kubernetes), applikasjoner som lokale prosesser:
 |----------|-----|
 | Swagger UI | http://localhost:8080/swagger-ui/index.html |
 | Health | http://localhost:8080/actuator/health |
+| Watson Sak | http://localhost:5174 |
 | mock-oauth2-server | http://localhost:8090 |
 | Tilt UI | http://localhost:10350 |
 

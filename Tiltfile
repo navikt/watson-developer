@@ -45,3 +45,21 @@ local_resource(
     ],
     labels=['backend'],
 )
+
+# watson-sak-frontend kjører lokalt som long-running prosess.
+# Token hentes automatisk fra mock-oauth2-server ved oppstart.
+# Manuell restart via Tilt UI eller: tilt trigger watson-sak-frontend
+local_resource(
+    'watson-sak-frontend',
+    serve_cmd='bash scripts/start-sak-frontend.sh',
+    resource_deps=['watson-admin-api'],
+    readiness_probe=probe(
+        http_get=http_get_action(port=5174, path='/'),
+        period_secs=5,
+        failure_threshold=15,
+    ),
+    links=[
+        link('http://localhost:5174', 'Watson Sak'),
+    ],
+    labels=['frontend'],
+)
