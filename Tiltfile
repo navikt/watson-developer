@@ -31,7 +31,7 @@ k8s_resource(
 # Manuell restart via Tilt UI eller: tilt trigger watson-admin-api
 local_resource(
     'watson-admin-api',
-    serve_cmd='cd ../watson-admin-api && SPRING_PROFILES_ACTIVE=local ./gradlew bootRun',
+    serve_cmd='cd ../watson-admin-api && export JAVA_HOME="$(/usr/libexec/java_home -v 21)" && export PATH="$JAVA_HOME/bin:$PATH" && SPRING_PROFILES_ACTIVE=local ./gradlew bootRun',
     resource_deps=['postgres', 'mock-oauth2-server'],
     readiness_probe=probe(
         http_get=http_get_action(port=8080, path='/actuator/health'),
