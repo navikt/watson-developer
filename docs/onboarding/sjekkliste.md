@@ -3,8 +3,8 @@
 Velkommen til Team Holmes! Følg denne sjekklisten for å komme i gang med Watson-porteføljen.
 Spør en kollega dersom noe er uklart — vi hjelper gjerne.
 
-> 💡 **Tips:** Bruk Copilot-skillen `watson-setup` for å automatisere hele oppsettet!
-> Start Copilot i watson-developer og be om «Sett opp watson-developer for meg».
+> 💡 **Tips:** Aktiver Copilot-skillen `watson-setup` (`@.github/skills/watson-setup/SKILL.md`)
+> for å automatisere hele oppsettet.
 
 ---
 
@@ -44,7 +44,7 @@ Manuell sjekkliste:
 - [ ] Start lokalmiljøet: `tilt up`
 - [ ] Verifiser at [Tilt UI](http://localhost:10350) viser grønne ressurser
 - [ ] Verifiser at [Swagger UI](http://localhost:8080/swagger-ui/index.html) svarer
-- [ ] Hent et testtoken og gjør et API-kall (se [README](../../README.md#hent-token-for-lokal-testing))
+- [ ] Hent et testtoken og gjør et API-kall (se [LOKALMILJO.md](../LOKALMILJO.md#hent-token-for-lokal-testing))
 
 ---
 
@@ -68,4 +68,4 @@ Manuell sjekkliste:
 
 ---
 
-> Noe som ikke fungerer? Sjekk [watson-developer README](../../README.md) eller spør i Slack.
+> Problemer med oppsettet? Se [docs/SETUP.md](../SETUP.md) eller spør i `#team-holmes` på Slack.
