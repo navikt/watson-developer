@@ -1,0 +1,19 @@
+{
+  "description": "Sett opp watson-developer lokalmiljø fra scratch — installerer verktøy, kloner repoer, starter infrastruktur",
+  "domain": "onboarding",
+  "tags": ["setup", "onboarding", "watson", "lokalmiljø", "kind", "tilt"],
+  "examples": [
+    {
+      "prompt": "Sett opp watson-developer for meg",
+      "scenario": "Ny utvikler som trenger fullstendig oppsett"
+    },
+    {
+      "prompt": "Jeg har nettopp klonet watson-developer, hjelp meg komme i gang",
+      "scenario": "Utvikler som har klonet repoet men ikke kjørt setup"
+    },
+    {
+      "prompt": "Kjør hele onboarding-prosessen for Watson",
+      "scenario": "Komplett setup fra scratch"
+    }
+  ]
+}
