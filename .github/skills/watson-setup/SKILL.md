@@ -93,6 +93,9 @@ Etter installasjon av manglende verktøy, kjør `./scripts/doctor.sh` på nytt f
 
 **Forventet resultat:** Alle repoer klonet/oppdatert uten feil.
 
+**Merk:** Scriptet fortsetter selv om et repo feiler. Sjekk output for `✗` eller
+`Kloning feilet` — hvis du ser slike meldinger, løs problemet og kjør på nytt.
+
 **Hvis det feiler:**
 - `Permission denied (publickey)` → SSH-nøkkel er ikke konfigurert for GitHub. Kjør `gh auth login` eller legg til SSH-nøkkel.
 - `Kloning feilet` → Sjekk at du har tilgang til navikt-organisasjonen.
@@ -127,7 +130,9 @@ docker info > /dev/null 2>&1 && echo "Docker kjører" || echo "Docker kjører IK
 
 ### Steg 6: Start Tilt
 
-Start Tilt i bakgrunnen (non-interaktiv modus):
+Start Tilt i bakgrunnen (non-interaktiv modus).
+**Viktig:** Tilt er en long-running prosess. Kjør den i en egen async-shell eller bakgrunn
+slik at du kan fortsette med verifisering i hovedshellen.
 
 ```bash
 tilt up --stream &
@@ -146,12 +151,12 @@ echo "Tilt startet (PID: $TILT_PID)"
 ```bash
 # Vent på mock-oauth2-server (maks 60 forsøk à 2 sek)
 for i in $(seq 1 60); do
-  curl -sf http://localhost:8090/.well-known/openid-configuration > /dev/null && break
+  curl -sf http://localhost:8090/azuread/.well-known/openid-configuration > /dev/null && break
   sleep 2
 done
 
 # Sjekk at mock-oauth2-server svarer
-curl -sf http://localhost:8090/.well-known/openid-configuration | head -1
+curl -sf http://localhost:8090/azuread/.well-known/openid-configuration | head -1
 
 # Sjekk at watson-admin-api svarer
 curl -sf http://localhost:8080/actuator/health | head -1
