@@ -3,6 +3,9 @@
 Velkommen til Team Holmes! Følg denne sjekklisten for å komme i gang med Watson-porteføljen.
 Spør en kollega dersom noe er uklart — vi hjelper gjerne.
 
+> 💡 **Tips:** Bruk Copilot-skillen `watson-setup` for å automatisere hele oppsettet!
+> Start Copilot i watson-developer og be om «Sett opp watson-developer for meg».
+
 ---
 
 ## 🔑 Tilganger (be om hjelp fra leder eller teammedlem)
