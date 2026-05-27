@@ -33,14 +33,14 @@ Nav Kontroll-ansatt som bruker Watson. Identifiseres med NAVident (en bokstav + 
 f.eks. `X123456`).
 
 - **Kodeterm**: `saksbehandler` / `Saksbehandler`
-- Lagres aldri som PII — bare NAVident refereres
+- Lagres ikke som personopplysning — kun NAVident refereres
 
 ### Bruker / Kontrollsubjekt
 Personen som kontrolleres. Identifiseres med fødselsnummer (fnr) eller d-nummer.
 Persondata hentes fra `nav-persondata-api` — lagres ikke i Watson-databasen.
 
 - **Kodeterm**: `fnr` / `bruker`
-- ⚠️ **PII** — aldri logge fnr
+- ⚠️ **Personopplysning** — skal aldri logges
 
 ---
 
