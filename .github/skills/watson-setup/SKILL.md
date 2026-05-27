@@ -18,8 +18,19 @@ alle repoer klonet, kind-kluster oppe og Tilt klar til å starte.
 
 - macOS
 - Homebrew installert
+- Docker Desktop installert og kjørende
 - GitHub-tilgang til navikt/watson-* repoene
 - Scriptet kjøres fra watson-developer-repoets rotkatalog
+
+## Instruksjoner til agenten
+
+Du skal **kjøre** kommandoene i dette dokumentet — ikke bare vise dem til brukeren.
+For hvert steg:
+1. Kjør kommandoen
+2. Vent på output
+3. Verifiser at resultatet matcher «Forventet resultat»
+4. Hvis det feiler: vis feilen, foreslå løsning fra «Hvis det feiler»-seksjonen, og spør brukeren om du skal prøve løsningen
+5. Ikke gå videre til neste steg før gjeldende steg er vellykket
 
 ## Workflow
 
@@ -86,7 +97,19 @@ Etter installasjon av manglende verktøy, kjør `./scripts/doctor.sh` på nytt f
 - `Permission denied (publickey)` → SSH-nøkkel er ikke konfigurert for GitHub. Kjør `gh auth login` eller legg til SSH-nøkkel.
 - `Kloning feilet` → Sjekk at du har tilgang til navikt-organisasjonen.
 
-### Steg 4: Opprett kind-kluster
+### Steg 4: Verifiser Docker
+
+```bash
+docker info > /dev/null 2>&1 && echo "Docker kjører" || echo "Docker kjører IKKE"
+```
+
+**Forventet resultat:** `Docker kjører`
+
+**Hvis det feiler:**
+- Start Docker Desktop manuelt (åpne Finder → Applications → Docker)
+- Vent 10–15 sekunder og prøv igjen
+
+### Steg 5: Opprett kind-kluster
 
 ```bash
 ./scripts/setup-kind.sh
@@ -99,32 +122,51 @@ Etter installasjon av manglende verktøy, kjør `./scripts/doctor.sh` på nytt f
 **Forventet resultat:** `✓ Klar — kjør 'tilt up' for å starte lokalmiljøet`
 
 **Hvis det feiler:**
-- Docker må kjøre. Start Docker Desktop og prøv igjen.
+- Docker må kjøre (se steg 4).
 - Hvis kind finnes men Docker er nede: `kind delete cluster --name watson` og prøv igjen.
 
-### Steg 5: Start Tilt
+### Steg 6: Start Tilt
+
+Start Tilt i bakgrunnen (non-interaktiv modus):
 
 ```bash
-tilt up
+tilt up --stream &
+TILT_PID=$!
+sleep 5
+echo "Tilt startet (PID: $TILT_PID)"
 ```
 
 **Hva dette gjør:**
 - Starter lokalt utviklingsmiljø med PostgreSQL og mock-oauth2-server i kind
 - Starter watson-admin-api og watson-sak-frontend som lokale prosesser
+- `--stream` kjører uten interaktivt UI (logger til stdout)
 
-**Vent til infrastrukturen er oppe, deretter verifiser:**
+**Vent til infrastrukturen er oppe (opptil 60 sek), deretter verifiser:**
 
 ```bash
+# Vent på mock-oauth2-server (maks 60 forsøk à 2 sek)
+for i in $(seq 1 60); do
+  curl -sf http://localhost:8090/.well-known/openid-configuration > /dev/null && break
+  sleep 2
+done
+
 # Sjekk at mock-oauth2-server svarer
 curl -sf http://localhost:8090/.well-known/openid-configuration | head -1
 
-# Sjekk at watson-admin-api svarer (kan ta opptil 30 sek)
+# Sjekk at watson-admin-api svarer
 curl -sf http://localhost:8080/actuator/health | head -1
 ```
 
 **Forventet resultat:** Begge curl-kommandoene returnerer JSON.
 
-### Steg 6: Verifiser med testtoken
+**Hvis det feiler:**
+- Sjekk Tilt-logger: `tilt logs` (i en annen terminal)
+- Sjekk Tilt UI: http://localhost:10350
+- Restart: `tilt down && tilt up --stream &`
+
+### Steg 7: Verifiser med testtoken
+
+Hent token-instruksjonene fra README (se seksjonen «Hent token for lokal testing»):
 
 ```bash
 TOKEN=$(curl -sf -X POST http://localhost:8090/azuread/token \
@@ -135,6 +177,9 @@ curl -sf -H "Authorization: Bearer $TOKEN" http://localhost:8080/api/kontrollsak
 ```
 
 **Forventet resultat:** JSON-respons (tom liste `[]` er OK for nytt miljø).
+
+**Merk:** Dersom token-endepunkt eller parametere har endret seg, se README.md
+seksjonen «Hent token for lokal testing» for oppdatert info.
 
 ## Etter fullført setup
 
