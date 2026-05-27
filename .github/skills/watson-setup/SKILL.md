@@ -158,6 +158,12 @@ done
 # Sjekk at mock-oauth2-server svarer
 curl -sf http://localhost:8090/azuread/.well-known/openid-configuration | head -1
 
+# Vent på watson-admin-api (kan ta opptil 60 sek pga Gradle-oppstart)
+for i in $(seq 1 60); do
+  curl -sf http://localhost:8080/actuator/health > /dev/null && break
+  sleep 2
+done
+
 # Sjekk at watson-admin-api svarer
 curl -sf http://localhost:8080/actuator/health | head -1
 ```
@@ -175,7 +181,7 @@ Hent token-instruksjonene fra README (se seksjonen «Hent token for lokal testin
 
 ```bash
 TOKEN=$(curl -sf -X POST http://localhost:8090/azuread/token \
-  -d "grant_type=client_credentials&client_id=watson-admin-api&client_secret=mock-secret" \
+  -d "grant_type=client_credentials&client_id=watson-admin-api&client_secret=mock" \
   | python3 -c "import sys,json; print(json.load(sys.stdin)['access_token'])")
 
 curl -sf -H "Authorization: Bearer $TOKEN" http://localhost:8080/api/kontrollsaker | head -1
