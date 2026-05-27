@@ -24,7 +24,17 @@ Se [docs/arkitektur/](docs/arkitektur/README.md) for systemkart og dataflyt.
 
 > 💡 Ny i teamet? Start med [docs/onboarding/sjekkliste.md](docs/onboarding/sjekkliste.md).
 
-### 1. Sjekk at verktøyene er på plass
+### 1. Sett opp AI-verktøy (cplt + nav-pilot)
+
+```bash
+./scripts/setup-copilot.sh
+```
+
+Installerer [cplt](https://github.com/navikt/cplt) (kernel-sandbox for AI-agenter) og
+[nav-pilot](https://ki-utvikling.nav.no/nav-pilot/docs) (Nav-kunnskap for Copilot).
+Genererer cplt-config tilpasset Watson-porteføljen. Idempotent — trygt å kjøre flere ganger.
+
+### 2. Sjekk at verktøyene er på plass
 
 ```bash
 ./scripts/doctor.sh
@@ -32,7 +42,7 @@ Se [docs/arkitektur/](docs/arkitektur/README.md) for systemkart og dataflyt.
 
 Skriptet verifiserer at alle nødvendige verktøy er installert med riktig versjon.
 
-### 2. Klon alle Watson-repoer
+### 3. Klon alle Watson-repoer
 
 ```bash
 ./scripts/clone-repos.sh
@@ -40,7 +50,7 @@ Skriptet verifiserer at alle nødvendige verktøy er installert med riktig versj
 
 Idempotent — kjør igjen for å oppdatere eksisterende repoer med `git pull`.
 
-### 3. Opprett kind-kluster
+### 4. Opprett kind-kluster
 
 ```bash
 ./scripts/setup-kind.sh
@@ -48,7 +58,7 @@ Idempotent — kjør igjen for å oppdatere eksisterende repoer med `git pull`.
 
 Idempotent — trygt å kjøre flere ganger. Oppretter kluster `watson` og setter kubectl-kontekst.
 
-### 4. Start lokalmiljøet
+### 5. Start lokalmiljøet
 
 ```bash
 tilt up
@@ -62,6 +72,8 @@ tilt up
 
 | Verktøy | Installasjon | Brukes til |
 |---------|-------------|-----------|
+| [cplt](https://github.com/navikt/cplt) | `brew install navikt/tap/cplt` | Kernel-sandbox for AI-agenter |
+| [nav-pilot](https://ki-utvikling.nav.no/nav-pilot/docs) | `brew install navikt/tap/nav-pilot` | Nav-kunnskap for GitHub Copilot |
 | [kind](https://kind.sigs.k8s.io/docs/user/quick-start/#installation) | `brew install kind` | Lokal Kubernetes-kluster |
 | [tilt](https://docs.tilt.dev/install.html) | `brew install tilt` | Lokal utviklingsserver |
 | [kubectl](https://kubernetes.io/docs/tasks/tools/) | `brew install kubectl` | Kubernetes-klient |
