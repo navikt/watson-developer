@@ -64,3 +64,32 @@ Lokale prosesser
 ```
 
 Start med: `./scripts/setup-kind.sh && tilt up`
+
+## Arbeidsflyt for Copilot
+
+### Repoer og terminologi
+
+- **«frontend»** betyr `../watson-sak-frontend`
+- **«backend»** betyr `../watson-admin-api`
+- For detaljer om frontend, se `../watson-sak-frontend/.github/copilot-instructions.md`
+- For detaljer om backend, se `../watson-admin-api/.github/copilot-instructions.md`
+
+### Før du begynner
+
+- Hent nyeste `main` i både frontend og backend (`git pull`)
+- Etter pull av backend: restart Tilt — nye kontrollere plukkes ikke opp av en kjørende JVM
+
+### Branching og commits
+
+- Lag alle endringer i nye branches (ikke commit direkte til `main`)
+- Commit underveis — ikke samle alt i én stor commit
+
+### Verifisering før du er ferdig
+
+- **Frontend**: kjør `pnpm verify` (inkluderer test, lint, format, typecheck, unused)
+- **Backend**: kjør `./gradlew build` (inkluderer test og kompilering)
+
+### Kjente begrensninger i sandbox
+
+- SSH mot GitHub (port 22) er blokkert — bruk HTTPS-remotes
+- Frontend bruker `pnpm`, ikke npm eller yarn
