@@ -85,9 +85,9 @@ detect_node_path() {
         return
     fi
 
-    # mise
-    if [[ -d "$HOME/.local/share/mise" ]]; then
-        echo "$HOME/.local/share/mise"
+    # mise (kun node-installasjoner)
+    if [[ -d "$HOME/.local/share/mise/installs/node" ]]; then
+        echo "$HOME/.local/share/mise/installs/node"
         return
     fi
 
@@ -144,8 +144,11 @@ else
     mkdir -p "$CONFIG_DIR"
     cat > "$CONFIG_FILE" <<EOF
 [allow]
+# Xcode CLI tools (git, clang etc.) + node version manager
 read = $READ_PATHS
+# Watson-porteføljens forelderkatalog (alle repoer)
 write = ["$WATSON_PARENT"]
+# Vite dev server (watson-sak-frontend)
 ports = [5174]
 
 [sandbox]
@@ -163,8 +166,11 @@ fi
 echo ""
 echo -e "${BOLD}Shell-alias:${NC}"
 
-cplt --shell-install 2>/dev/null && ok "'copilot' kjører nå gjennom cplt-sandboxen" \
-    || skip "Shell-alias var allerede konfigurert"
+if cplt --shell-install 2>&1 | grep -q "already"; then
+    skip "Shell-alias var allerede konfigurert"
+else
+    ok "'copilot' kjører nå gjennom cplt-sandboxen"
+fi
 
 # ─── Oppsummering ────────────────────────────────────────────────────────────
 
