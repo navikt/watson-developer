@@ -1,5 +1,7 @@
 # watson-developer
 
+![Holmes og Watson](docs/holmes-og-watson.png)
+
 Inngangsport og utviklermiljø for **Team Holmes** sin Watson-portefølje.
 
 > Watson er Nav Kontrolls system for å avdekke og forebygge misbruk av Nav-ytelser.
