@@ -1,8 +1,8 @@
 {
   "collection": "fullstack",
-  "version": "2026.05.22-103454-7acbe01",
+  "version": "2026.05.30-092315-0d88c99",
   "scope": "repo",
-  "source_sha": "c27c610",
+  "source_sha": "06f6c00",
   "installed_at": "2026-05-27T13:26:26Z",
   "files": [
     {
@@ -31,7 +31,7 @@
     },
     {
       "path": ".github/agents/nav-pilot.agent.md",
-      "hash": "e50baf495f28613f"
+      "hash": "d04fd3fc8eef124b"
     },
     {
       "path": ".github/skills/aksel-spacing/",
@@ -167,7 +167,7 @@
     },
     {
       "path": ".github/instructions/security-owasp.instructions.md",
-      "hash": "6d2de01195174566"
+      "hash": "3388700634dd315d"
     },
     {
       "path": ".github/instructions/testing.instructions.md",
@@ -215,7 +215,7 @@
     },
     {
       "path": ".github/prompts/aksel-component.prompt.md",
-      "hash": "dbeb27a9cad0e768"
+      "hash": "8f6e07fff457bc3d"
     },
     {
       "path": ".github/prompts/nextjs-api-route.prompt.md",
