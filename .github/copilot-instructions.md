@@ -90,6 +90,10 @@ Start med: `./scripts/setup-kind.sh && tilt up`
 - Branch-navn på formatet `<Aha!-ID>/<beskrivende-navn>` (f.eks. `HOLMES-123/legg-til-filter`)
 - Commit underveis — ikke samle alt i én stor commit
 
+### Pull requests
+
+- Legg til lenke til Aha!-saken i PR-beskrivelsen: `https://nav1.aha.io/features/<Aha!-ID>`
+
 ### Verifisering før du er ferdig
 
 - **Frontend**: kjør `pnpm verify` (inkluderer test, lint, format, typecheck, unused)
