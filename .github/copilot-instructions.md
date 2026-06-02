@@ -76,12 +76,18 @@ Start med: `./scripts/setup-kind.sh && tilt up`
 
 ### Før du begynner
 
-- Hent nyeste `main` i både frontend og backend (`git pull`)
-- Etter pull av backend: restart Tilt — nye kontrollere plukkes ikke opp av en kjørende JVM
+1. Spør om Aha!-ID dersom den ikke er nevnt i oppgaven
+2. Hent nyeste `main` i repoene som skal endres (`git pull`)
+3. Opprett og sjekk ut en ny branch i repoene som skal endres
+   - Branch-navnet skal starte med Aha!-IDen, f.eks. `HOLMES-123-beskrivende-navn`
+   - Brukes samme branch-navn i alle berørte repoer
+4. Etter pull av backend: restart Tilt — nye kontrollere plukkes ikke opp av en kjørende JVM
 
 ### Branching og commits
 
 - Lag alle endringer i nye branches (ikke commit direkte til `main`)
+- Opprett bare branch i repoer som faktisk endres
+- Branch-navn starter alltid med Aha!-ID (f.eks. `HOLMES-123-legg-til-filter`)
 - Commit underveis — ikke samle alt i én stor commit
 
 ### Verifisering før du er ferdig
