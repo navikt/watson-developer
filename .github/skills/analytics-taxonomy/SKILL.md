@@ -8,46 +8,62 @@ metadata:
   tags: analytics umami sporing taksonomi events personvern
 ---
 
-# Analytics-taksonomi for Nav
+# Analytics for Watson-frontend
 
-Nav bruker en felles taksonomi for analytics-events. Taksonomien sikrer konsistente navn, sammenlignbare data på tvers av team, og at ingen personopplysninger sendes til analyseplattformen.
+Tre ting denne skillen hjelper deg med:
 
-Kilde: [navikt/analytics-taxonomy](https://github.com/navikt/analytics-taxonomy)
+1. [Spore en hendelse i koden](#slik-sporer-du-en-hendelse)
+2. [Velge navn på et nytt event](#navngi-et-nytt-event)
+3. [Avgjøre om noe er et eget event eller en parameter](#nytt-event-eller-ny-parameter)
 
-## Grunnprinsipper
+Referanseimplementasjon: [`app/analytics/analytics.tsx`](../watson-sak-frontend/app/analytics/analytics.tsx)
 
-- **Naturlig språk, fortid**: eventnavn beskriver noe brukeren *gjorde* — «skjema åpnet», ikke «openForm»
-- **camelCase i attributter**: `skjemaId`, `lenketekst`, `pagePath`
-- **Allowlist-validering**: kun definerte attributter sendes — forhindrer at PII lekker
+---
 
-## Implementering
+## Slik sporer du en hendelse
 
-Nav bruker sitt eget sporingsskript (`sporing.js`) som sender events til `umami.nav.no`. Se referanseimplementasjon i [`app/analytics/analytics.tsx`](../watson-sak-frontend/app/analytics/analytics.tsx).
-
-### 1. Last inn sporingsskriptet
-
-Legg `AnalyticsTags` i rotruten din (f.eks. `root.tsx`):
+Kall `sporHendelse` fra `~/analytics/analytics`:
 
 ```typescript
-// app/analytics/analytics.tsx
-type AnalyticsTagProps = {
-  sporingId: string;
-};
+import { sporHendelse } from "~/analytics/analytics";
 
-export function AnalyticsTags({ sporingId }: AnalyticsTagProps) {
-  return (
-    <script
-      defer
-      src="https://cdn.nav.no/team-researchops/sporing/sporing.js"
-      data-host-url="https://umami.nav.no"
-      data-website-id={sporingId}
-    />
-  );
-}
+sporHendelse("sak opprettet", { saktype: "EØS-sak" });
 ```
 
+Det er det. `sporHendelse` logger til konsoll i development og sender til `umami.nav.no` i produksjon.
+
+### Wrap i typesikre hjelpefunksjoner
+
+Ikke kall `sporHendelse` direkte fra komponenter — samle dem i en `analytics`-modul:
+
+```typescript
+// app/analytics/events.ts
+import { sporHendelse } from "~/analytics/analytics";
+
+export const analytics = {
+  sakOpprettet: (saktype: string) =>
+    sporHendelse("sak opprettet", { saktype }),
+
+  filterBrukt: (kategori: string, verdi: string) =>
+    sporHendelse("filter brukt", { kategori, verdi }),
+
+  sokUtfort: (kilde: string) =>
+    sporHendelse("søk utført", { kilde }),
+};
+```
+
+```typescript
+// I en komponent
+import { analytics } from "~/analytics/events";
+
+analytics.sakOpprettet("EØS-sak");
+```
+
+### Sett opp sporingsskriptet (én gang per app)
+
+`AnalyticsTags` legges i rotruten (`root.tsx`). `SPORING_ID` er Umami-nøkkelen for appen:
+
 ```tsx
-// app/root.tsx
 import { AnalyticsTags } from "~/analytics/analytics";
 
 export default function Root() {
@@ -62,434 +78,147 @@ export default function Root() {
 }
 ```
 
-### 2. Definer og spor hendelser
+---
+
+## Navngi et nytt event
+
+### Formel
+
+```
+[substantiv] [verb i fortid]
+```
+
+Eventnavn beskriver hva brukeren **gjorde**, på norsk bokmål, med mellomrom som separator. Maks 50 tegn.
+
+| ✅ Riktig | ❌ Feil | Feil fordi |
+|-----------|---------|------------|
+| `sak opprettet` | `createCase` | Engelsk |
+| `filter brukt` | `filterBrukt` | camelCase |
+| `søk utført` | `søk` | For vagt, ikke fortidsform |
+| `dokument lastet ned` | `download` | Engelsk |
+| `notat lagret` | `noteSaved` | Engelsk, camelCase |
+| `varsler åpnet` | `openNotifications` | Engelsk |
+
+### Vanlige verb å bruke
+
+`opprettet` · `lukket` · `åpnet` · `brukt` · `utført` · `valgt` · `endret` · `lastet ned` · `sendt` · `avbrutt` · `fullført` · `feilet`
+
+### Watson-spesifikke eksempler
+
+```
+sak opprettet          sak lukket             sak status endret
+sak satt på vent       sak gjenopptatt        sak redigert
+søk utført             søk resultat valgt     person oppslag
+filter brukt           fordeling utført       notat lagret
+journalpost opprettet  oppgave opprettet      fil lastet opp
+```
+
+---
+
+## Nytt event eller ny parameter?
+
+Dette er det vanligste designspørsmålet. Tommelfingerregel:
+
+> **Stiller du deg spørsmålet «hva skjedde?» → eventnavn. «Mer om hva som skjedde?» → parameter.**
+
+### Lag et nytt event når
+
+Brukerens **intensjon eller handling** er fundamentalt annerledes:
+
+```
+sak opprettet  ≠  sak lukket       → to events (ulik handling)
+søk utført     ≠  filter brukt     → to events (ulik mekanisme)
+modal åpnet    ≠  modal lukket     → to events (ulik retning)
+```
+
+### Bruk parameter (data) når
+
+Det er **samme handling**, men i ulik kontekst, med ulik metadata, eller ulike varianter:
+
+| Situasjon | Gjør dette |
+|-----------|-----------|
+| Samme knapp finnes flere steder i appen | `sporHendelse("søk utført", { kilde: "saksliste" })` |
+| Handlingen gjelder ulike typer objekter | `sporHendelse("dokument lastet ned", { type: "PDF" })` |
+| Du vil skille på hvilken variant/flyt brukeren var i | `sporHendelse("sak opprettet", { saktype: "EØS-sak" })` |
+| Du vil måle et steg i en sekvens | `sporHendelse("skjema steg fullført", { steg: "Personopplysninger" })` |
+
+### Eksempel: sak-handlinger i Watson
 
 ```typescript
-// app/analytics/analytics.tsx
-import { logger } from "~/logging/logging";
+// ✅ Riktig: fire ulike hendelser
+sporHendelse("sak opprettet",    { saktype: "EØS-sak" });
+sporHendelse("sak lukket",       { aarsak: "Henlagt" });
+sporHendelse("sak satt på vent", { antallDager: 7 });
+sporHendelse("sak redigert",     { felt: "tittel" });
 
-/** Spor en hendelse til analyseformål */
-export function sporHendelse(hendelse: Hendelse, data: Record<string, unknown> = {}) {
-  if (process.env.NODE_ENV === "development") {
-    if (hendelse.length > 50) {
-      logger.warn(`📊 [Analytics] Hendelse "${hendelse}" er for lang (maks 50 tegn)`);
-    }
-    logger.info(`📊 [Analytics] ${hendelse}`, data);
-    return;
-  }
-  if (typeof window !== "undefined" && window.umami) {
-    window.umami.track(hendelse.substring(0, 50), data);
-  }
-}
-
-type Hendelse =
-  | "navigere"
-  | "søk utført"
-  | "filter brukt"
-  // legg til applikasjonsspesifikke hendelser her
-  | string;
+// ❌ Feil: én hendelse med type-parameter
+sporHendelse("sak handling", { handling: "opprettet", saktype: "EØS-sak" });
+// → "hva skjedde?" er uklart, umulig å filtrere direkte på handling
 ```
-
-## Alle standardeventer
-
-### `besøk`
-
-Loggføres automatisk av **nav-dekoratøren** — ikke implementer i egen app.
-
-Attributter beriket av nav-dekoratøren:
-- `url` — siden brukeren besøkte
-- `sidetittel` — tittelen på siden
-
----
-
-### `navigere`
-
-Loggføres automatisk av **nav-dekoratøren** for klikk i dekoratøren. Team legger til sporing i sin egen app der det er ønskelig.
-
-| Attributt | Påkrevd | Type | Beskrivelse |
-|-----------|---------|------|-------------|
-| `lenketekst` | nei | string | Teksten på lenken brukeren trykket på |
-| `destinasjon` | nei | string | URL brukeren sendes til |
 
 ```typescript
-sporHendelse("navigere", {
-  lenketekst: "Les mer om dagpenger",
-  destinasjon: "https://www.nav.no/dagpenger",
-});
+// ✅ Riktig: ett event med kilde-parameter
+sporHendelse("søk utført", { kilde: "hurtigsøk" });
+sporHendelse("søk utført", { kilde: "avansert-søk" });
+
+// ❌ Feil: to separate events
+sporHendelse("hurtigsøk utført");
+sporHendelse("avansert søk utført");
+// → samme brukerintensjon, unødvendig splitting
 ```
 
 ---
 
-### `søk`
+## Standardeventer fra Nav-taksonomien
 
-| Attributt | Påkrevd | Type | Beskrivelse |
-|-----------|---------|------|-------------|
-| `destinasjon` | ja | string | Tjeneste-URL søket sendes til |
-| `søkeord` | ja | string | Strengen brukeren søkte på |
-| `komponent` | nei | string | Navn på komponenten søket utføres fra |
+Bruk disse før du lager egne. Kilde: [navikt/analytics-taxonomy](https://github.com/navikt/analytics-taxonomy)
 
-```typescript
-sporHendelse("søk", {
-  destinasjon: "https://www.nav.no/sok",
-  søkeord: "dagpenger",
-  komponent: "global-søkeboks",
-});
-```
+| Event | Påkrevde attributter | Automatisk? |
+|-------|---------------------|-------------|
+| `besøk` | — | ✅ Nav-dekoratøren |
+| `navigere` | `lenketekst`, `destinasjon` | ✅ Nav-dekoratøren (kan suppleres) |
+| `søk` | `destinasjon`, `søkeord` | Nei |
+| `filtervalg` | `kategori`, `filternavn` | Nei |
+| `last ned` | `type`, `tema`, `tittel` | Nei |
+| `accordion åpnet/lukket` | `tekst` | Nei |
+| `modal åpnet/lukket` | `tekst` | Nei |
+| `alert vist` | `variant`, `tekst` | Nei |
+| `skjema åpnet` | `skjemanavn`, `skjemaId` | Nei |
+| `skjema startet` | `skjemanavn`, `skjemaId` | Nei |
+| `skjema fullført` | `skjemanavn`, `skjemaId` | Nei |
+| `skjema validering feilet` | `skjemanavn`, `skjemaId` | Nei |
 
----
-
-### `filtervalg`
-
-| Attributt | Påkrevd | Type | Beskrivelse |
-|-----------|---------|------|-------------|
-| `kategori` | ja | string | Tekst på filteret som brukes |
-| `filternavn` | ja | string | Tekst på filteralternativet som velges |
-
-```typescript
-sporHendelse("filtervalg", {
-  kategori: "Status",
-  filternavn: "Under behandling",
-});
-```
+> `skjema åpnet` = siden lastet. `skjema startet` = brukeren trykket «Start». Ikke forveksle disse.
 
 ---
 
-### `last ned`
+## Personvern
 
-| Attributt | Påkrevd | Type | Beskrivelse |
-|-----------|---------|------|-------------|
-| `type` | ja | string | Filtype eller dokumenttype (f.eks. «Saksdokument», «Statistikk») |
-| `tema` | ja | string | Hva handler filen om? (f.eks. «Dagpenger», «Foreldrepenger») |
-| `tittel` | ja | string | Tittel på dokumentet som lastes ned |
-
-```typescript
-sporHendelse("last ned", {
-  type: "Saksdokument",
-  tema: "Dagpenger",
-  tittel: "Vedtak om dagpenger 2024",
-});
-```
+| ❌ Send aldri | ✅ Send heller |
+|--------------|--------------|
+| Fødselsnummer, d-nummer, aktørId | Sakstype, status, kategori |
+| Fritekst brukeren har skrevet | Forhåndsdefinerte svaralternativer |
+| Navn, adresse, kontaktinfo | Generiske labels: «utfylt», «tomt» |
+| Token-verdier eller interne ID-er | Anonyme teller: antall, indeks |
 
 ---
-
-### `accordion åpnet` / `accordion lukket`
-
-| Attributt | Påkrevd | Type | Beskrivelse |
-|-----------|---------|------|-------------|
-| `tekst` | ja | string | Teksten på accordion-headingen |
-
-```typescript
-sporHendelse("accordion åpnet", { tekst: "Hvem kan søke om dagpenger?" });
-sporHendelse("accordion lukket", { tekst: "Hvem kan søke om dagpenger?" });
-```
-
----
-
-### `modal åpnet` / `modal lukket`
-
-| Attributt | Påkrevd | Type | Beskrivelse |
-|-----------|---------|------|-------------|
-| `tekst` | ja | string | Teksten på modalen (tittel eller kort beskrivelse) |
-
-```typescript
-sporHendelse("modal åpnet", { tekst: "Bekreft innsending" });
-sporHendelse("modal lukket", { tekst: "Bekreft innsending" });
-```
-
----
-
-### `alert vist`
-
-| Attributt | Påkrevd | Type | Beskrivelse |
-|-----------|---------|------|-------------|
-| `variant` | ja | string | Hvilken variant: `info`, `success`, `warning`, `error` |
-| `tekst` | ja | string | Teksten i alerten |
-
-```typescript
-sporHendelse("alert vist", {
-  variant: "warning",
-  tekst: "Du har ikke sendt inn skjemaet ennå",
-});
-```
-
----
-
-### `guidepanel vist`
-
-| Attributt | Påkrevd | Type | Beskrivelse |
-|-----------|---------|------|-------------|
-| `komponent` | ja | string | Statisk beskrivelse av hvilken komponent dette er |
-| `tekst` | nei | string | Tekst i guidepanelet — utelat hvis sensitivt |
-
-```typescript
-sporHendelse("guidepanel vist", {
-  komponent: "dagpenger-veileder-intro",
-  tekst: "Vi trenger litt informasjon om din situasjon",
-});
-```
-
----
-
-### `chat startet` / `chat avsluttet`
-
-| Attributt | Påkrevd | Type | Beskrivelse |
-|-----------|---------|------|-------------|
-| `komponent` | ja | string | Navn på chat-komponenten |
-
-```typescript
-sporHendelse("chat startet", { komponent: "boost-chatbot" });
-sporHendelse("chat avsluttet", { komponent: "boost-chatbot" });
-```
-
----
-
-## Skjema-events
-
-Skjema-events brukes i sekvens for å følge brukerens reise gjennom et skjema. `skjemaId` og `skjemanavn` er påkrevd i alle skjema-events.
-
-### Sekvens
-
-```
-skjema åpnet → skjema startet → skjema spørsmål besvart (×n)
-             → skjema steg fullført (×n)
-             → skjema validering feilet? (×n)
-             → skjema innsending feilet? (×n)
-             → skjema fullført
-```
-
----
-
-### `skjema åpnet`
-
-En bruker åpnet skjema-siden.
-
-| Attributt | Påkrevd | Type | Beskrivelse |
-|-----------|---------|------|-------------|
-| `skjemanavn` | ja | string | Navn på skjemaet |
-| `skjemaId` | ja | string | ID på skjemaet |
-
-```typescript
-sporHendelse("skjema åpnet", {
-  skjemanavn: "Søknad om dagpenger",
-  skjemaId: "NAV 04-01.03",
-});
-```
-
----
-
-### `skjema startet`
-
-En bruker startet utfyllingen (f.eks. trykket «Start søknad»).
-
-| Attributt | Påkrevd | Type | Beskrivelse |
-|-----------|---------|------|-------------|
-| `skjemanavn` | ja | string | Navn på skjemaet |
-| `skjemaId` | ja | string | ID på skjemaet |
-
-```typescript
-sporHendelse("skjema startet", {
-  skjemanavn: "Søknad om dagpenger",
-  skjemaId: "NAV 04-01.03",
-});
-```
-
----
-
-### `skjema spørsmål besvart`
-
-En bruker besvarte ett spørsmål i skjemaet.
-
-| Attributt | Påkrevd | Type | Beskrivelse |
-|-----------|---------|------|-------------|
-| `skjemanavn` | ja | string | Navn på skjemaet |
-| `skjemaId` | ja | string | ID på skjemaet |
-| `spørsmål` | ja | string | Teksten på spørsmålet |
-| `svar` | ja | string | Svaret brukeren ga — **aldri fritekst fra bruker** |
-
-> ⚠️ **Personvern**: `svar` skal kun inneholde forhåndsdefinerte svaralternativer (f.eks. «Ja» / «Nei»), aldri fritekst brukeren har skrevet.
-
-```typescript
-sporHendelse("skjema spørsmål besvart", {
-  skjemanavn: "Søknad om dagpenger",
-  skjemaId: "NAV 04-01.03",
-  spørsmål: "Er du registrert som arbeidssøker hos NAV?",
-  svar: "Ja",
-});
-```
-
----
-
-### `skjema steg fullført`
-
-Et steg i et flersides skjema er fullført.
-
-| Attributt | Påkrevd | Type | Beskrivelse |
-|-----------|---------|------|-------------|
-| `skjemanavn` | ja | string | Navn på skjemaet |
-| `skjemaId` | ja | string | ID på skjemaet |
-| `steg` | ja | string | Navn på steget som ble fullført |
-
-```typescript
-sporHendelse("skjema steg fullført", {
-  skjemanavn: "Søknad om dagpenger",
-  skjemaId: "NAV 04-01.03",
-  steg: "Arbeidssituasjon",
-});
-```
-
----
-
-### `skjema validering feilet`
-
-Skjemavalidering feilet (f.eks. manglende påkrevde felt).
-
-| Attributt | Påkrevd | Type | Beskrivelse |
-|-----------|---------|------|-------------|
-| `skjemanavn` | ja | string | Navn på skjemaet |
-| `skjemaId` | ja | string | ID på skjemaet |
-
-```typescript
-sporHendelse("skjema validering feilet", {
-  skjemanavn: "Søknad om dagpenger",
-  skjemaId: "NAV 04-01.03",
-});
-```
-
----
-
-### `skjema innsending feilet`
-
-Innsendingen til API feilet.
-
-| Attributt | Påkrevd | Type | Beskrivelse |
-|-----------|---------|------|-------------|
-| `skjemanavn` | ja | string | Navn på skjemaet |
-| `skjemaId` | ja | string | ID på skjemaet |
-
-```typescript
-sporHendelse("skjema innsending feilet", {
-  skjemanavn: "Søknad om dagpenger",
-  skjemaId: "NAV 04-01.03",
-});
-```
-
----
-
-### `skjema fullført`
-
-Brukeren har sendt inn skjemaet.
-
-| Attributt | Påkrevd | Type | Beskrivelse |
-|-----------|---------|------|-------------|
-| `skjemanavn` | ja | string | Navn på skjemaet |
-| `skjemaId` | ja | string | ID på skjemaet |
-
-```typescript
-sporHendelse("skjema fullført", {
-  skjemanavn: "Søknad om dagpenger",
-  skjemaId: "NAV 04-01.03",
-});
-```
-
----
-
-## TypeScript-hjelpefunksjoner
-
-Wrap standardeventer i typesikre funksjoner for å unngå skrivefeil:
-
-```typescript
-// analytics/events.ts
-import { sporHendelse } from "~/analytics/analytics";
-
-const SKJEMA_NAVN = "Søknad om dagpenger";
-const SKJEMA_ID = "NAV 04-01.03";
-
-export const analytics = {
-  skjemaÅpnet: () =>
-    sporHendelse("skjema åpnet", { skjemanavn: SKJEMA_NAVN, skjemaId: SKJEMA_ID }),
-
-  skjemaStartet: () =>
-    sporHendelse("skjema startet", { skjemanavn: SKJEMA_NAVN, skjemaId: SKJEMA_ID }),
-
-  spørsmålBesvart: (spørsmål: string, svar: string) =>
-    sporHendelse("skjema spørsmål besvart", {
-      skjemanavn: SKJEMA_NAVN,
-      skjemaId: SKJEMA_ID,
-      spørsmål,
-      svar,
-    }),
-
-  stegFullført: (steg: string) =>
-    sporHendelse("skjema steg fullført", {
-      skjemanavn: SKJEMA_NAVN,
-      skjemaId: SKJEMA_ID,
-      steg,
-    }),
-
-  valideringFeilet: () =>
-    sporHendelse("skjema validering feilet", {
-      skjemanavn: SKJEMA_NAVN,
-      skjemaId: SKJEMA_ID,
-    }),
-
-  innsendingFeilet: () =>
-    sporHendelse("skjema innsending feilet", {
-      skjemanavn: SKJEMA_NAVN,
-      skjemaId: SKJEMA_ID,
-    }),
-
-  skjemaFullført: () =>
-    sporHendelse("skjema fullført", { skjemanavn: SKJEMA_NAVN, skjemaId: SKJEMA_ID }),
-
-  navigere: (lenketekst: string, destinasjon: string) =>
-    sporHendelse("navigere", { lenketekst, destinasjon }),
-
-  accordionÅpnet: (tekst: string) =>
-    sporHendelse("accordion åpnet", { tekst }),
-
-  accordionLukket: (tekst: string) =>
-    sporHendelse("accordion lukket", { tekst }),
-};
-```
-
----
-
-## Personvernregler
-
-| Regel | Forklaring |
-|-------|-----------|
-| **Ikke log fnr eller aktørId** | Send aldri personnummer, d-nummer eller aktørId som attributtverdi |
-| **Ikke log fritekst fra bruker** | Fritekstfelter kan inneholde PII — send aldri råverdi fra input-felt |
-| **`svar` kun forhåndsdefinerte verdier** | I `skjema spørsmål besvart` skal `svar` kun inneholde faste alternativer |
-| **Utelat sensitiv tekst i `guidepanel vist`** | Hvis `tekst`-attributtet kan inneholde sensitive opplysninger, utelat det |
-| **Allowlist håndheves av taksonomien** | Attributter utenfor allowlist avvises — ikke forsøk å legge til egne |
-
----
-
-## Gotchas
-
-- `besøk` og `navigere` (i dekoratøren) trenger du ikke implementere selv — men du kan logge `navigere` i tillegg for lenker inni appen
-- Umami begrenser eventnavn til **50 tegn** — `sporHendelse` kutter automatisk, men hold navnene korte
-- `skjema åpnet` ≠ `skjema startet`: åpnet = siden lastet, startet = brukeren trykket «Start»
-- Bruk konstanter for `skjemanavn` og `skjemaId` — ikke hard-code strenger flere steder
 
 ## Boundaries
 
 ### ✅ Always
 
-- Bruk eksakt eventnavn fra taksonomien (norsk, mellomrom, ikke camelCase)
-- Inkluder alle påkrevde attributter
-- Wrap events i typesikre hjelpefunksjoner per applikasjon
-- Sjekk personvernreglene for `svar`-attributtet og fritekst
+- Bruk `sporHendelse` fra `~/analytics/analytics` — ikke kall `window.umami` direkte
+- Norsk bokmål, mellomrom, fortidsform i eventnavn
+- Wrap i typesikre hjelpefunksjoner — ikke strenger spredt i komponenter
+- Sjekk personverntabellen før du sender attributter
 
 ### ⚠️ Ask First
 
-- Behov for et event som ikke finnes i taksonomien → lag PR til [analytics-taxonomy](https://github.com/navikt/analytics-taxonomy)
-- Usikker på om et attributt er sensitivt — spør personvernombud
+- Event du trenger finnes ikke i Nav-taksonomien → lag PR til [analytics-taxonomy](https://github.com/navikt/analytics-taxonomy)
+- Usikker på om et attributt er sensitivt → spør personvernombud
 
 ### 🚫 Never
 
-- Log fnr, aktørId, navn, adresse eller andre personopplysninger som attributtverdi
-- Bruk fritekst fra bruker som `svar` i `skjema spørsmål besvart`
-- Oppfinn egne eventnavn uten å bidra til taksonomien
-- Sett CPU-limits i Nais (ikke relevant her, men universelt)
+- Send fnr, aktørId, navn eller annen PII som attributtverdi
+- Bruk fritekst fra bruker som attributtverdi
+- Hard-code eventnavn som strenger direkte i komponenter
