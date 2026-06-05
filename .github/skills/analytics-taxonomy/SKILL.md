@@ -212,11 +212,6 @@ Bruk disse før du lager egne. Kilde: [navikt/analytics-taxonomy](https://github
 - Wrap i typesikre hjelpefunksjoner — ikke strenger spredt i komponenter
 - Sjekk personverntabellen før du sender attributter
 
-### ⚠️ Ask First
-
-- Event du trenger finnes ikke i Nav-taksonomien → lag PR til [analytics-taxonomy](https://github.com/navikt/analytics-taxonomy)
-- Usikker på om et attributt er sensitivt → spør personvernombud
-
 ### 🚫 Never
 
 - Send fnr, aktørId, navn eller annen PII som attributtverdi
