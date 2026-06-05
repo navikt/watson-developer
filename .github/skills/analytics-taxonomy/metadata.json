@@ -1,0 +1,10 @@
+{
+  "description": "Nav analytics-taksonomi med Amplitude — eventnavn, attributter og personvernregler for frontend-applikasjoner",
+  "domain": "frontend",
+  "tags": ["analytics", "amplitude", "taksonomi", "events", "personvern"],
+  "examples": [
+    "Legg til sporing av skjemainnsending i watson-sak-frontend",
+    "Hvilke events skal jeg bruke for navigasjon?",
+    "Hvordan sporer jeg at en bruker åpnet en accordion?"
+  ]
+}
