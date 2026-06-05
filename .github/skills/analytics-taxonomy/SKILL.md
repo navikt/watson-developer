@@ -1,16 +1,16 @@
 ---
 name: analytics-taxonomy
-description: Nav analytics-taksonomi med Amplitude — eventnavn, attributter og personvernregler for frontend-applikasjoner
+description: Nav analytics-taksonomi med Umami-eventnavn, attributter og personvernregler for frontend-applikasjoner
 license: MIT
 compatibility: React/Next.js frontend på Nais
 metadata:
   domain: frontend
-  tags: analytics amplitude taksonomi events personvern
+  tags: analytics umami sporing taksonomi events personvern
 ---
 
 # Analytics-taksonomi for Nav
 
-Nav bruker en felles taksonomi for analytics-events. Taksonomien sikrer konsistente navn, sammenlignbare data på tvers av team, og at ingen personopplysninger sendes til Amplitude.
+Nav bruker en felles taksonomi for analytics-events. Taksonomien sikrer konsistente navn, sammenlignbare data på tvers av team, og at ingen personopplysninger sendes til analyseplattformen.
 
 Kilde: [navikt/analytics-taxonomy](https://github.com/navikt/analytics-taxonomy)
 
@@ -18,29 +18,76 @@ Kilde: [navikt/analytics-taxonomy](https://github.com/navikt/analytics-taxonomy)
 
 - **Naturlig språk, fortid**: eventnavn beskriver noe brukeren *gjorde* — «skjema åpnet», ikke «openForm»
 - **camelCase i attributter**: `skjemaId`, `lenketekst`, `pagePath`
-- **Allowlist-validering**: kun definerte attributter sendes — forhindrer at PII lekker til Amplitude
-- **Amplitude-grenser**: maks 2 000 eventnavn og 2 000 attributtnavn per prosjekt — bruk felles taksonomi
+- **Allowlist-validering**: kun definerte attributter sendes — forhindrer at PII lekker
 
-## Initiering
+## Implementering
+
+Nav bruker sitt eget sporingsskript (`sporing.js`) som sender events til `umami.nav.no`. Se referanseimplementasjon i [`app/analytics/analytics.tsx`](../watson-sak-frontend/app/analytics/analytics.tsx).
+
+### 1. Last inn sporingsskriptet
+
+Legg `AnalyticsTags` i rotruten din (f.eks. `root.tsx`):
 
 ```typescript
-// analytics.ts
-import { initTaxonomy } from "@navikt/analytics-taxonomy";
-import { AmplitudeClient } from "amplitude-js";
+// app/analytics/analytics.tsx
+type AnalyticsTagProps = {
+  sporingId: string;
+};
 
-const amplitudeClient = new AmplitudeClient();
+export function AnalyticsTags({ sporingId }: AnalyticsTagProps) {
+  return (
+    <script
+      defer
+      src="https://cdn.nav.no/team-researchops/sporing/sporing.js"
+      data-host-url="https://umami.nav.no"
+      data-website-id={sporingId}
+    />
+  );
+}
+```
 
-amplitudeClient.init("default", "", {
-  apiEndpoint: "amplitude.nav.no/collect-auto",
-  saveEvents: false,
-  includeUtm: true,
-  includeReferrer: true,
-  platform: window.location.toString(),
-});
+```tsx
+// app/root.tsx
+import { AnalyticsTags } from "~/analytics/analytics";
 
-initTaxonomy(amplitudeClient);
+export default function Root() {
+  return (
+    <html>
+      <head>
+        <AnalyticsTags sporingId={ENV.SPORING_ID} />
+      </head>
+      ...
+    </html>
+  );
+}
+```
 
-export default amplitudeClient;
+### 2. Definer og spor hendelser
+
+```typescript
+// app/analytics/analytics.tsx
+import { logger } from "~/logging/logging";
+
+/** Spor en hendelse til analyseformål */
+export function sporHendelse(hendelse: Hendelse, data: Record<string, unknown> = {}) {
+  if (process.env.NODE_ENV === "development") {
+    if (hendelse.length > 50) {
+      logger.warn(`📊 [Analytics] Hendelse "${hendelse}" er for lang (maks 50 tegn)`);
+    }
+    logger.info(`📊 [Analytics] ${hendelse}`, data);
+    return;
+  }
+  if (typeof window !== "undefined" && window.umami) {
+    window.umami.track(hendelse.substring(0, 50), data);
+  }
+}
+
+type Hendelse =
+  | "navigere"
+  | "søk utført"
+  | "filter brukt"
+  // legg til applikasjonsspesifikke hendelser her
+  | string;
 ```
 
 ## Alle standardeventer
@@ -49,7 +96,7 @@ export default amplitudeClient;
 
 Loggføres automatisk av **nav-dekoratøren** — ikke implementer i egen app.
 
-Attributter beriket av amplitude-proxy:
+Attributter beriket av nav-dekoratøren:
 - `url` — siden brukeren besøkte
 - `sidetittel` — tittelen på siden
 
@@ -65,7 +112,7 @@ Loggføres automatisk av **nav-dekoratøren** for klikk i dekoratøren. Team leg
 | `destinasjon` | nei | string | URL brukeren sendes til |
 
 ```typescript
-logEvent("navigere", {
+sporHendelse("navigere", {
   lenketekst: "Les mer om dagpenger",
   destinasjon: "https://www.nav.no/dagpenger",
 });
@@ -82,7 +129,7 @@ logEvent("navigere", {
 | `komponent` | nei | string | Navn på komponenten søket utføres fra |
 
 ```typescript
-logEvent("søk", {
+sporHendelse("søk", {
   destinasjon: "https://www.nav.no/sok",
   søkeord: "dagpenger",
   komponent: "global-søkeboks",
@@ -99,7 +146,7 @@ logEvent("søk", {
 | `filternavn` | ja | string | Tekst på filteralternativet som velges |
 
 ```typescript
-logEvent("filtervalg", {
+sporHendelse("filtervalg", {
   kategori: "Status",
   filternavn: "Under behandling",
 });
@@ -116,7 +163,7 @@ logEvent("filtervalg", {
 | `tittel` | ja | string | Tittel på dokumentet som lastes ned |
 
 ```typescript
-logEvent("last ned", {
+sporHendelse("last ned", {
   type: "Saksdokument",
   tema: "Dagpenger",
   tittel: "Vedtak om dagpenger 2024",
@@ -132,8 +179,8 @@ logEvent("last ned", {
 | `tekst` | ja | string | Teksten på accordion-headingen |
 
 ```typescript
-logEvent("accordion åpnet", { tekst: "Hvem kan søke om dagpenger?" });
-logEvent("accordion lukket", { tekst: "Hvem kan søke om dagpenger?" });
+sporHendelse("accordion åpnet", { tekst: "Hvem kan søke om dagpenger?" });
+sporHendelse("accordion lukket", { tekst: "Hvem kan søke om dagpenger?" });
 ```
 
 ---
@@ -145,8 +192,8 @@ logEvent("accordion lukket", { tekst: "Hvem kan søke om dagpenger?" });
 | `tekst` | ja | string | Teksten på modalen (tittel eller kort beskrivelse) |
 
 ```typescript
-logEvent("modal åpnet", { tekst: "Bekreft innsending" });
-logEvent("modal lukket", { tekst: "Bekreft innsending" });
+sporHendelse("modal åpnet", { tekst: "Bekreft innsending" });
+sporHendelse("modal lukket", { tekst: "Bekreft innsending" });
 ```
 
 ---
@@ -159,7 +206,7 @@ logEvent("modal lukket", { tekst: "Bekreft innsending" });
 | `tekst` | ja | string | Teksten i alerten |
 
 ```typescript
-logEvent("alert vist", {
+sporHendelse("alert vist", {
   variant: "warning",
   tekst: "Du har ikke sendt inn skjemaet ennå",
 });
@@ -175,7 +222,7 @@ logEvent("alert vist", {
 | `tekst` | nei | string | Tekst i guidepanelet — utelat hvis sensitivt |
 
 ```typescript
-logEvent("guidepanel vist", {
+sporHendelse("guidepanel vist", {
   komponent: "dagpenger-veileder-intro",
   tekst: "Vi trenger litt informasjon om din situasjon",
 });
@@ -190,8 +237,8 @@ logEvent("guidepanel vist", {
 | `komponent` | ja | string | Navn på chat-komponenten |
 
 ```typescript
-logEvent("chat startet", { komponent: "boost-chatbot" });
-logEvent("chat avsluttet", { komponent: "boost-chatbot" });
+sporHendelse("chat startet", { komponent: "boost-chatbot" });
+sporHendelse("chat avsluttet", { komponent: "boost-chatbot" });
 ```
 
 ---
@@ -222,7 +269,7 @@ En bruker åpnet skjema-siden.
 | `skjemaId` | ja | string | ID på skjemaet |
 
 ```typescript
-logEvent("skjema åpnet", {
+sporHendelse("skjema åpnet", {
   skjemanavn: "Søknad om dagpenger",
   skjemaId: "NAV 04-01.03",
 });
@@ -240,7 +287,7 @@ En bruker startet utfyllingen (f.eks. trykket «Start søknad»).
 | `skjemaId` | ja | string | ID på skjemaet |
 
 ```typescript
-logEvent("skjema startet", {
+sporHendelse("skjema startet", {
   skjemanavn: "Søknad om dagpenger",
   skjemaId: "NAV 04-01.03",
 });
@@ -262,7 +309,7 @@ En bruker besvarte ett spørsmål i skjemaet.
 > ⚠️ **Personvern**: `svar` skal kun inneholde forhåndsdefinerte svaralternativer (f.eks. «Ja» / «Nei»), aldri fritekst brukeren har skrevet.
 
 ```typescript
-logEvent("skjema spørsmål besvart", {
+sporHendelse("skjema spørsmål besvart", {
   skjemanavn: "Søknad om dagpenger",
   skjemaId: "NAV 04-01.03",
   spørsmål: "Er du registrert som arbeidssøker hos NAV?",
@@ -283,7 +330,7 @@ Et steg i et flersides skjema er fullført.
 | `steg` | ja | string | Navn på steget som ble fullført |
 
 ```typescript
-logEvent("skjema steg fullført", {
+sporHendelse("skjema steg fullført", {
   skjemanavn: "Søknad om dagpenger",
   skjemaId: "NAV 04-01.03",
   steg: "Arbeidssituasjon",
@@ -302,7 +349,7 @@ Skjemavalidering feilet (f.eks. manglende påkrevde felt).
 | `skjemaId` | ja | string | ID på skjemaet |
 
 ```typescript
-logEvent("skjema validering feilet", {
+sporHendelse("skjema validering feilet", {
   skjemanavn: "Søknad om dagpenger",
   skjemaId: "NAV 04-01.03",
 });
@@ -320,7 +367,7 @@ Innsendingen til API feilet.
 | `skjemaId` | ja | string | ID på skjemaet |
 
 ```typescript
-logEvent("skjema innsending feilet", {
+sporHendelse("skjema innsending feilet", {
   skjemanavn: "Søknad om dagpenger",
   skjemaId: "NAV 04-01.03",
 });
@@ -338,7 +385,7 @@ Brukeren har sendt inn skjemaet.
 | `skjemaId` | ja | string | ID på skjemaet |
 
 ```typescript
-logEvent("skjema fullført", {
+sporHendelse("skjema fullført", {
   skjemanavn: "Søknad om dagpenger",
   skjemaId: "NAV 04-01.03",
 });
@@ -352,20 +399,20 @@ Wrap standardeventer i typesikre funksjoner for å unngå skrivefeil:
 
 ```typescript
 // analytics/events.ts
-import { logEvent } from "@navikt/analytics-taxonomy";
+import { sporHendelse } from "~/analytics/analytics";
 
 const SKJEMA_NAVN = "Søknad om dagpenger";
 const SKJEMA_ID = "NAV 04-01.03";
 
 export const analytics = {
   skjemaÅpnet: () =>
-    logEvent("skjema åpnet", { skjemanavn: SKJEMA_NAVN, skjemaId: SKJEMA_ID }),
+    sporHendelse("skjema åpnet", { skjemanavn: SKJEMA_NAVN, skjemaId: SKJEMA_ID }),
 
   skjemaStartet: () =>
-    logEvent("skjema startet", { skjemanavn: SKJEMA_NAVN, skjemaId: SKJEMA_ID }),
+    sporHendelse("skjema startet", { skjemanavn: SKJEMA_NAVN, skjemaId: SKJEMA_ID }),
 
   spørsmålBesvart: (spørsmål: string, svar: string) =>
-    logEvent("skjema spørsmål besvart", {
+    sporHendelse("skjema spørsmål besvart", {
       skjemanavn: SKJEMA_NAVN,
       skjemaId: SKJEMA_ID,
       spørsmål,
@@ -373,35 +420,35 @@ export const analytics = {
     }),
 
   stegFullført: (steg: string) =>
-    logEvent("skjema steg fullført", {
+    sporHendelse("skjema steg fullført", {
       skjemanavn: SKJEMA_NAVN,
       skjemaId: SKJEMA_ID,
       steg,
     }),
 
   valideringFeilet: () =>
-    logEvent("skjema validering feilet", {
+    sporHendelse("skjema validering feilet", {
       skjemanavn: SKJEMA_NAVN,
       skjemaId: SKJEMA_ID,
     }),
 
   innsendingFeilet: () =>
-    logEvent("skjema innsending feilet", {
+    sporHendelse("skjema innsending feilet", {
       skjemanavn: SKJEMA_NAVN,
       skjemaId: SKJEMA_ID,
     }),
 
   skjemaFullført: () =>
-    logEvent("skjema fullført", { skjemanavn: SKJEMA_NAVN, skjemaId: SKJEMA_ID }),
+    sporHendelse("skjema fullført", { skjemanavn: SKJEMA_NAVN, skjemaId: SKJEMA_ID }),
 
   navigere: (lenketekst: string, destinasjon: string) =>
-    logEvent("navigere", { lenketekst, destinasjon }),
+    sporHendelse("navigere", { lenketekst, destinasjon }),
 
   accordionÅpnet: (tekst: string) =>
-    logEvent("accordion åpnet", { tekst }),
+    sporHendelse("accordion åpnet", { tekst }),
 
   accordionLukket: (tekst: string) =>
-    logEvent("accordion lukket", { tekst }),
+    sporHendelse("accordion lukket", { tekst }),
 };
 ```
 
@@ -422,7 +469,7 @@ export const analytics = {
 ## Gotchas
 
 - `besøk` og `navigere` (i dekoratøren) trenger du ikke implementere selv — men du kan logge `navigere` i tillegg for lenker inni appen
-- Amplitude begrenser prosjektet til 2 000 eventnavn — bruk alltid standard taksonomi fremfor egne navn
+- Umami begrenser eventnavn til **50 tegn** — `sporHendelse` kutter automatisk, men hold navnene korte
 - `skjema åpnet` ≠ `skjema startet`: åpnet = siden lastet, startet = brukeren trykket «Start»
 - Bruk konstanter for `skjemanavn` og `skjemaId` — ikke hard-code strenger flere steder
 
