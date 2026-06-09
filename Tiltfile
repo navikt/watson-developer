@@ -46,6 +46,23 @@ local_resource(
     labels=['backend'],
 )
 
+# nav-persondata-api kjører lokalt som long-running prosess.
+# Manuell restart via Tilt UI eller: tilt trigger nav-persondata-api
+local_resource(
+    'nav-persondata-api',
+    serve_cmd='cd ../nav-persondata-api && export JAVA_HOME="$(/usr/libexec/java_home -v 21)" && export PATH="$JAVA_HOME/bin:$PATH" && SPRING_PROFILES_ACTIVE=local SERVER_PORT=8081 ./gradlew bootRun',
+    resource_deps=['mock-oauth2-server'],
+    readiness_probe=probe(
+        http_get=http_get_action(port=8081, path='/actuator/health'),
+        period_secs=5,
+        failure_threshold=15,
+    ),
+    links=[
+        link('http://localhost:8081/actuator/health', 'Health'),
+    ],
+    labels=['backend'],
+)
+
 # watson-sak-frontend kjører lokalt som long-running prosess.
 # Token hentes automatisk fra mock-oauth2-server ved oppstart.
 # Manuell restart via Tilt UI eller: tilt trigger watson-sak-frontend
