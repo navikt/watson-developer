@@ -1,15 +1,17 @@
 # Watson Developer — Copilot-instruksjoner
 
-Dette er `watson-developer`, portefølje-huben for Team Holmes. Repoet inneholder
-lokalt utviklingsmiljø (Tilt + kind), skript og dokumentasjon for Watson-porteføljen.
+Watson er Nav Kontrolls system for å avdekke trygdesvindel. `watson-developer` inneholder lokalmiljø (Tilt + kind), skript og dokumentasjon — ikke applikasjonskode.
 
-## Hva Watson er
+## Svarsstil
 
-Watson er Nav Kontrolls system for å avdekke trygdesvindel. Saksbehandlere i Nav Kontroll
-bruker Watson til å opprette og administrere kontrollsaker, søke opp brukere og se
-brukerens ytelseshistorikk og arbeidsforhold.
+- Konklusjonen først — si «si 'forklar' for detaljer» når begrunnelse hoppes over
+- Kode direkte uten innledningsprosa
+- Dropp: oppsummering av oppgaven, høflighetsfraser, avsnitt som bare gjentar hva som skal gjøres
+- Still bare spørsmål når svaret faktisk endrer implementeringen
+- Les filer direkte — ikke be brukeren lime inn innhold
+- Kjør målrettede tester (`./gradlew test --tests *Test` / `pnpm test MinTest`) før full pipeline
 
-## Porteføljeoversikt
+## Portefølje
 
 | Repo | Beskrivelse |
 |------|-------------|
@@ -18,7 +20,7 @@ brukerens ytelseshistorikk og arbeidsforhold.
 | `watson-sok` | React Router v7 + Aksel — brukeroppslag (fnr/d-nummer) |
 | `nav-persondata-api` | Spring Boot + Kotlin — persondata, ytelser, arbeidsforhold |
 
-Alle repoer klones til foreldrekatalogen (`../`) med `./scripts/clone-repos.sh`.
+Repoer klones til `../` med `./scripts/clone-repos.sh`.
 
 ## Plattform og autentisering
 
@@ -47,23 +49,14 @@ Alle repoer klones til foreldrekatalogen (`../`) med `./scripts/clone-repos.sh`.
 - Domenebegreper i `docs/domene/ordbok.md`
 
 ### Hva dette repoet IKKE er
-Dette repoet inneholder ikke applikasjonskode. Ikke legg til Kotlin-, TypeScript- eller
-Java-filer her. Applikasjonene bor i sine egne repoer.
+
+Ikke legg til Kotlin-, TypeScript- eller Java-filer her. Applikasjonene bor i sine egne repoer.
 
 ## Lokalt utviklingsmiljø
 
-Hybrid-modus: infrastruktur i kind, applikasjoner som lokale prosesser.
-
-```
-kind-kluster (watson)
-├── postgres (5432)
-└── mock-oauth2-server (8090)
-
-Lokale prosesser
-└── watson-admin-api (8080) via ./gradlew bootRun
-```
-
-Start med: `./scripts/setup-kind.sh && tilt up`
+- Kind-kluster: postgres (5432) og mock-oauth2-server (8090)
+- Lokale prosesser: watson-admin-api (8080) via `./gradlew bootRun`
+- Start med: `./scripts/setup-kind.sh && tilt up`
 
 ## Arbeidsflyt for Copilot
 
@@ -78,16 +71,13 @@ Start med: `./scripts/setup-kind.sh && tilt up`
 
 1. Spør om Aha!-ID dersom den ikke er nevnt i oppgaven
 2. Hent nyeste `main` i repoene som skal endres (`git pull`)
-3. Opprett og sjekk ut en ny branch i repoene som skal endres
-   - Format: `<Aha!-ID>/<beskrivende-navn>`, f.eks. `SAK-50/legg-til-filter`
-   - Bruk samme branch-navn i alle berørte repoer
-4. Etter pull av backend: restart Tilt — nye kontrollere plukkes ikke opp av en kjørende JVM
+3. Opprett ny branch: `<Aha!-ID>/<beskrivende-navn>` (f.eks. `SAK-50/legg-til-filter`) — samme navn i alle berørte repoer
+4. Etter pull av backend: restart Tilt
 
 ### Branching og commits
 
-- Lag alle endringer i nye branches (ikke commit direkte til `main`)
+- Aldri commit direkte til `main`
 - Opprett bare branch i repoer som faktisk endres
-- Branch-navn på formatet `<Aha!-ID>/<beskrivende-navn>` (f.eks. `SAK-50/legg-til-filter`)
 - Commit underveis — ikke samle alt i én stor commit
 
 ### Pull requests
@@ -96,8 +86,8 @@ Start med: `./scripts/setup-kind.sh && tilt up`
 
 ### Verifisering før du er ferdig
 
-- **Frontend**: kjør `pnpm verify` (inkluderer test, lint, format, typecheck, unused)
-- **Backend**: kjør `./gradlew build` (inkluderer test og kompilering)
+- **Frontend**: `pnpm verify`
+- **Backend**: `./gradlew build`
 
 ### Kjente begrensninger i sandbox
 
