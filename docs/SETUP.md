@@ -13,6 +13,7 @@ Detaljert guide for å sette opp Watson-porteføljens lokale utviklingsmiljø.
 |---------|-------------|-----------|
 | [cplt](https://github.com/navikt/cplt) | `brew install navikt/tap/cplt` | Kernel-sandbox for AI-agenter |
 | [nav-pilot](https://ki-utvikling.nav.no/nav-pilot/docs) | `brew install navikt/tap/nav-pilot` | Nav-kunnskap for GitHub Copilot |
+| [rtk](https://github.com/rtk-ai/rtk) | `brew install rtk` | Komprimerer terminaloutput — reduserer tokenforbruk i Copilot |
 | [kind](https://kind.sigs.k8s.io/docs/user/quick-start/#installation) | `brew install kind` | Lokal Kubernetes-kluster |
 | [tilt](https://docs.tilt.dev/install.html) | `brew install tilt` | Lokal utviklingsserver |
 | [kubectl](https://kubernetes.io/docs/tasks/tools/) | `brew install kubectl` | Kubernetes-klient |
@@ -37,6 +38,14 @@ Kjør `./scripts/doctor.sh` for å se hva som mangler.
 Installerer [cplt](https://github.com/navikt/cplt) (kernel-sandbox for AI-agenter) og
 [nav-pilot](https://ki-utvikling.nav.no/nav-pilot/docs) (Nav-kunnskap for Copilot).
 Genererer cplt-config tilpasset Watson-porteføljen. Idempotent — trygt å kjøre flere ganger.
+
+Installer deretter [rtk](https://github.com/rtk-ai/rtk) for å komprimere terminaloutput (testresultater, diff, kubectl) før det når Copilots kontekstvindu:
+
+```bash
+brew install rtk && rtk init -g --copilot
+```
+
+> **Merk:** RTK prosesserer terminaloutput lokalt — ikke bruk det med output som kan inneholde sensitive data (f.eks. produksjonslogger med PII).
 
 ### 2. Sjekk at verktøyene er på plass
 
