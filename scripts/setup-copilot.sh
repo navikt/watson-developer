@@ -146,7 +146,7 @@ else
 [allow]
 # Xcode CLI tools (git, clang etc.) + node version manager
 read = $READ_PATHS
-# Watson-porteføljens forelderkatalog (alle repoer)
+# Watson-porteføljens forelderkatalog (alle repoer) + rtk (token-optimalisert CLI-proxy)
 write = ["$WATSON_PARENT", "$HOME/Library/Application Support/rtk"]
 # Vite dev server (watson-sak-frontend)
 ports = [5174]
