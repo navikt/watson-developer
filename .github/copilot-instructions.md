@@ -9,7 +9,7 @@ Watson er Nav Kontrolls system for å avdekke trygdesvindel. `watson-developer` 
 - Dropp: oppsummering av oppgaven, høflighetsfraser, avsnitt som bare gjentar hva som skal gjøres
 - Still bare spørsmål når svaret faktisk endrer implementeringen
 - Les filer direkte — ikke be brukeren lime inn innhold
-- Kjør målrettede tester (`./gradlew test --tests *Test` / `pnpm test MinTest`) før full pipeline
+- Kjør målrettede tester (`./gradlew test --tests '*Test'` / `pnpm test -- <args>`) før full pipeline
 
 ## Portefølje
 
