@@ -43,10 +43,10 @@ Versjonsnummeret speiler hvilken release funksjonaliteten tilhører.
 | **Operational** | Driftsbryter som kan leve lenger (f.eks. nødstopp for en integrasjon) |
 | **Permission** | Tilgangskontroll per brukergruppe |
 
-### Steg 3 — Legg til i nav-persondata-api
+### Steg 3 — Legg til i backend
 
 ```kotlin
-// src/main/kotlin/no/nav/persondataapi/unleash/Toggle.kt
+// src/main/kotlin/no/nav/persondataapi/unleash/Toggle.kt  (nav-persondata-api)
 enum class Toggle(
     val toggleName: String,
 ) {
@@ -72,10 +72,10 @@ class MinService(private val toggles: FeatureToggleService) {
 
 NAVident-konteksten settes automatisk per request — ingen manuell håndtering nødvendig.
 
-### Steg 4 — Legg til i watson-søk (frontend, om relevant)
+### Steg 4 — Legg til i frontend (om relevant)
 
 ```typescript
-// Bruk unleash-klienten som allerede er satt opp i watson-søk
+// Bruk unleash-klienten som allerede er satt opp i frontend-appen
 const isEnabled = useFlag("watson-sok-v-1-2");
 ```
 
@@ -100,14 +100,14 @@ Bruk denne sjekklisten når en toggle er verifisert i prod og skal fjernes.
 #### Unleash-dashboardet
 - [ ] Arkiver eller slett togglen i dashboardet
 
-#### nav-persondata-api
+#### Backend
 - [ ] Fjern enum-verdien fra `Toggle.kt`
 - [ ] Fjern alle `toggles.isEnabled(Toggle.X)`-sjekker
-- [ ] Behold kun den nye kodeveien — slett `else`-branchen og fallback-kode
+- [ ] Behold kun den nye kodeveien — slett `else`-grenen og fallback-kode
 - [ ] Fjern eventuelle kommentarer som refererer til togglen
 - [ ] Kjør testene og verifiser at ingenting brekker
 
-#### watson-søk (om togglen var i bruk der)
+#### Frontend (om togglen var i bruk der)
 - [ ] Fjern `useFlag("toggle-navn")`-kallet
 - [ ] Behold kun den nye kodeveien — slett betinget rendering/logikk
 - [ ] Fjern eventuelle kommentarer som refererer til togglen
