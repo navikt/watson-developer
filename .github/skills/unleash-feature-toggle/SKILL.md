@@ -40,7 +40,7 @@ Versjonsnummeret speiler hvilken release funksjonaliteten tilhører.
 |------|---------|
 | **Release** | Ny funksjonalitet som skal rulles ut og deretter fjernes — vanligste valg |
 | **Experiment** | A/B-testing eller gradvis utrulling til en andel brukere |
-| **Operational** | Driftsbryter som kan leve lenger (f.eks. nødstop for en integrasjon) |
+| **Operational** | Driftsbryter som kan leve lenger (f.eks. nødstopp for en integrasjon) |
 | **Permission** | Tilgangskontroll per brukergruppe |
 
 ### Steg 3 — Legg til i nav-persondata-api
@@ -79,14 +79,14 @@ NAVident-konteksten settes automatisk per request — ingen manuell håndtering 
 const isEnabled = useFlag("watson-sok-v-1-2");
 ```
 
-### Steg 5 — Verifiser rekkefølge
+### Steg 5 — Aktiver i riktig rekkefølge
 
 1. Opprett toggle i dashboardet **før** du merger kode
 2. Deploy til dev og prod (toggle er av)
 3. Aktiver i `development` — verifiser
 4. Aktiver i `production` — verifiser
 
-Alltid verifiser i `development` før `production`. Utvikleren som implementerte featuren
+Verifiser alltid i `development` før `production`. Utvikleren som implementerte featuren
 har ansvar for å aktivere og verifisere i prod.
 
 ---
