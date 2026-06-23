@@ -1,46 +1,28 @@
 ---
 name: unleash-feature-toggle
-description: Feature toggle-standarder for Holmes-porteføljen med Unleash — livssyklus, navnekonvensjoner, Kotlin-integrasjon og Nais-konfigurasjon
+description: Hjelp til å opprette og rydde opp feature toggles i Holmes-porteføljen — navngivning, type, plassering og tverrrepo-opprydding
 license: MIT
-compatibility: Spring Boot Kotlin on Nais, Holmes namespace
+compatibility: Spring Boot Kotlin + React, Holmes-porteføljen
 metadata:
   domain: backend
-  tags: unleash feature-toggle feature-flag kotlin spring-boot nais holmes
+  tags: unleash feature-toggle feature-flag kotlin react holmes
 ---
 
 # Unleash Feature Toggle Skill
 
-Standarder og mønstre for feature toggles i Holmes-porteføljen (`nav-persondata-api`, `watson-søk`, `watson-sak`).
+Hjelper deg med å **opprette** og **rydde opp** feature toggles i Holmes-porteføljen
+(`nav-persondata-api`, `watson-søk`, `watson-sak`).
 
 Unleash-dashboardet: [holmes-unleash-web.iap.nav.cloud.nais.io](https://holmes-unleash-web.iap.nav.cloud.nais.io/projects/default?limit=25&favoritesFirst=true&sortBy=createdAt&sortOrder=desc)
 
 ## When to Use
 
-- Ny funksjonalitet med risiko for å gå skeis skal skjules bak en toggle
-- Rulle ut en feature uten ny deployment (deploy → aktiver i dashboardet)
-- Koordinere release mellom `nav-persondata-api` (backend) og `watson-søk` (frontend)
-- Rydde opp døde toggles etter verifisert produksjonssetting
+- Du skal innføre en ny feature toggle og trenger hjelp med navn, type og plassering
+- Du skal rydde opp etter en toggle som ikke lenger trengs
 
-## Livssyklus
+## Opprette en ny toggle
 
-```
-1. Opprett toggle i Unleash-dashboardet
-        ↓
-2. Implementer i koden (backend + frontend om nødvendig)
-        ↓
-3. Deploy til dev og prod (toggle er av)
-        ↓
-4. Aktiver i development — verifiser
-        ↓
-5. Aktiver i production — verifiser
-        ↓
-6. Slett toggle fra kode og Unleash-dashboardet
-```
-
-**Regel:** Alltid verifiser i `development` før du aktiverer i `production`.
-**Ansvar:** Utvikleren som implementerte featuren aktiverer og verifiserer i prod.
-
-## Navnekonvensjoner
+### Steg 1 — Velg navn
 
 Format: `<prefix>-v<major>-<minor>`
 
@@ -50,26 +32,34 @@ Format: `<prefix>-v<major>-<minor>`
 | Funksjonalitet i watson-sak | `watson-sak` | `watson-sak-v-2-0` |
 | Generell / tverrgående | _(fritt valg med begrunnelse)_ | `ny-tilgangspolicy` |
 
-Versjonsnummeret speiler hvilken release funksjonaliteten tilhører. Avvik krever begrunnelse.
+Versjonsnummeret speiler hvilken release funksjonaliteten tilhører.
 
-## Kotlin-integrasjon (nav-persondata-api)
+### Steg 2 — Velg type i Unleash-dashboardet
 
-### 1. Legg til toggle i enumen
+| Type | Bruk når |
+|------|---------|
+| **Release** | Ny funksjonalitet som skal rulles ut og deretter fjernes — vanligste valg |
+| **Experiment** | A/B-testing eller gradvis utrulling til en andel brukere |
+| **Operational** | Driftsbryter som kan leve lenger (f.eks. nødstop for en integrasjon) |
+| **Permission** | Tilgangskontroll per brukergruppe |
+
+### Steg 3 — Legg til i nav-persondata-api
 
 ```kotlin
 // src/main/kotlin/no/nav/persondataapi/unleash/Toggle.kt
-enum class Toggle(val toggleName: String) {
+enum class Toggle(
+    val toggleName: String,
+) {
     WATSON_SOK_V_1_2("watson-sok-v-1-2"),
-    // Legg til nye toggles her
+    // Legg til ny toggle her
 }
 ```
 
-### 2. Bruk FeatureToggleService
+Bruk via `FeatureToggleService`:
 
 ```kotlin
 @Service
 class MinService(private val toggles: FeatureToggleService) {
-
     fun gjørNoe() {
         if (toggles.isEnabled(Toggle.WATSON_SOK_V_1_2)) {
             // ny kode
@@ -80,92 +70,72 @@ class MinService(private val toggles: FeatureToggleService) {
 }
 ```
 
-NAVident-konteksten settes automatisk per request via `NavCallIdServletFilter` — ingen manuell
-håndtering av kontekst er nødvendig.
+NAVident-konteksten settes automatisk per request — ingen manuell håndtering nødvendig.
 
-### 3. Lokal utvikling
+### Steg 4 — Legg til i watson-søk (frontend, om relevant)
 
-Lokalt (uten `UNLEASH_SERVER_API_URL` satt) returnerer alle toggles `false` automatisk via `FakeUnleash`.
-
-```kotlin
-// I tester: aktiver toggles eksplisitt
-val fakeUnleash = FakeUnleash()
-fakeUnleash.enable("watson-sok-v-1-2")
+```typescript
+// Bruk unleash-klienten som allerede er satt opp i watson-søk
+const isEnabled = useFlag("watson-sok-v-1-2");
 ```
 
-## Nais-konfigurasjon
+### Steg 5 — Verifiser rekkefølge
 
-### unleash-api-token.yaml
+1. Opprett toggle i dashboardet **før** du merger kode
+2. Deploy til dev og prod (toggle er av)
+3. Aktiver i `development` — verifiser
+4. Aktiver i `production` — verifiser
 
-```yaml
-apiVersion: unleash.nais.io/v1
-kind: ApiToken
-metadata:
-  name: <app-name>
-  namespace: holmes
-  labels:
-    team: holmes
-spec:
-  unleashInstance:
-    apiVersion: unleash.nais.io/v1
-    kind: RemoteUnleash
-    name: holmes
-  secretName: <app-name>-unleash-api-token
-  environment: {{UNLEASH_ENVIRONMENT}}
+Alltid verifiser i `development` før `production`. Utvikleren som implementerte featuren
+har ansvar for å aktivere og verifisere i prod.
+
+---
+
+## Rydde opp etter en toggle
+
+Bruk denne sjekklisten når en toggle er verifisert i prod og skal fjernes.
+
+### Sjekkliste
+
+#### Unleash-dashboardet
+- [ ] Arkiver eller slett togglen i dashboardet
+
+#### nav-persondata-api
+- [ ] Fjern enum-verdien fra `Toggle.kt`
+- [ ] Fjern alle `toggles.isEnabled(Toggle.X)`-sjekker
+- [ ] Behold kun den nye kodeveien — slett `else`-branchen og fallback-kode
+- [ ] Fjern eventuelle kommentarer som refererer til togglen
+- [ ] Kjør testene og verifiser at ingenting brekker
+
+#### watson-søk (om togglen var i bruk der)
+- [ ] Fjern `useFlag("toggle-navn")`-kallet
+- [ ] Behold kun den nye kodeveien — slett betinget rendering/logikk
+- [ ] Fjern eventuelle kommentarer som refererer til togglen
+
+#### Tverrrepo-søk (unngå å glemme noe)
+Søk etter toggle-navnet i alle repoer:
+```bash
+grep -r "watson-sok-v-1-2" ../watson-søk ../nav-persondata-api ../watson-sak
 ```
 
-### nais.yaml — accessPolicy og envFrom
-
-```yaml
-spec:
-  accessPolicy:
-    outbound:
-      external:
-        - host: holmes-unleash-api.nav.cloud.nais.io
-  envFrom:
-    - secret: <app-name>-unleash-api-token
-```
-
-### dev.json / prod.json
-
-```json
-{
-  "UNLEASH_ENVIRONMENT": "development"   // dev
-  "UNLEASH_ENVIRONMENT": "production"    // prod
-}
-```
-
-Secretet som injiseres inneholder:
-- `UNLEASH_SERVER_API_URL` — API-adressen til Holmes sin Unleash-instans
-- `UNLEASH_SERVER_API_TOKEN` — API-nøkkel for applikasjonen
-- `UNLEASH_SERVER_API_ENV` — miljø (development/production)
-
-## Opprydding
-
-Når featuren er verifisert i prod:
-
-1. Fjern enum-verdien fra `Toggle`
-2. Fjern alle `isEnabled`-sjekker — behold kun den nye kodeveien
-3. Slett togglen i Unleash-dashboardet
-
-Ikke la døde toggles bli liggende — de er teknisk gjeld.
+---
 
 ## Boundaries
 
 ### ✅ Always
 
-- Opprett alltid toggle i dashboardet **før** du merger kode
-- Verifiser alltid i `development` før `production`
-- Rydd opp toggles etter verifisert produksjonssetting
-- Bruk `Toggle`-enum — aldri hardkodede strenger i `isEnabled`-kall
+- Opprett toggle i dashboardet **før** kode merges
+- Verifiser i `development` før `production`
+- Bruk `Toggle`-enum i backend — aldri hardkodede strenger
+- Rydd opp tverrrepo ved sletting — sjekk alle berørte repoer
 
 ### ⚠️ Ask First
 
 - Avvik fra navnekonvensjonen `<prefix>-v<major>-<minor>`
-- Toggles som gjelder tvers av flere applikasjoner
+- Toggles med lang levetid (operational) — vurder om det faktisk er en config-verdi
 
 ### 🚫 Never
 
-- Aktiver direkte i `production` uten å ha verifisert i `development` først
-- La en toggle leve lenger enn nødvendig etter produksjonssetting
-- Opprett API-tokens manuelt i Unleash (bruk `ApiToken`-ressursen i Nais)
+- Aktiver i `production` uten å ha verifisert i `development` først
+- La en avviklet toggle bli liggende i koden
+- Fjern kun dashboardet-togglen uten å rydde opp koden (eller omvendt)
