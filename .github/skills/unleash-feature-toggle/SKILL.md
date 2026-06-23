@@ -24,11 +24,11 @@ Unleash-dashboardet: [holmes-unleash-web.iap.nav.cloud.nais.io](https://holmes-u
 
 ### Steg 1 — Velg navn
 
-Format: `<prefix>-v<major>-<minor>`
+Format: `<prefix>-v-<major>-<minor>`
 
 | Kontekst | Prefix | Eksempel |
 |----------|--------|---------|
-| Funksjonalitet i watson-søk | `watson-sok` | `watson-sok-v-1-2` |
+| Funksjonalitet i watson-sok | `watson-sok` | `watson-sok-v-1-2` |
 | Funksjonalitet i watson-sak | `watson-sak` | `watson-sak-v-2-0` |
 | Generell / tverrgående | _(fritt valg med begrunnelse)_ | `ny-tilgangspolicy` |
 
@@ -70,7 +70,7 @@ class MinService(private val toggles: FeatureToggleService) {
 }
 ```
 
-NAVident-konteksten settes automatisk per request — ingen manuell håndtering nødvendig.
+NAVident-konteksten settes automatisk per request via MDC — ingen manuell håndtering nødvendig.
 
 ### Steg 4 — Legg til i frontend (om relevant)
 
@@ -115,7 +115,7 @@ Bruk denne sjekklisten når en toggle er verifisert i prod og skal fjernes.
 #### Tverrrepo-søk (unngå å glemme noe)
 Søk etter toggle-navnet i alle repoer:
 ```bash
-grep -r "watson-sok-v-1-2" ../watson-søk ../nav-persondata-api ../watson-sak
+grep -r "watson-sok-v-1-2" ../watson-sok ../nav-persondata-api ../watson-sak-frontend
 ```
 
 ---
@@ -131,7 +131,7 @@ grep -r "watson-sok-v-1-2" ../watson-søk ../nav-persondata-api ../watson-sak
 
 ### ⚠️ Ask First
 
-- Avvik fra navnekonvensjonen `<prefix>-v<major>-<minor>`
+- Avvik fra navnekonvensjonen `<prefix>-v-<major>-<minor>`
 - Toggles med lang levetid (operational) — vurder om det faktisk er en config-verdi
 
 ### 🚫 Never
