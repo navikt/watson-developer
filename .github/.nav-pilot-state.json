@@ -1,8 +1,8 @@
 {
   "collection": "fullstack",
-  "version": "2026.06.15-131923-51be240",
+  "version": "2026.06.23-062530-3353496",
   "scope": "repo",
-  "source_sha": "51be240",
+  "source_sha": "3353496",
   "installed_at": "2026-05-27T13:26:26Z",
   "files": [
     {
@@ -11,7 +11,7 @@
     },
     {
       "path": ".github/agents/aksel.agent.md",
-      "hash": "5619d05aa37ec8f9"
+      "hash": "d190246642818387"
     },
     {
       "path": ".github/agents/code-review.agent.md",
@@ -155,7 +155,7 @@
     },
     {
       "path": ".github/instructions/nextjs-aksel.instructions.md",
-      "hash": "9283252e55829ca2"
+      "hash": "75e0932dfe465508"
     },
     {
       "path": ".github/instructions/norwegian-text.instructions.md",
@@ -215,7 +215,7 @@
     },
     {
       "path": ".github/prompts/aksel-component.prompt.md",
-      "hash": "8f6e07fff457bc3d"
+      "hash": "68c1da8a387cdffe"
     },
     {
       "path": ".github/prompts/nextjs-api-route.prompt.md",
