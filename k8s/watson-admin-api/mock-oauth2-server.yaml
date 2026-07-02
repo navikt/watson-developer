@@ -12,6 +12,19 @@ data:
           "issuerId": "azuread",
           "requestMappings": [
             {
+              "requestParam": "client_id",
+              "match": "nav-persondata-api",
+              "claims": {
+                "aud": ["nav-persondata-api"],
+                "sub": "local-dev-user",
+                "NAVident": "L999999",
+                "name": "Lokal Utvikler",
+                "preferred_username": "local-dev@nav.no",
+                "oid": "00000000-0000-0000-0000-000000000001",
+                "groups": ["local-basic-id", "local-utvidet-id"]
+              }
+            },
+            {
               "requestParam": "grant_type",
               "match": "*",
               "claims": {
@@ -44,7 +57,7 @@ spec:
         app: mock-oauth2-server
       annotations:
         # Bump config-version når JSON_CONFIG endres for å tvinge pod-restart
-        config-version: "2"
+        config-version: "3"
     spec:
       containers:
         - name: mock-oauth2-server
