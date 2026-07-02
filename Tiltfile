@@ -63,6 +63,24 @@ local_resource(
     labels=['backend'],
 )
 
+# watson-sok kjører lokalt som long-running prosess.
+# Token hentes automatisk fra mock-oauth2-server ved oppstart.
+# Manuell restart via Tilt UI eller: tilt trigger watson-sok
+local_resource(
+    'watson-sok',
+    serve_cmd='bash scripts/start-sok-frontend.sh',
+    resource_deps=['nav-persondata-api', 'mock-oauth2-server'],
+    readiness_probe=probe(
+        http_get=http_get_action(port=5173, path='/'),
+        period_secs=5,
+        failure_threshold=15,
+    ),
+    links=[
+        link('http://localhost:5173', 'Watson Søk'),
+    ],
+    labels=['frontend'],
+)
+
 # watson-sak-frontend kjører lokalt som long-running prosess.
 # Token hentes automatisk fra mock-oauth2-server ved oppstart.
 # Manuell restart via Tilt UI eller: tilt trigger watson-sak-frontend
