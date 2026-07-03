@@ -46,12 +46,34 @@ local_resource(
     labels=['backend'],
 )
 
+wiremock_jar = str(local('find ~/.gradle/caches -name "wiremock-standalone-3.13.2.jar" | grep -v sources | head -1')).strip()
+if not wiremock_jar:
+    fail("wiremock-standalone-3.13.2.jar ikke funnet i ~/.gradle/caches. Kjør: cd ../nav-persondata-api && ./gradlew test")
+
+# WireMock for nav-persondata-api — mocker alle nedstrøms-API-er (PDL, NOM, AAREG, m.fl.)
+# nav-persondata-api forventer WireMock på port 7164 (${WIREMOCK_PORT:7164})
+# Manuell restart via Tilt UI eller: tilt trigger nav-persondata-api-wiremock
+local_resource(
+    'nav-persondata-api-wiremock',
+    serve_cmd='export JAVA_HOME="$(/usr/libexec/java_home -v 21)" && export PATH="$JAVA_HOME/bin:$PATH" && java -jar ' + wiremock_jar + ' --port 7164 --root-dir ../nav-persondata-api/src/test/resources',
+    resource_deps=['mock-oauth2-server'],
+    readiness_probe=probe(
+        http_get=http_get_action(port=7164, path='/__admin/health'),
+        period_secs=3,
+        failure_threshold=20,
+    ),
+    links=[
+        link('http://localhost:7164/__admin/mappings', 'WireMock mappings'),
+    ],
+    labels=['infra'],
+)
+
 # nav-persondata-api kjører lokalt som long-running prosess.
 # Manuell restart via Tilt UI eller: tilt trigger nav-persondata-api
 local_resource(
     'nav-persondata-api',
     serve_cmd='cd ../nav-persondata-api && export JAVA_HOME="$(/usr/libexec/java_home -v 21)" && export PATH="$JAVA_HOME/bin:$PATH" && SPRING_PROFILES_ACTIVE=local SERVER_PORT=8081 ./gradlew bootRun',
-    resource_deps=['mock-oauth2-server'],
+    resource_deps=['mock-oauth2-server', 'nav-persondata-api-wiremock'],
     readiness_probe=probe(
         http_get=http_get_action(port=8081, path='/actuator/health'),
         period_secs=5,
@@ -61,6 +83,24 @@ local_resource(
         link('http://localhost:8081/actuator/health', 'Health'),
     ],
     labels=['backend'],
+)
+
+# watson-sok kjører lokalt som long-running prosess.
+# Token hentes automatisk fra mock-oauth2-server ved oppstart.
+# Manuell restart via Tilt UI eller: tilt trigger watson-sok
+local_resource(
+    'watson-sok',
+    serve_cmd='bash scripts/start-sok-frontend.sh',
+    resource_deps=['nav-persondata-api', 'mock-oauth2-server'],
+    readiness_probe=probe(
+        http_get=http_get_action(port=5173, path='/'),
+        period_secs=5,
+        failure_threshold=15,
+    ),
+    links=[
+        link('http://localhost:5173', 'Watson Søk'),
+    ],
+    labels=['frontend'],
 )
 
 # watson-sak-frontend kjører lokalt som long-running prosess.
