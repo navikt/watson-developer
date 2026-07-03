@@ -51,7 +51,7 @@ local_resource(
 # Manuell restart via Tilt UI eller: tilt trigger nav-persondata-api-wiremock
 local_resource(
     'nav-persondata-api-wiremock',
-    serve_cmd='java -jar ' + str(local('find ~/.gradle/caches -name "wiremock-standalone-3.13.2.jar" | grep -v sources | head -1')).strip() + ' --port 7164 --root-dir ../nav-persondata-api/src/test/resources',
+    serve_cmd='export JAVA_HOME="$(/usr/libexec/java_home -v 21)" && export PATH="$JAVA_HOME/bin:$PATH" && java -jar ' + str(local('find ~/.gradle/caches -name "wiremock-standalone-3.13.2.jar" | grep -v sources | head -1')).strip() + ' --port 7164 --root-dir ../nav-persondata-api/src/test/resources',
     resource_deps=['mock-oauth2-server'],
     readiness_probe=probe(
         http_get=http_get_action(port=7164, path='/__admin/health'),
