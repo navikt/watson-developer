@@ -46,12 +46,16 @@ local_resource(
     labels=['backend'],
 )
 
+wiremock_jar = str(local('find ~/.gradle/caches -name "wiremock-standalone-3.13.2.jar" | grep -v sources | head -1')).strip()
+if not wiremock_jar:
+    fail("wiremock-standalone-3.13.2.jar ikke funnet i ~/.gradle/caches. Kjør: cd ../nav-persondata-api && ./gradlew test")
+
 # WireMock for nav-persondata-api — mocker alle nedstrøms-API-er (PDL, NOM, AAREG, m.fl.)
 # nav-persondata-api forventer WireMock på port 7164 (${WIREMOCK_PORT:7164})
 # Manuell restart via Tilt UI eller: tilt trigger nav-persondata-api-wiremock
 local_resource(
     'nav-persondata-api-wiremock',
-    serve_cmd='export JAVA_HOME="$(/usr/libexec/java_home -v 21)" && export PATH="$JAVA_HOME/bin:$PATH" && java -jar ' + str(local('find ~/.gradle/caches -name "wiremock-standalone-3.13.2.jar" | grep -v sources | head -1')).strip() + ' --port 7164 --root-dir ../nav-persondata-api/src/test/resources',
+    serve_cmd='export JAVA_HOME="$(/usr/libexec/java_home -v 21)" && export PATH="$JAVA_HOME/bin:$PATH" && java -jar ' + wiremock_jar + ' --port 7164 --root-dir ../nav-persondata-api/src/test/resources',
     resource_deps=['mock-oauth2-server'],
     readiness_probe=probe(
         http_get=http_get_action(port=7164, path='/__admin/health'),
