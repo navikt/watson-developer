@@ -21,7 +21,8 @@ data:
                 "name": "Lokal Utvikler",
                 "preferred_username": "local-dev@nav.no",
                 "oid": "00000000-0000-0000-0000-000000000001",
-                "groups": ["local-basic-id", "local-utvidet-id"]
+                "groups": ["222dedb1-a80d-48c9-b8d3-1e8149be9063", "b734a20d-63e3-4b44-bb77-87f7f0b7f48a"],
+                "exp": 4102444800
               }
             },
             {
@@ -34,7 +35,8 @@ data:
                 "name": "Lokal Utvikler",
                 "preferred_username": "local-dev@nav.no",
                 "oid": "00000000-0000-0000-0000-000000000001",
-                "groups": ["local-basic-id", "local-utvidet-id"]
+                "groups": ["222dedb1-a80d-48c9-b8d3-1e8149be9063", "b734a20d-63e3-4b44-bb77-87f7f0b7f48a"],
+                "exp": 4102444800
               }
             }
           ]
@@ -57,7 +59,7 @@ spec:
         app: mock-oauth2-server
       annotations:
         # Bump config-version når JSON_CONFIG endres for å tvinge pod-restart
-        config-version: "3"
+        config-version: "6"
     spec:
       containers:
         - name: mock-oauth2-server
