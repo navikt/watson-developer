@@ -1,0 +1,152 @@
+name: Vaktmester — daglig driftsrapport
+
+on:
+  schedule:
+    # Hverdager kl. 08:00 CET (07:00 UTC)
+    - cron: "0 7 * * 1-5"
+  workflow_dispatch:
+    inputs:
+      post_to_slack:
+        description: "Post rapport til Slack?"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  driftsrapport:
+    name: Sjekk Holmes-portefølje
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Hent siste releases
+        id: releases
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          sok=$(gh release list -R navikt/watson-sok --limit 1 --json tagName,publishedAt \
+            --jq '.[0] | "\(.tagName) (\(.publishedAt | split("T")[0]))"' 2>/dev/null || echo "ukjent")
+          admin=$(gh release list -R navikt/watson-admin-api --limit 1 --json tagName,publishedAt \
+            --jq '.[0] | "\(.tagName) (\(.publishedAt | split("T")[0]))"' 2>/dev/null || echo "ukjent")
+          persondata=$(gh release list -R navikt/nav-persondata-api --limit 1 --json tagName,publishedAt \
+            --jq '.[0] | "\(.tagName) (\(.publishedAt | split("T")[0]))"' 2>/dev/null || echo "ukjent")
+
+          echo "sok=$sok" >> "$GITHUB_OUTPUT"
+          echo "admin=$admin" >> "$GITHUB_OUTPUT"
+          echo "persondata=$persondata" >> "$GITHUB_OUTPUT"
+
+      - name: Tell åpne bugs
+        id: bugs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          sok_bugs=$(gh issue list -R navikt/watson-sok --label bug --state open --json number \
+            --jq 'length' 2>/dev/null || echo "?")
+          admin_bugs=$(gh issue list -R navikt/watson-admin-api --label bug --state open --json number \
+            --jq 'length' 2>/dev/null || echo "?")
+          persondata_bugs=$(gh issue list -R navikt/nav-persondata-api --label bug --state open --json number \
+            --jq 'length' 2>/dev/null || echo "?")
+
+          echo "sok=$sok_bugs" >> "$GITHUB_OUTPUT"
+          echo "admin=$admin_bugs" >> "$GITHUB_OUTPUT"
+          echo "persondata=$persondata_bugs" >> "$GITHUB_OUTPUT"
+
+      - name: Tell gamle Dependabot-PRer (>7 dager)
+        id: dependabot
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cutoff=$(date -d '7 days ago' --iso-8601 2>/dev/null || date -v-7d +%Y-%m-%d)
+
+          count=0
+          for repo in watson-sok watson-admin-api nav-persondata-api; do
+            n=$(gh pr list -R navikt/$repo --author app/dependabot --state open \
+              --json createdAt --jq "[.[] | select(.createdAt < \"$cutoff\")] | length" 2>/dev/null || echo 0)
+            count=$((count + n))
+          done
+
+          echo "count=$count" >> "$GITHUB_OUTPUT"
+
+      - name: Bygg rapport og post til Slack
+        if: ${{ github.event_name == 'schedule' || inputs.post_to_slack == true }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SOK_RELEASE: ${{ steps.releases.outputs.sok }}
+          ADMIN_RELEASE: ${{ steps.releases.outputs.admin }}
+          PERSONDATA_RELEASE: ${{ steps.releases.outputs.persondata }}
+          SOK_BUGS: ${{ steps.bugs.outputs.sok }}
+          ADMIN_BUGS: ${{ steps.bugs.outputs.admin }}
+          PERSONDATA_BUGS: ${{ steps.bugs.outputs.persondata }}
+          DEP_COUNT: ${{ steps.dependabot.outputs.count }}
+        run: |
+          dato=$(date +"%Y-%m-%d")
+
+          sok_status="🟢"
+          [ "$SOK_BUGS" != "0" ] && [ "$SOK_BUGS" != "?" ] && sok_status="🟡"
+
+          admin_status="🟢"
+          [ "$ADMIN_BUGS" != "0" ] && [ "$ADMIN_BUGS" != "?" ] && admin_status="🟡"
+
+          persondata_status="🟢"
+          [ "$PERSONDATA_BUGS" != "0" ] && [ "$PERSONDATA_BUGS" != "?" ] && persondata_status="🟡"
+
+          dep_tekst="Ingen"
+          [ "$DEP_COUNT" -gt 0 ] 2>/dev/null && dep_tekst="⚠️ $DEP_COUNT gammel(e) Dependabot-PR(er)"
+
+          payload=$(cat <<EOF
+          {
+            "text": "🔧 *Vaktrapport — $dato*",
+            "blocks": [
+              {
+                "type": "header",
+                "text": { "type": "plain_text", "text": "🔧 Vaktrapport — $dato", "emoji": true }
+              },
+              {
+                "type": "section",
+                "fields": [
+                  { "type": "mrkdwn", "text": "*Watson Søk*\n$sok_status Siste: $SOK_RELEASE\nÅpne bugs: $SOK_BUGS" },
+                  { "type": "mrkdwn", "text": "*Watson Admin API*\n$admin_status Siste: $ADMIN_RELEASE\nÅpne bugs: $ADMIN_BUGS" }
+                ]
+              },
+              {
+                "type": "section",
+                "fields": [
+                  { "type": "mrkdwn", "text": "*Nav Persondata API*\n$persondata_status Siste: $PERSONDATA_RELEASE\nÅpne bugs: $PERSONDATA_BUGS" },
+                  { "type": "mrkdwn", "text": "*Dependabot*\n$dep_tekst" }
+                ]
+              },
+              {
+                "type": "context",
+                "elements": [
+                  { "type": "mrkdwn", "text": "🟢 OK  🟡 Observer  🔴 Handling kreves — sjekk <https://grafana.nav.cloud.nais.io|Grafana> og <https://nav1.aha.io/products/HOLMES|Aha!>" }
+                ]
+              }
+            ]
+          }
+          EOF
+          )
+
+          curl -s -X POST "$SLACK_WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            -d "$payload"
+
+      - name: Skriv rapport til Actions-logg
+        env:
+          SOK_RELEASE: ${{ steps.releases.outputs.sok }}
+          ADMIN_RELEASE: ${{ steps.releases.outputs.admin }}
+          PERSONDATA_RELEASE: ${{ steps.releases.outputs.persondata }}
+          SOK_BUGS: ${{ steps.bugs.outputs.sok }}
+          ADMIN_BUGS: ${{ steps.bugs.outputs.admin }}
+          PERSONDATA_BUGS: ${{ steps.bugs.outputs.persondata }}
+          DEP_COUNT: ${{ steps.dependabot.outputs.count }}
+        run: |
+          echo "## Vaktrapport $(date +"%Y-%m-%d")"
+          echo ""
+          echo "| App | Siste release | Åpne bugs |"
+          echo "|-----|--------------|-----------|"
+          echo "| watson-sok | $SOK_RELEASE | $SOK_BUGS |"
+          echo "| watson-admin-api | $ADMIN_RELEASE | $ADMIN_BUGS |"
+          echo "| nav-persondata-api | $PERSONDATA_RELEASE | $PERSONDATA_BUGS |"
+          echo ""
+          echo "Dependabot-PRer eldre enn 7 dager: $DEP_COUNT"
