@@ -16,14 +16,14 @@ spec:
         - name: wiremock
           image: wiremock/wiremock:3.13.0
           args:
-            - "--port=8080"
+            - "--port=7164"
             - "--verbose"
           ports:
-            - containerPort: 8080
+            - containerPort: 7164
           readinessProbe:
             httpGet:
               path: /__admin/health
-              port: 8080
+              port: 7164
             initialDelaySeconds: 3
             periodSeconds: 3
 ---
@@ -35,5 +35,5 @@ spec:
   selector:
     app: wiremock
   ports:
-    - port: 8080
-      targetPort: 8080
+    - port: 7164
+      targetPort: 7164

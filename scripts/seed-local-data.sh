@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Seeder lokal testdata i watson_admin-databasen.
-# Trygt å kjøre flere ganger (idempotent — sletter og gjenskaper test-saker).
+# NB: Oppretter nye saker hver kjøring — sletter ikke eksisterende data.
 set -euo pipefail
 
 GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; NC='\033[0m'
@@ -44,47 +44,58 @@ SAKER=(
 
 SAK_IDS=()
 for sak in "${SAKER[@]}"; do
-  resp=$(curl -sf -X POST "$BASE" -H "$H" -H "Content-Type: application/json" -d "$sak" 2>/dev/null) || true
-  id=$(echo "$resp" | python3 -c "import sys,json; print(json.load(sys.stdin).get('id',''))" 2>/dev/null || echo "")
-  if [ -n "$id" ]; then
-    SAK_IDS+=("$id")
-    echo -e "  ${GREEN}✓${NC} sakId=$id"
+  resp=$(curl -s -w "\n%{http_code}" -X POST "$BASE" \
+    -H "$H" -H "Content-Type: application/json" -d "$sak")
+  http_code=$(echo "$resp" | tail -1)
+  body=$(echo "$resp" | head -n -1)
+
+  if [[ "$http_code" =~ ^2 ]]; then
+    id=$(echo "$body" | python3 -c "import sys,json; print(json.load(sys.stdin).get('id',''))" 2>/dev/null || echo "")
+    if [ -n "$id" ]; then
+      SAK_IDS+=("$id")
+      echo -e "  ${GREEN}✓${NC} sakId=$id"
+    fi
+  else
+    echo -e "  ${YELLOW}⟳${NC} HTTP $http_code — ${body:0:120}"
   fi
 done
 
 echo ""
 echo "→ Oppdaterer datoer og statuser via databasen..."
 
-node - << 'NODEEOF'
-const { Client } = require('/tmp/pg-seed2/node_modules/pg');
-async function main() {
-  const c = new Client({ host: process.env.DB_HOST||'localhost', port: parseInt(process.env.DB_PORT||'5432'),
-    database: process.env.DB_NAME||'watson_admin', user: process.env.DB_USER||'postgres', password: process.env.DB_PASS||'postgres' });
-  await c.connect();
-  const { rows } = await c.query('SELECT sak_id FROM kontrollsak ORDER BY sak_id ASC');
-  const ids = rows.map(r => r.sak_id);
-  const dates = ['2024-01-15T10:00:00Z','2024-02-20T09:00:00Z','2024-04-05T11:00:00Z','2024-06-12T14:00:00Z',
-    '2024-08-19T10:30:00Z','2024-10-28T08:00:00Z','2025-01-08T09:00:00Z','2025-02-14T11:00:00Z',
-    '2025-04-03T10:00:00Z','2025-05-22T13:00:00Z','2025-07-11T09:30:00Z','2025-11-04T10:00:00Z',
-    '2026-01-20T11:00:00Z','2026-03-17T10:00:00Z','2026-07-01T09:00:00Z'];
-  const data = [
-    {s:'AVSLUTTET',a:'INGEN_UTREDNING'},{s:'AVSLUTTET',a:'IKKE_KAPASITET'},{s:'AVSLUTTET',a:null},
-    {s:'UTREDES',a:null},{s:'UTREDES',a:null},{s:'UTREDES',a:null},
-    {s:'STRAFFERETTSLIG_VURDERING',a:null},{s:'STRAFFERETTSLIG_VURDERING',a:null},
-    {s:'ANMELDT',a:null},{s:'ANMELDT',a:null},
-    {s:'HENLAGT',a:'IKKE_TILSTREKKELIG_BEVISGRUNNLAG'},{s:'HENLAGT',a:'FORELDET'},
-    {s:'OPPRETTET',a:null},{s:'OPPRETTET',a:null},{s:'OPPRETTET',a:null}
-  ];
-  for (let i=0; i<ids.length; i++) {
-    const d = data[i]||{s:'OPPRETTET',a:null};
-    await c.query('UPDATE kontrollsak SET opprettet=$1,status=$2,henleggelsesarsak=$3 WHERE sak_id=$4',
-      [dates[i]||dates[dates.length-1], d.s, d.a, ids[i]]);
-  }
-  console.log('Datoer og statuser oppdatert for ' + ids.length + ' saker');
-  await c.end();
-}
-main().catch(e=>{console.error(e.message);process.exit(1);});
-NODEEOF
+if [ ${#SAK_IDS[@]} -eq 0 ]; then
+  echo -e "  ${YELLOW}⟳ Ingen saker opprettet — hopper over DB-oppdatering${NC}"
+elif ! command -v psql >/dev/null 2>&1; then
+  echo -e "  ${RED}✗ psql ikke funnet — hopper over DB-oppdatering${NC}"
+  echo "    Installer postgresql-client og kjør scriptet på nytt"
+else
+  export PGPASSWORD="$DB_PASS"
+  DATES=('2024-01-15T10:00:00Z' '2024-02-20T09:00:00Z' '2024-04-05T11:00:00Z' '2024-06-12T14:00:00Z'
+    '2024-08-19T10:30:00Z' '2024-10-28T08:00:00Z' '2025-01-08T09:00:00Z' '2025-02-14T11:00:00Z'
+    '2025-04-03T10:00:00Z' '2025-05-22T13:00:00Z' '2025-07-11T09:30:00Z' '2025-11-04T10:00:00Z'
+    '2026-01-20T11:00:00Z' '2026-03-17T10:00:00Z' '2026-07-01T09:00:00Z')
+  STATUSES=('AVSLUTTET' 'AVSLUTTET' 'AVSLUTTET' 'UTREDES' 'UTREDES' 'UTREDES'
+    'STRAFFERETTSLIG_VURDERING' 'STRAFFERETTSLIG_VURDERING' 'ANMELDT' 'ANMELDT'
+    'HENLAGT' 'HENLAGT' 'OPPRETTET' 'OPPRETTET' 'OPPRETTET')
+  ARSAKER=('INGEN_UTREDNING' 'IKKE_KAPASITET' '' '' '' '' '' '' '' ''
+    'IKKE_TILSTREKKELIG_BEVISGRUNNLAG' 'FORELDET' '' '' '')
+
+  SQL=""
+  for i in "${!SAK_IDS[@]}"; do
+    id="${SAK_IDS[$i]}"
+    dato="${DATES[$i]:-${DATES[-1]}}"
+    status="${STATUSES[$i]:-OPPRETTET}"
+    arsak="${ARSAKER[$i]:-}"
+    if [ -z "$arsak" ]; then
+      SQL+="UPDATE kontrollsak SET opprettet='$dato', status='$status', henleggelsesarsak=NULL WHERE sak_id='$id';"$'\n'
+    else
+      SQL+="UPDATE kontrollsak SET opprettet='$dato', status='$status', henleggelsesarsak='$arsak' WHERE sak_id='$id';"$'\n'
+    fi
+  done
+
+  echo "$SQL" | psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -q
+  echo -e "  ${GREEN}✓${NC} Datoer og statuser oppdatert for ${#SAK_IDS[@]} saker"
+fi
 
 echo ""
 echo -e "${GREEN}✓ Seed fullført!${NC}"
