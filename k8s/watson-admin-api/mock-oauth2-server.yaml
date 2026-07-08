@@ -22,7 +22,7 @@ data:
                 "preferred_username": "local-dev@nav.no",
                 "oid": "00000000-0000-0000-0000-000000000001",
                 "groups": ["222dedb1-a80d-48c9-b8d3-1e8149be9063", "b734a20d-63e3-4b44-bb77-87f7f0b7f48a"],
-                "exp": 4102444800
+                "exp": 2147483647
               }
             },
             {
@@ -36,7 +36,7 @@ data:
                 "preferred_username": "local-dev@nav.no",
                 "oid": "00000000-0000-0000-0000-000000000001",
                 "groups": ["222dedb1-a80d-48c9-b8d3-1e8149be9063", "b734a20d-63e3-4b44-bb77-87f7f0b7f48a"],
-                "exp": 4102444800
+                "exp": 2147483647
               }
             }
           ]

@@ -24,6 +24,16 @@ if [ "$ready" -eq 0 ]; then
   exit 1
 fi
 
+echo "→ Sjekker kildemapper..."
+if [ ! -d "$MAPPINGS_DIR" ]; then
+  echo -e "\033[0;31m✗ Finner ikke $MAPPINGS_DIR — er nav-persondata-api klonet?\033[0m" >&2
+  exit 1
+fi
+if [ ! -d "$FILES_DIR" ]; then
+  echo -e "\033[0;31m✗ Finner ikke $FILES_DIR — er nav-persondata-api klonet?\033[0m" >&2
+  exit 1
+fi
+
 echo "→ Sletter eksisterende stubs og filer ..."
 curl -sf -X DELETE "$WIREMOCK_URL/__admin/mappings" >/dev/null
 curl -sf -X DELETE "$WIREMOCK_URL/__admin/files" >/dev/null 2>&1 || true

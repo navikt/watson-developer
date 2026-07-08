@@ -1,11 +1,16 @@
 #!/usr/bin/env bash
-# Seeder lokal testdata i watson_admin-databasen.
-# NB: Oppretter nye saker hver kjøring — sletter ikke eksisterende data.
+# Seeder lokal testdata i watson_admin-databasen med syntetisk testperson.
+# Kjøres med RESET=true for å slette eksisterende testdata og starte på nytt.
+# Eksempel: RESET=true ./scripts/seed-local-data.sh
 set -euo pipefail
 
 GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; NC='\033[0m'
 
 ADMIN_API="${ADMIN_API:-http://localhost:8080}"
+RESET="${RESET:-false}"
+# Syntetisk testperson (ikke reell PII — brukes kun i lokalt testmiljø)
+TEST_PERSON_IDENT="01010050205"
+TEST_PERSON_NAVN="Test Testesen"
 TOKEN_URL="${TOKEN_URL:-http://localhost:8090/azuread/token}"
 DB_HOST="${DB_HOST:-localhost}"
 DB_PORT="${DB_PORT:-5432}"
@@ -19,27 +24,39 @@ TOKEN=$(curl -sf -X POST "$TOKEN_URL" \
   -d "grant_type=client_credentials&client_id=watson-admin-api&client_secret=mock-secret&scope=api://local/.default" \
   | python3 -c "import sys,json; print(json.load(sys.stdin)['access_token'])")
 
+if [[ "$RESET" == "true" ]]; then
+  echo "→ RESET=true — sletter eksisterende saker for testpersonen..."
+  existing=$(curl -s -H "Authorization: Bearer $TOKEN" \
+    "$ADMIN_API/api/v1/kontrollsaker?personIdent=$TEST_PERSON_IDENT" \
+    | python3 -c "import sys,json; [print(s['id']) for s in json.load(sys.stdin).get('saker',[])]" 2>/dev/null || true)
+  while IFS= read -r sak_id; do
+    [ -z "$sak_id" ] && continue
+    curl -s -X DELETE -H "Authorization: Bearer $TOKEN" "$ADMIN_API/api/v1/kontrollsaker/$sak_id" >/dev/null
+    echo -e "  ${YELLOW}✗${NC} slettet $sak_id"
+  done <<< "$existing"
+fi
+
 echo "→ Oppretter kontrollsaker..."
 BASE="$ADMIN_API/api/v1/kontrollsaker"
 H="Authorization: Bearer $TOKEN"
 
 # Saker for SAK-36 (periodevelger) og SAK-47 (statusmodal)
 SAKER=(
-  '{"personIdent":"67890123456","navn":"Kari Nordmann","kategori":"ARBEID","kilde":"NAV_KONTROLL","misbruktype":["FIKTIVT_ARBEIDSFORHOLD"],"prioritet":"HOY","ytelser":[{"type":"DAGPENGER","periodeFra":"2024-01-01","periodeTil":"2024-03-31","belop":25000}]}'
-  '{"personIdent":"67890123456","navn":"Kari Nordmann","kategori":"ARBEID","kilde":"A_KRIMSAMARBEID","misbruktype":["SVART_ARBEID"],"prioritet":"HOY","ytelser":[{"type":"DAGPENGER","periodeFra":"2024-05-01","periodeTil":"2024-08-31","belop":18000}]}'
-  '{"personIdent":"67890123456","navn":"Kari Nordmann","kategori":"IDENTITET","kilde":"POLITIET","misbruktype":["IDENTITETSMISBRUK"],"prioritet":"HOY","ytelser":[]}'
-  '{"personIdent":"67890123456","navn":"Kari Nordmann","kategori":"UTLAND","kilde":"REGISTERSAMKJORING","misbruktype":["MEDLEMSKAP_BORTFALT"],"prioritet":"LAV","ytelser":[{"type":"SYKEPENGER","periodeFra":"2024-04-01","periodeTil":"2024-06-30","belop":35000}]}'
-  '{"personIdent":"67890123456","navn":"Kari Nordmann","kategori":"SAMLIV","kilde":"PUBLIKUM","misbruktype":["SKJULT_SAMLIV"],"prioritet":"NORMAL","ytelser":[{"type":"AAP","periodeFra":"2024-02-01","periodeTil":"2024-04-30"}]}'
-  '{"personIdent":"67890123456","navn":"Kari Nordmann","kategori":"ANNET","kilde":"NAV_OVRIG","misbruktype":[],"prioritet":"NORMAL","ytelser":[{"type":"ANDRE","periodeFra":"2024-10-01","periodeTil":"2024-12-31","belop":22000}]}'
-  '{"personIdent":"67890123456","navn":"Kari Nordmann","kategori":"ARBEID","kilde":"SKATTEETATEN","misbruktype":["HVIT_INNTEKT","FEIL_INNTEKTSGRUNNLAG"],"prioritet":"HOY","ytelser":[{"type":"FORELDREPENGER","periodeFra":"2025-01-01","periodeTil":"2025-03-31"}]}'
-  '{"personIdent":"67890123456","navn":"Kari Nordmann","kategori":"BEHANDLER","kilde":"NAV_KONTROLL","misbruktype":["BEHANDLER_25_7"],"prioritet":"NORMAL","ytelser":[]}'
-  '{"personIdent":"67890123456","navn":"Kari Nordmann","kategori":"TILTAK","kilde":"NAV_OVRIG","misbruktype":["MISBRUK_AV_TILTAKSPLASS"],"prioritet":"LAV","ytelser":[{"type":"ANDRE","periodeFra":"2025-04-01","periodeTil":"2025-06-30"}]}'
-  '{"personIdent":"67890123456","navn":"Kari Nordmann","kategori":"SAMLIV","kilde":"PUBLIKUM","misbruktype":["ENDRET_SIVILSTATUS"],"prioritet":"NORMAL","ytelser":[{"type":"AAP","periodeFra":"2025-05-01","periodeTil":"2025-09-30","belop":29000}]}'
-  '{"personIdent":"67890123456","navn":"Kari Nordmann","kategori":"ARBEID","kilde":"NAV_KONTROLL","misbruktype":["SKJULT_AKTIVITET"],"prioritet":"HOY","ytelser":[{"type":"SYKEPENGER","periodeFra":"2025-07-01","periodeTil":"2025-09-30"}]}'
-  '{"personIdent":"67890123456","navn":"Kari Nordmann","kategori":"UTLAND","kilde":"UTENRIKSTJENESTEN","misbruktype":["INNENFOR_EOS"],"prioritet":"NORMAL","ytelser":[]}'
-  '{"personIdent":"67890123456","navn":"Kari Nordmann","kategori":"ARBEID","kilde":"REGISTERSAMKJORING","misbruktype":["FIKTIVT_ARBEIDSFORHOLD","SVART_ARBEID"],"prioritet":"HOY","ytelser":[{"type":"DAGPENGER","periodeFra":"2026-01-01","periodeTil":"2026-03-31","belop":31000}]}'
-  '{"personIdent":"67890123456","navn":"Kari Nordmann","kategori":"SAMLIV","kilde":"NAV_KONTROLL","misbruktype":["SKJULT_SAMLIV"],"prioritet":"NORMAL","ytelser":[]}'
-  '{"personIdent":"67890123456","navn":"Kari Nordmann","kategori":"IDENTITET","kilde":"POLITIET","misbruktype":[],"prioritet":"LAV","ytelser":[]}'
+  "{\"personIdent\":\"$TEST_PERSON_IDENT\",\"navn\":\"$TEST_PERSON_NAVN\",\"kategori\":\"ARBEID\",\"kilde\":\"NAV_KONTROLL\",\"misbruktype\":[\"FIKTIVT_ARBEIDSFORHOLD\"],\"prioritet\":\"HOY\",\"ytelser\":[{\"type\":\"DAGPENGER\",\"periodeFra\":\"2024-01-01\",\"periodeTil\":\"2024-03-31\",\"belop\":25000}]}"
+  "{\"personIdent\":\"$TEST_PERSON_IDENT\",\"navn\":\"$TEST_PERSON_NAVN\",\"kategori\":\"ARBEID\",\"kilde\":\"A_KRIMSAMARBEID\",\"misbruktype\":[\"SVART_ARBEID\"],\"prioritet\":\"HOY\",\"ytelser\":[{\"type\":\"DAGPENGER\",\"periodeFra\":\"2024-05-01\",\"periodeTil\":\"2024-08-31\",\"belop\":18000}]}"
+  "{\"personIdent\":\"$TEST_PERSON_IDENT\",\"navn\":\"$TEST_PERSON_NAVN\",\"kategori\":\"IDENTITET\",\"kilde\":\"POLITIET\",\"misbruktype\":[\"IDENTITETSMISBRUK\"],\"prioritet\":\"HOY\",\"ytelser\":[]}"
+  "{\"personIdent\":\"$TEST_PERSON_IDENT\",\"navn\":\"$TEST_PERSON_NAVN\",\"kategori\":\"UTLAND\",\"kilde\":\"REGISTERSAMKJORING\",\"misbruktype\":[\"MEDLEMSKAP_BORTFALT\"],\"prioritet\":\"LAV\",\"ytelser\":[{\"type\":\"SYKEPENGER\",\"periodeFra\":\"2024-04-01\",\"periodeTil\":\"2024-06-30\",\"belop\":35000}]}"
+  "{\"personIdent\":\"$TEST_PERSON_IDENT\",\"navn\":\"$TEST_PERSON_NAVN\",\"kategori\":\"SAMLIV\",\"kilde\":\"PUBLIKUM\",\"misbruktype\":[\"SKJULT_SAMLIV\"],\"prioritet\":\"NORMAL\",\"ytelser\":[{\"type\":\"AAP\",\"periodeFra\":\"2024-02-01\",\"periodeTil\":\"2024-04-30\"}]}"
+  "{\"personIdent\":\"$TEST_PERSON_IDENT\",\"navn\":\"$TEST_PERSON_NAVN\",\"kategori\":\"ANNET\",\"kilde\":\"NAV_OVRIG\",\"misbruktype\":[],\"prioritet\":\"NORMAL\",\"ytelser\":[{\"type\":\"ANDRE\",\"periodeFra\":\"2024-10-01\",\"periodeTil\":\"2024-12-31\",\"belop\":22000}]}"
+  "{\"personIdent\":\"$TEST_PERSON_IDENT\",\"navn\":\"$TEST_PERSON_NAVN\",\"kategori\":\"ARBEID\",\"kilde\":\"SKATTEETATEN\",\"misbruktype\":[\"HVIT_INNTEKT\",\"FEIL_INNTEKTSGRUNNLAG\"],\"prioritet\":\"HOY\",\"ytelser\":[{\"type\":\"FORELDREPENGER\",\"periodeFra\":\"2025-01-01\",\"periodeTil\":\"2025-03-31\"}]}"
+  "{\"personIdent\":\"$TEST_PERSON_IDENT\",\"navn\":\"$TEST_PERSON_NAVN\",\"kategori\":\"BEHANDLER\",\"kilde\":\"NAV_KONTROLL\",\"misbruktype\":[\"BEHANDLER_25_7\"],\"prioritet\":\"NORMAL\",\"ytelser\":[]}"
+  "{\"personIdent\":\"$TEST_PERSON_IDENT\",\"navn\":\"$TEST_PERSON_NAVN\",\"kategori\":\"TILTAK\",\"kilde\":\"NAV_OVRIG\",\"misbruktype\":[\"MISBRUK_AV_TILTAKSPLASS\"],\"prioritet\":\"LAV\",\"ytelser\":[{\"type\":\"ANDRE\",\"periodeFra\":\"2025-04-01\",\"periodeTil\":\"2025-06-30\"}]}"
+  "{\"personIdent\":\"$TEST_PERSON_IDENT\",\"navn\":\"$TEST_PERSON_NAVN\",\"kategori\":\"SAMLIV\",\"kilde\":\"PUBLIKUM\",\"misbruktype\":[\"ENDRET_SIVILSTATUS\"],\"prioritet\":\"NORMAL\",\"ytelser\":[{\"type\":\"AAP\",\"periodeFra\":\"2025-05-01\",\"periodeTil\":\"2025-09-30\",\"belop\":29000}]}"
+  "{\"personIdent\":\"$TEST_PERSON_IDENT\",\"navn\":\"$TEST_PERSON_NAVN\",\"kategori\":\"ARBEID\",\"kilde\":\"NAV_KONTROLL\",\"misbruktype\":[\"SKJULT_AKTIVITET\"],\"prioritet\":\"HOY\",\"ytelser\":[{\"type\":\"SYKEPENGER\",\"periodeFra\":\"2025-07-01\",\"periodeTil\":\"2025-09-30\"}]}"
+  "{\"personIdent\":\"$TEST_PERSON_IDENT\",\"navn\":\"$TEST_PERSON_NAVN\",\"kategori\":\"UTLAND\",\"kilde\":\"UTENRIKSTJENESTEN\",\"misbruktype\":[\"INNENFOR_EOS\"],\"prioritet\":\"NORMAL\",\"ytelser\":[]}"
+  "{\"personIdent\":\"$TEST_PERSON_IDENT\",\"navn\":\"$TEST_PERSON_NAVN\",\"kategori\":\"ARBEID\",\"kilde\":\"REGISTERSAMKJORING\",\"misbruktype\":[\"FIKTIVT_ARBEIDSFORHOLD\",\"SVART_ARBEID\"],\"prioritet\":\"HOY\",\"ytelser\":[{\"type\":\"DAGPENGER\",\"periodeFra\":\"2026-01-01\",\"periodeTil\":\"2026-03-31\",\"belop\":31000}]}"
+  "{\"personIdent\":\"$TEST_PERSON_IDENT\",\"navn\":\"$TEST_PERSON_NAVN\",\"kategori\":\"SAMLIV\",\"kilde\":\"NAV_KONTROLL\",\"misbruktype\":[\"SKJULT_SAMLIV\"],\"prioritet\":\"NORMAL\",\"ytelser\":[]}"
+  "{\"personIdent\":\"$TEST_PERSON_IDENT\",\"navn\":\"$TEST_PERSON_NAVN\",\"kategori\":\"IDENTITET\",\"kilde\":\"POLITIET\",\"misbruktype\":[],\"prioritet\":\"LAV\",\"ytelser\":[]}"
 )
 
 SAK_IDS=()
@@ -83,7 +100,7 @@ else
   SQL=""
   for i in "${!SAK_IDS[@]}"; do
     id="${SAK_IDS[$i]}"
-    dato="${DATES[$i]:-${DATES[-1]}}"
+    dato="${DATES[$i]:-${DATES[${#DATES[@]}-1]}}"
     status="${STATUSES[$i]:-OPPRETTET}"
     arsak="${ARSAKER[$i]:-}"
     if [ -z "$arsak" ]; then
