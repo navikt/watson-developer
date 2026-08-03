@@ -11,7 +11,7 @@ metadata:
 # Unleash Feature Toggle Skill
 
 Hjelper deg med å **opprette** og **rydde opp** feature toggles i Holmes-porteføljen
-(`nav-persondata-api`, `watson-søk`, `watson-sak`).
+(`nav-persondata-api`, `watson-sok`, `watson-sak`).
 
 Unleash-dashboardet: [holmes-unleash-web.iap.nav.cloud.nais.io](https://holmes-unleash-web.iap.nav.cloud.nais.io/projects/default?limit=25&favoritesFirst=true&sortBy=createdAt&sortOrder=desc)
 
