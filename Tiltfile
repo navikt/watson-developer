@@ -13,6 +13,7 @@
 k8s_yaml([
     'k8s/watson-admin-api/postgres.yaml',
     'k8s/watson-admin-api/mock-oauth2-server.yaml',
+    'k8s/watson-admin-api/clamav.yaml',
 ])
 
 k8s_resource(
@@ -25,6 +26,13 @@ k8s_resource(
     'mock-oauth2-server',
     port_forwards=['8090:8090'],
     labels=['infra'],
+)
+
+k8s_resource(
+    'clamav',
+    port_forwards=['3310:3310'],
+    labels=['infra'],
+    # OBS: ClamAV laster ned virusdefinisjoner ved oppstart (~2-3 min første gang)
 )
 
 # watson-admin-api kjører lokalt som long-running prosess.
