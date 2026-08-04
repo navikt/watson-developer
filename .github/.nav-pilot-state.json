@@ -1,8 +1,8 @@
 {
   "collection": "fullstack",
-  "version": "2026.07.01-205322-ecb3952",
+  "version": "2026.07.31-143403-5ce3c3b",
   "scope": "repo",
-  "source_sha": "ecb3952",
+  "source_sha": "5ce3c3b",
   "installed_at": "2026-05-27T13:26:26Z",
   "files": [
     {
@@ -79,7 +79,7 @@
     },
     {
       "path": ".github/skills/observability-debugging/",
-      "hash": "b01ef3cd48eca1aa"
+      "hash": "107a99f70451c01b"
     },
     {
       "path": ".github/skills/playwright-testing/",
@@ -215,7 +215,7 @@
     },
     {
       "path": ".github/prompts/aksel-component.prompt.md",
-      "hash": "68c1da8a387cdffe"
+      "hash": "721f879cfd8e89da"
     },
     {
       "path": ".github/prompts/nextjs-api-route.prompt.md",
