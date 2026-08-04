@@ -1,3 +1,34 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: clamav-config
+data:
+  clamd.conf: |
+    # ClamAV daemon-konfigurasjon for Watson
+    # StreamMaxLength MÅ være høyere enn maks filstørrelse (50 MB)
+    Foreground yes
+    PidFile /tmp/clamd.pid
+    DatabaseDirectory /var/lib/clamav
+    LocalSocket /run/clamav/clamd.ctl
+    TCPSocket 3310
+    TCPAddr 0.0.0.0
+
+    # Grenser — satt eksplisitt for å unngå at ClamAV stopper scanning
+    # av filer mellom 25 MB (default StreamMaxLength) og 50 MB (vår maks)
+    StreamMaxLength 60M
+    MaxScanSize 200M
+    MaxFileSize 60M
+    MaxRecursion 10
+    MaxFiles 10000
+
+    ScanPE yes
+    ScanELF yes
+    ScanOLE2 yes
+    ScanPDF yes
+    ScanSWF yes
+    ScanXMLDOCS yes
+    ScanArchive yes
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -14,7 +45,7 @@ spec:
     spec:
       containers:
         - name: clamav
-          image: clamav/clamav:stable
+          image: clamav/clamav:1.5.3
           ports:
             - containerPort: 3310
           env:
@@ -26,6 +57,11 @@ spec:
               cpu: 100m
             limits:
               memory: 2Gi
+              cpu: 500m
+          volumeMounts:
+            - name: clamav-config
+              mountPath: /etc/clamav/clamd.conf
+              subPath: clamd.conf
           readinessProbe:
             tcpSocket:
               port: 3310
@@ -37,6 +73,10 @@ spec:
               port: 3310
             initialDelaySeconds: 90
             periodSeconds: 15
+      volumes:
+        - name: clamav-config
+          configMap:
+            name: clamav-config
 ---
 apiVersion: v1
 kind: Service
