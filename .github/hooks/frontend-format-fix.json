@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "hooks": {
+    "agentStop": [
+      {
+        "type": "command",
+        "bash": "./scripts/hooks/frontend-format-fix.sh",
+        "cwd": ".",
+        "timeoutSec": 60
+      }
+    ]
+  }
+}
