@@ -39,7 +39,7 @@ check_java_version() {
         if echo "$java_output" | grep -q "jenv"; then
             fail "java-kommandoen feiler — ødelagt jenv-shim. Kjør: jenv rehash --force"
         elif echo "$java_output" | grep -q "libjli.dylib\|Operation not permitted"; then
-            fail "java-kommandoen feiler — kan ikke lese JDK-filer (sandbox/rettigheter). Se docs/onboarding for tiltak"
+            fail "java-kommandoen feiler — kan ikke lese JDK-filer (sandbox/rettigheter). Se docs/SETUP.md#feilsøking-gradlew-feiler-i-cplt-sandboxen for tiltak"
         else
             fail "java-kommandoen feiler: $(echo "$java_output" | head -1)"
         fi
