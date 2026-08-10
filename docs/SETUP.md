@@ -93,6 +93,51 @@ Når Tilt er oppe, sjekk følgende:
 
 ---
 
+## Feilsøking: `./gradlew` feiler i cplt-sandboxen
+
+Symptom: `./gradlew` (i `watson-admin-api` e.l.) feiler med enten
+
+```
+/Users/<deg>/.jenv/shims/java: line 21: /opt/homebrew/Cellar/jenv/<versjon>/libexec/libexec/jenv: No such file or directory
+```
+
+eller
+
+```
+dyld[...]: Library not loaded: @rpath/libjli.dylib
+... (file system sandbox blocked open())
+```
+
+**Årsak 1 — ødelagt jenv-shim:** `jenv`s shim for `java` peker på en hardkodet
+Homebrew-Cellar-versjon. Når `brew upgrade jenv` fjerner den gamle mappen, blir
+shimmet værende og peker på en sti som ikke lenger finnes. Fiks **utenfor**
+sandboxen (cplt gjør `~/.jenv` skrivebeskyttet):
+
+```bash
+jenv rehash --force
+```
+
+**Årsak 2 — cplt-sandboxen blokkerer lesing av JDK-filer:** selv med et
+korrekt shim kan sandboxen nekte lesing av `lib/libjli.dylib` inni JDK-er
+under `~/Library/Java/JavaVirtualMachines/...`, fordi `~/Library` som helhet
+ikke er i sandboxens `allow.read`. Symptomet er da `Operation not permitted`/
+`file system sandbox blocked open()`.
+
+Tiltak, i prioritert rekkefølge:
+
+1. **Foretrukket:** Sett `org.gradle.java.home` til en Homebrew-installert JDK
+   (f.eks. `/opt/homebrew/opt/openjdk@21`, eller kjør med `JAVA_HOME` satt til
+   en `/opt/homebrew/Cellar/...`-JDK) i stedet for å gå via jenv/`~/Library`.
+   Homebrew-installerte JDK-er ligger utenfor de vanlige sandbox-blokkerte
+   stiene.
+2. Legg de spesifikke JDK-stiene til i `allow.read` i cplt-konfigurasjonen
+   (`cplt settings`, kjøres utenfor sandbox) hvis du må bruke en jenv-styrt
+   JDK under `~/Library/Java/JavaVirtualMachines`.
+3. Kjør `./scripts/doctor.sh` etter endringer — den fanger opp begge
+   feilklassene og gir konkret handling.
+
+---
+
 ## Fallback: docker-compose
 
 `watson-admin-api` har en `docker-compose.yml` som alternativ til Tilt:

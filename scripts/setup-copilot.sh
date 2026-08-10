@@ -118,6 +118,50 @@ else
     fi
 fi
 
+# ─── Detekter JDK (for watson-admin-api / gradle) ────────────────────────────
+
+detect_java_home() {
+    # Foretrekk en Homebrew-installert JDK — disse ligger under /opt/homebrew/
+    # og unngår cplt-sandboxens read-blokkering av ~/Library/Java/JavaVirtualMachines.
+    local brew_jdk
+    for formula in openjdk@21 openjdk; do
+        if brew_jdk="$(brew --prefix "$formula" 2>/dev/null)" && [[ -d "$brew_jdk" ]]; then
+            echo "$brew_jdk"
+            return
+        fi
+    done
+
+    # Fallback: jenv-styrt JDK. Disse ligger under ~/Library/Java/JavaVirtualMachines
+    # og krever at stien legges til allow.read eksplisitt (håndteres under).
+    if command -v jenv &>/dev/null; then
+        local jenv_home
+        if jenv_home="$(jenv prefix 2>/dev/null)" && [[ -d "$jenv_home" ]]; then
+            # Følg symlink til den faktiske JDK-installasjonen
+            echo "$(cd "$jenv_home" && pwd -P)"
+            return
+        fi
+    fi
+
+    return 1
+}
+
+echo ""
+echo -e "${BOLD}Java/JDK (for watson-admin-api):${NC}"
+
+JAVA_HOME_PATH=""
+JDK_IS_JENV_MANAGED=false
+if JAVA_HOME_PATH=$(detect_java_home); then
+    if [[ "$JAVA_HOME_PATH" == "$HOME/Library/Java/JavaVirtualMachines/"* ]]; then
+        JDK_IS_JENV_MANAGED=true
+        ok "Detektert (jenv-styrt): $JAVA_HOME_PATH"
+        info "Denne stien legges til allow.read — anbefaler ellers en Homebrew-JDK (brew install openjdk@21)"
+    else
+        ok "Detektert (Homebrew): $JAVA_HOME_PATH"
+    fi
+else
+    skip "Fant ingen JDK automatisk — installer med: brew install openjdk@21"
+fi
+
 # ─── Generer cplt-config ─────────────────────────────────────────────────────
 
 echo ""
@@ -131,9 +175,19 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WATSON_PARENT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
 # Bygg read-array
-READ_PATHS='["/Applications/Xcode.app"'
+# - Xcode CLI tools (git, clang etc.)
+# - node version manager (hvis detektert)
+# - ~/.gradle/gradle.properties: watson-admin-api sitt gradlew leser denne for
+#   GitHub Packages-credentials (gpr.user/gpr.key) allerede før build starter
+# - detektert JDK (Homebrew eller jenv-styrt) — se detect_java_home over.
+#   Gradle kan trenge å lese JDK-filer direkte (f.eks. under toolchain-oppdagelse),
+#   så vi legger til stien uansett hvilken JDK som ble funnet.
+READ_PATHS='["/Applications/Xcode.app", "'"$HOME"'/.gradle/gradle.properties"'
 if [[ -n "$NODE_PATH" ]]; then
     READ_PATHS="$READ_PATHS, \"$NODE_PATH\""
+fi
+if [[ -n "$JAVA_HOME_PATH" ]]; then
+    READ_PATHS="$READ_PATHS, \"$JAVA_HOME_PATH\""
 fi
 READ_PATHS="$READ_PATHS]"
 
@@ -144,7 +198,8 @@ else
     mkdir -p "$CONFIG_DIR"
     cat > "$CONFIG_FILE" <<EOF
 [allow]
-# Xcode CLI tools (git, clang etc.) + node version manager
+# Xcode CLI tools (git, clang etc.) + node version manager + gradle.properties
+# (GitHub Packages-credentials for watson-admin-api) + detektert JDK
 read = $READ_PATHS
 # Watson-porteføljens forelderkatalog (alle repoer) + rtk (token-optimalisert CLI-proxy)
 write = ["$WATSON_PARENT", "$HOME/Library/Application Support/rtk"]

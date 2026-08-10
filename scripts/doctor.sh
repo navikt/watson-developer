@@ -30,8 +30,24 @@ check_java_version() {
         fail "java er ikke installert — brew install --cask temurin@21"
         return
     fi
+
+    local java_output
+    java_output=$(java -version 2>&1) || {
+        # `java` finnes på PATH, men klarer ikke å kjøre — vanligvis en ødelagt
+        # jenv-shim (peker på en avinstallert jenv-versjon) eller sandbox som
+        # blokkerer lesing av libjli.dylib i JDK-installasjonen.
+        if echo "$java_output" | grep -q "jenv"; then
+            fail "java-kommandoen feiler — ødelagt jenv-shim. Kjør: jenv rehash --force"
+        elif echo "$java_output" | grep -q "libjli.dylib\|Operation not permitted"; then
+            fail "java-kommandoen feiler — kan ikke lese JDK-filer (sandbox/rettigheter). Se docs/SETUP.md#feilsøking-gradlew-feiler-i-cplt-sandboxen for tiltak"
+        else
+            fail "java-kommandoen feiler: $(echo "$java_output" | head -1)"
+        fi
+        return
+    }
+
     local version_line version
-    version_line=$(java -version 2>&1 | grep -v "^Picked up" | head -1)
+    version_line=$(echo "$java_output" | grep -v "^Picked up" | head -1)
     # Extract major version — handles both "21.0.2" and legacy "1.8.0_321"
     version=$(echo "$version_line" | awk -F'"' '{print $2}' | cut -d. -f1)
     if [ "$version" = "1" ]; then
