@@ -11,6 +11,7 @@ REPOS=(
   "git@github.com:navikt/watson-admin-api.git"
   "git@github.com:navikt/watson-sak-frontend.git"
   "git@github.com:navikt/watson-sok.git"
+  "git@github.com:navikt/watson-pdfgen.git"
 )
 
 # Colors

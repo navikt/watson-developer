@@ -32,7 +32,7 @@ k8s_resource(
 local_resource(
     'watson-admin-api',
     serve_cmd='cd ../watson-admin-api && export JAVA_HOME="$(/usr/libexec/java_home -v 21)" && export PATH="$JAVA_HOME/bin:$PATH" && SPRING_PROFILES_ACTIVE=local ./gradlew bootRun',
-    resource_deps=['postgres', 'mock-oauth2-server'],
+    resource_deps=['postgres', 'mock-oauth2-server', 'watson-pdfgen'],
     readiness_probe=probe(
         http_get=http_get_action(port=8080, path='/actuator/health'),
         period_secs=5,
@@ -119,4 +119,20 @@ local_resource(
         link('http://localhost:5174', 'Watson Sak'),
     ],
     labels=['frontend'],
+)
+
+local_resource(
+    'watson-pdfgen',
+    cmd='cd ../watson-pdfgen && docker build --tag watson-pdfgen:local .',
+    serve_cmd='docker run --rm --name watson-pdfgen -p 8082:8080 watson-pdfgen:local',
+    readiness_probe=probe(
+        http_get=http_get_action(port=8082, path='/internal/is_ready'),
+        period_secs=5,
+        failure_threshold=15,
+    ),
+    links=[
+        link('http://localhost:8082/internal/is_ready', 'Health'),
+        link('http://localhost:8082/internal/metrics', 'Metrics'),
+    ],
+    labels=['backend'],
 )
