@@ -38,8 +38,8 @@ Ny i teamet? Start med [onboarding-sjekklisten](docs/onboarding/sjekkliste.md).
 ./sync.sh
 ```
 
-Sjekker ut standardbranch (`main`) og henter nyeste endringer i alle git-repoer i foreldrekatalogen.
-Repoer med ukommiterte endringer hoppes over, slik at ingenting går tapt.
+Sjekker ut standardbranchen (det `origin/HEAD` peker på, med fallback til `main`/`master`) og henter nyeste endringer i alle git-repoer i foreldrekatalogen.
+Repoer med ukommiterte endringer i sporede filer hoppes over, slik at ingenting går tapt.
 
 ---
 

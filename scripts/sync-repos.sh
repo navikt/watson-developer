@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Sjekker ut main og henter nyeste endringer i alle git-repoer i foreldremappen.
+# Sjekker ut standardbranch (via origin/HEAD, fallback main/master) og henter
+# nyeste endringer i alle git-repoer i foreldremappen.
 # Idempotent — trygt å kjøre flere ganger.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -25,8 +26,10 @@ for repo_path in "$PARENT_DIR"/*/; do
 
   echo "📦 $repo_name"
 
+  # Usporede filer ignoreres bevisst — de blokkerer ikke checkout eller ff-only pull,
+  # og lokale artefakter (build/, .env, .DS_Store) skal ikke hindre synkronisering.
   if [ -n "$(git -C "$repo_path" status --porcelain --untracked-files=no)" ]; then
-    echo -e "  ${YELLOW}⟳${NC} Hopper over — ukommiterte endringer"
+    echo -e "  ${YELLOW}⟳${NC} Hopper over — ukommiterte endringer i sporede filer"
     continue
   fi
 
