@@ -22,6 +22,8 @@ Watson er Nav Kontrolls system for å avdekke trygdesvindel. `watson-developer` 
 
 Repoer klones til `../` med `./scripts/clone-repos.sh`.
 
+Synkroniser alle repoer med `./sync.sh` (sjekker ut standardbranch og gjør `pull --ff-only` i hvert git-repo i foreldremappen, hopper over repoer med ukommiterte endringer i sporede filer).
+
 ## Plattform og autentisering
 
 - **Plattform**: Nais (Kubernetes/GCP) — namespace `holmes`
@@ -35,7 +37,7 @@ Repoer klones til `../` med `./scripts/clone-repos.sh`.
 - Alltid `set -euo pipefail` øverst
 - Idempotente — trygge å kjøre flere ganger
 - Fargeutskrift: grønn (✓ OK), gul (⟳ hopper over), rød (✗ feil)
-- Legg skript i `scripts/` — ikke i rotkatalogen
+- Legg skript i `scripts/` — ikke i rotkatalogen. Eneste unntak er `sync.sh`, en tynn wrapper som `exec`-er `scripts/sync-repos.sh`
 
 ### Tiltfile
 - Starlark (Python-dialekt)
@@ -70,7 +72,7 @@ Ikke legg til Kotlin-, TypeScript- eller Java-filer her. Applikasjonene bor i si
 ### Før du begynner
 
 1. Spør om Aha!-ID dersom den ikke er nevnt i oppgaven
-2. Hent nyeste `main` i repoene som skal endres (`git pull`)
+2. Hent nyeste standardbranch i repoene som skal endres — kjør `./sync.sh` fra `watson-developer` for å synkronisere alle repoer på én gang
 3. Opprett ny branch: `<Aha!-ID>/<beskrivende-navn>` (f.eks. `SAK-50/legg-til-filter`) — samme navn i alle berørte repoer
 4. Etter pull av backend: restart Tilt
 
