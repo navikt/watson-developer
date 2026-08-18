@@ -13,11 +13,13 @@ Watson er Nav Kontrolls system for å avdekke og forebygge misbruk av Nav-ytelse
 | `nav-persondata-api` | Persondata-API | Spring Boot + Kotlin |
 
 Sibling-repoer klones til `../` (foreldrekatalog) med `./scripts/clone-repos.sh`.
+Alle repoer synkroniseres til nyeste standardbranch med `./sync.sh`.
 
 ## Dette repoet
 
 `watson-developer` inneholder:
 - `Tiltfile` — lokal utviklingsserver (Tilt + kind)
+- `sync.sh` — synkroniser alle repoer i foreldrekatalogen til nyeste standardbranch
 - `kind/cluster.yaml` — lokal Kubernetes-kluster
 - `k8s/` — Kubernetes-manifester for lokal infrastruktur
 - `scripts/` — hjelpeskript (klon repoer, sett opp kluster, pre-flight sjekk)

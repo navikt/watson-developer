@@ -32,17 +32,30 @@ Ny i teamet? Start med [onboarding-sjekklisten](docs/onboarding/sjekkliste.md).
 
 ---
 
+## Synkroniser repoene
+
+```bash
+./sync.sh
+```
+
+Sjekker ut standardbranch (`main`) og henter nyeste endringer i alle git-repoer i foreldrekatalogen.
+Repoer med ukommiterte endringer hoppes over, slik at ingenting går tapt.
+
+---
+
 ## Katalogstruktur
 
 ```
 parent/
 ├── watson-developer/          ← dette repoet
 │   ├── Tiltfile
+│   ├── sync.sh
 │   ├── kind/cluster.yaml
 │   ├── k8s/watson-admin-api/
 │   ├── scripts/
 │   │   ├── clone-repos.sh
 │   │   ├── setup-kind.sh
+│   │   ├── sync-repos.sh
 │   │   └── doctor.sh
 │   └── docs/
 │       ├── arkitektur/
