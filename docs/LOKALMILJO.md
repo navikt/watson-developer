@@ -14,6 +14,7 @@ Infrastruktur kjører i kind (Kubernetes), applikasjoner kjører som lokale pros
 | mock-oauth2-server | kind | 8090 |
 | watson-admin-api | lokal (`bootRun`) | 8080 |
 | watson-sak-frontend | lokal (`pnpm run dev:local`) | 5174 |
+| watson-pdfgen | lokal Docker-container | 8082 |
 
 > OAuth2 access token for watson-sak-frontend hentes automatisk fra mock-oauth2-server ved Tilt-oppstart.
 
@@ -37,6 +38,7 @@ tilt trigger <ressursnavn>
 | Swagger UI | http://localhost:8080/swagger-ui/index.html |
 | Health | http://localhost:8080/actuator/health |
 | Watson Sak | http://localhost:5174 |
+| Watson PDF-gen health | http://localhost:8082/internal/is_ready |
 | mock-oauth2-server | http://localhost:8090 |
 
 ---
