@@ -1,0 +1,19 @@
+{
+  "description": "Lag en HTML-side som beskriver en endring",
+  "domain": "review",
+  "tags": ["diff"],
+  "examples": [
+    {
+      "scenario": "PR diff",
+      "prompt": "Forklar PRet for meg"
+    },
+    {
+      "scenario": "Commit diff",
+      "prompt": "Forklar den siste commiten"
+    },
+    {
+      "scenario": "Fil diff",
+      "prompt": "Forklar endringene i filen"
+    }
+  ]
+}

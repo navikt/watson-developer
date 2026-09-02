@@ -1,6 +1,6 @@
 ---
 name: explain-diff-html
-description: Bruk når brukeren ber om en rik forklaring av en kodeendring, diff, branch eller PR. Produserer HTML-utdata.
+description: Bruk når brukeren ber om en forklaring av en kodeendring, diff, branch eller PR. Produserer HTML-utdata.
 model: GPT-5.3-Codex
 ---
 
@@ -8,11 +8,11 @@ model: GPT-5.3-Codex
 
 Lag en kort, men rik og interaktiv forklaring av den angitte kodeendringen.
 
-Skriv alt på norsk. Bruk en rolig, engasjerende stil med flyt og presisjon, som Martin Kleppmann: tydelig, undervisende og uten unødvendig jargon. Overganger mellom seksjoner skal være naturlige, og teksten skal være lærerik for både nybegynnere og erfarne lesere.
+Skriv alt på norsk. Bruk en rolig, engasjerende stil med flyt og presisjon, som Martin Kleppmann: tydelig, undervisende og uten unødvendig jargon. Overganger mellom seksjoner skal være naturlige, og teksten skal være lærerik for både nybegynnere og erfarne lesere. Leseren er utvikleren som har gjort endringen.
 
 ## Generell målsetning
 
-Forklaringen skal være en hel side, oppbygget som et enkelt, responsivt dokument i HTML. Den skal inneholde en tabell of innhold, seksjoner og interaktive quiz-spørsmål. Dokumentet skal være selvstendig og kunne åpnes direkte i en nettleser uten ekstra bygg, rammeverk eller server.
+Forklaringen skal være en hel side, oppbygget som et enkelt, responsivt dokument i HTML. Den skal inneholde en innholdsfortegnelse, seksjoner og interaktive quiz-spørsmål. Dokumentet skal være selvstendig og kunne åpnes direkte i en nettleser uten ekstra bygg, rammeverk eller server.
 
 ## Viktige krav
 
@@ -93,13 +93,12 @@ Dokumentet skal ha disse seksjonene, i denne rekkefølgen:
 
 ## Filplassering og navngiving
 
-Lagre filen utenfor kode-repositoriet i:
+Lagre filen i:
 
-`../explanations/<repository-name>/YYYY-MM-DD-<beskrivende-slug>.html`
+`./explanations/YYYY-MM-DD-<beskrivende-slug>.html`
 
 Merk:
 
-- `repository-name` skal være navnet på repoet, hentet fra repo-roten eller git-navnet
 - `YYYY-MM-DD` skal være dagens dato
 - `beskrivende-slug` skal være kort, konsist og i kebab-case
 - Katalogen skal opprettes om den ikke finnes
@@ -114,7 +113,7 @@ Merk:
 3. Generer et kort, beskrivende slug i kebab-case som reflekterer endringen.
 4. Sjekk om den målrettede filen allerede finnes.
 5. Hvis den finnes, inkrementér suffikset: `-2`, `-3`, etc.
-6. Opprett katalogen `../explanations/<repository-name>/` om nødvendig.
+6. Opprett katalogen `./explanations/` om nødvendig.
 7. Skriv kun en enkelt HTML-fil til den endelige banen.
 
 ## Viktige retningslinjer for kvalitet
