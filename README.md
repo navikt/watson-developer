@@ -45,7 +45,7 @@ Repoer med ukommiterte endringer i sporede filer hoppes over, slik at ingenting 
 
 ## Lokal ledervisning
 
-I `watson-sak-frontend` kan lederoversikten startes direkte med:
+I `watson-sak-frontend` kan lederoversikten startes direkte med mockdata:
 
 ```bash
 cd ../watson-sak-frontend
@@ -54,15 +54,24 @@ pnpm dev:leder
 
 Dette starter frontend på `http://localhost:5174` med mockdata og logger deg inn som leder.
 
-Med Tilt bruker du samme frontend-ressurs, men setter profilen ved oppstart:
+Med Tilt kjører lederoversikten i stedet mot en ekte lokal `watson-admin-api`
+(`ENVIRONMENT=local-backend`), slik at du får reelle saker og ansatte tilbake fra backenden.
+Sett profilen ved oppstart:
 
 ```bash
-LOCAL_MOCK_PROFIL=leder tilt up watson-sak-frontend
+BRUKERPROFIL=leder tilt up watson-sak-frontend
 ```
 
+`BRUKERPROFIL` styrer hvilket OAuth-token `start-sak-frontend.sh` henter fra
+mock-oauth2-server: `leder` gir et token for lokal-lederbrukeren (NAVident `L900000`), som
+backenden (via `NomClientMock`/`mock-saksbehandlere.json`) anerkjenner som leder for enheten
+`ka864v` (NAV Kontroll Analyse Seksjon 1). Uten `BRUKERPROFIL` (eller med
+`BRUKERPROFIL=saksbehandler`) beholder Tilt dagens standard og logger deg inn som vanlig
+saksbehandler (`L999999`).
+
 Starter du Tilt fra en allerede kjørende sesjon, stopp frontend-ressursen først og start den
-på nytt med miljøvariabelen. Uten `LOCAL_MOCK_PROFIL=leder` beholder Tilt dagens standard og
-starter frontend mot lokal `watson-admin-api`.
+på nytt med miljøvariabelen satt, f.eks. `BRUKERPROFIL=leder tilt trigger watson-sak-frontend`
+(eller restart via Tilt UI etter å ha eksportert variabelen i terminalen Tilt kjører i).
 
 ---
 

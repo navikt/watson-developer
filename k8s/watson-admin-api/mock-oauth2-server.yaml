@@ -26,6 +26,20 @@ data:
               }
             },
             {
+              "requestParam": "login_hint",
+              "match": "leder",
+              "claims": {
+                "aud": ["watson-admin-api"],
+                "sub": "local-leder-user",
+                "NAVident": "L900000",
+                "name": "Lokal Leder",
+                "preferred_username": "local-leder@nav.no",
+                "oid": "00000000-0000-0000-0000-000000000002",
+                "groups": ["222dedb1-a80d-48c9-b8d3-1e8149be9063", "b734a20d-63e3-4b44-bb77-87f7f0b7f48a", "local-leder-id"],
+                "exp": 2147483647
+              }
+            },
+            {
               "requestParam": "grant_type",
               "match": "*",
               "claims": {
@@ -59,7 +73,7 @@ spec:
         app: mock-oauth2-server
       annotations:
         # Bump config-version når JSON_CONFIG endres for å tvinge pod-restart
-        config-version: "6"
+        config-version: "7"
     spec:
       containers:
         - name: mock-oauth2-server
