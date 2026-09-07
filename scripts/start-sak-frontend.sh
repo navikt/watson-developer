@@ -22,6 +22,14 @@ TOKEN=$(curl -sf -X POST http://localhost:8090/azuread/token \
 
 cd "$SCRIPT_DIR/../../watson-sak-frontend"
 
+if [[ "${LOCAL_MOCK_PROFIL:-}" == "leder" ]]; then
+  exec env CLUSTER=local \
+    FARO_URL=http://localhost:9999 \
+    UMAMI_SITE_ID=local \
+    IDENT_SESSION_SECRET=local-dev-secret \
+    pnpm run dev:leder
+fi
+
 exec env CLUSTER=local \
   FARO_URL=http://localhost:9999 \
   UMAMI_SITE_ID=local \
