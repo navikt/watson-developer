@@ -18,8 +18,8 @@ data:
                 "aud": ["nav-persondata-api"],
                 "sub": "local-dev-user",
                 "NAVident": "L999999",
-                "name": "Lokal Utvikler",
-                "preferred_username": "local-dev@nav.no",
+                "name": "Bjarte Byråkratsen",
+                "preferred_username": "bjarte.byrakratsen@nav.no",
                 "oid": "00000000-0000-0000-0000-000000000001",
                 "groups": ["222dedb1-a80d-48c9-b8d3-1e8149be9063", "b734a20d-63e3-4b44-bb77-87f7f0b7f48a"],
                 "exp": 2147483647
@@ -32,8 +32,8 @@ data:
                 "aud": ["watson-admin-api"],
                 "sub": "local-dev-user",
                 "NAVident": "L999999",
-                "name": "Lokal Utvikler",
-                "preferred_username": "lokal.utvikler@nav.no",
+                "name": "Bjarte Byråkratsen",
+                "preferred_username": "bjarte.byrakratsen@nav.no",
                 "oid": "00000000-0000-0000-0000-000000000001",
                 "groups": ["222dedb1-a80d-48c9-b8d3-1e8149be9063", "b734a20d-63e3-4b44-bb77-87f7f0b7f48a"],
                 "exp": 2147483647
@@ -46,8 +46,8 @@ data:
                 "aud": ["watson-admin-api"],
                 "sub": "local-leder-analyse-user",
                 "NAVident": "L900006",
-                "name": "Lene Leder",
-                "preferred_username": "lene.leder@nav.no",
+                "name": "Stian Sjeferud",
+                "preferred_username": "stian.sjeferud@nav.no",
                 "oid": "00000000-0000-0000-0000-000000000008",
                 "groups": ["222dedb1-a80d-48c9-b8d3-1e8149be9063", "b734a20d-63e3-4b44-bb77-87f7f0b7f48a", "local-leder-id"],
                 "exp": 2147483647
@@ -60,8 +60,8 @@ data:
                 "aud": ["watson-admin-api"],
                 "sub": "local-leder-ost-user",
                 "NAVident": "L900000",
-                "name": "Lars Leder",
-                "preferred_username": "lars.leder@nav.no",
+                "name": "Ove Overordnerud",
+                "preferred_username": "ove.overordnerud@nav.no",
                 "oid": "00000000-0000-0000-0000-000000000002",
                 "groups": ["222dedb1-a80d-48c9-b8d3-1e8149be9063", "b734a20d-63e3-4b44-bb77-87f7f0b7f48a", "local-leder-id"],
                 "exp": 2147483647
@@ -74,8 +74,8 @@ data:
                 "aud": ["watson-admin-api"],
                 "sub": "local-leder-vest-user",
                 "NAVident": "L900001",
-                "name": "Lisa Leder",
-                "preferred_username": "lisa.leder@nav.no",
+                "name": "Kari Kommandørsen",
+                "preferred_username": "kari.kommandorsen@nav.no",
                 "oid": "00000000-0000-0000-0000-000000000003",
                 "groups": ["222dedb1-a80d-48c9-b8d3-1e8149be9063", "b734a20d-63e3-4b44-bb77-87f7f0b7f48a", "local-leder-id"],
                 "exp": 2147483647
@@ -88,8 +88,8 @@ data:
                 "aud": ["watson-admin-api"],
                 "sub": "local-saksbehandler-ost-1-user",
                 "NAVident": "L900002",
-                "name": "Simen Saksbehandler",
-                "preferred_username": "simen.saksbehandler@nav.no",
+                "name": "Ulrikke Utrederson",
+                "preferred_username": "ulrikke.utrederson@nav.no",
                 "oid": "00000000-0000-0000-0000-000000000004",
                 "groups": ["222dedb1-a80d-48c9-b8d3-1e8149be9063", "b734a20d-63e3-4b44-bb77-87f7f0b7f48a"],
                 "exp": 2147483647
@@ -102,8 +102,8 @@ data:
                 "aud": ["watson-admin-api"],
                 "sub": "local-saksbehandler-ost-2-user",
                 "NAVident": "L900003",
-                "name": "Sara Saksbehandler",
-                "preferred_username": "sara.saksbehandler@nav.no",
+                "name": "Trine Trygdesen",
+                "preferred_username": "trine.trygdesen@nav.no",
                 "oid": "00000000-0000-0000-0000-000000000005",
                 "groups": ["222dedb1-a80d-48c9-b8d3-1e8149be9063", "b734a20d-63e3-4b44-bb77-87f7f0b7f48a"],
                 "exp": 2147483647
@@ -116,8 +116,8 @@ data:
                 "aud": ["watson-admin-api"],
                 "sub": "local-saksbehandler-vest-1-user",
                 "NAVident": "L900004",
-                "name": "Silje Saksbehandler",
-                "preferred_username": "silje.saksbehandler@nav.no",
+                "name": "Kjell Kontrollsen",
+                "preferred_username": "kjell.kontrollsen@nav.no",
                 "oid": "00000000-0000-0000-0000-000000000006",
                 "groups": ["222dedb1-a80d-48c9-b8d3-1e8149be9063", "b734a20d-63e3-4b44-bb77-87f7f0b7f48a"],
                 "exp": 2147483647
@@ -130,8 +130,8 @@ data:
                 "aud": ["watson-admin-api"],
                 "sub": "local-saksbehandler-vest-2-user",
                 "NAVident": "L900005",
-                "name": "Stian Saksbehandler",
-                "preferred_username": "stian.saksbehandler@nav.no",
+                "name": "Gunnar Granskeren",
+                "preferred_username": "gunnar.granskeren@nav.no",
                 "oid": "00000000-0000-0000-0000-000000000007",
                 "groups": ["222dedb1-a80d-48c9-b8d3-1e8149be9063", "b734a20d-63e3-4b44-bb77-87f7f0b7f48a"],
                 "exp": 2147483647
@@ -144,8 +144,8 @@ data:
                 "aud": ["watson-admin-api"],
                 "sub": "local-dev-user",
                 "NAVident": "L999999",
-                "name": "Lokal Utvikler",
-                "preferred_username": "local-dev@nav.no",
+                "name": "Bjarte Byråkratsen",
+                "preferred_username": "bjarte.byrakratsen@nav.no",
                 "oid": "00000000-0000-0000-0000-000000000001",
                 "groups": ["222dedb1-a80d-48c9-b8d3-1e8149be9063", "b734a20d-63e3-4b44-bb77-87f7f0b7f48a"],
                 "exp": 2147483647
@@ -171,7 +171,7 @@ spec:
         app: mock-oauth2-server
       annotations:
         # Bump config-version når JSON_CONFIG endres for å tvinge pod-restart
-        config-version: "9"
+        config-version: "10"
     spec:
       containers:
         - name: mock-oauth2-server

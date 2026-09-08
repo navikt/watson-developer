@@ -43,6 +43,18 @@ Repoer med ukommiterte endringer i sporede filer hoppes over, slik at ingenting 
 
 ---
 
+## Starte lokalmiljøet interaktivt
+
+```bash
+./scripts/start.sh
+```
+
+Spør hvilken bruker du vil logge inn som i `watson-sak-frontend` (saksbehandler eller leder,
+se tabellen under), setter `BRUKERPROFIL` deretter, og kjører `tilt up` med output direkte i
+terminalen. Praktisk når du ikke trenger å huske hvilken profil-id som hører til hvem.
+
+---
+
 ## Lokal ledervisning
 
 I `watson-sak-frontend` kan lederoversikten startes direkte med mockdata:
@@ -68,14 +80,14 @@ backenden logger deg inn som:
 
 | `BRUKERPROFIL`         | Navn                 | NAVident  | Enhet                        | Leder? |
 | ---------------------- | -------------------- | --------- | ---------------------------- | ------ |
-| `saksbehandler-analyse` (default) | Lokal Utvikler | `L999999` | NAV Kontroll Analyse Seksjon 1 | Nei    |
-| `leder-analyse`        | Lene Leder           | `L900006` | NAV Kontroll Analyse Seksjon 1 | Ja     |
-| `leder-øst`            | Lars Leder           | `L900000` | NAV Kontroll Øst Seksjon 1   | Ja     |
-| `leder-vest`           | Lisa Leder           | `L900001` | NAV Kontroll Vest Seksjon 1  | Ja     |
-| `saksbehandler-øst-1`  | Simen Saksbehandler  | `L900002` | NAV Kontroll Øst Seksjon 1   | Nei    |
-| `saksbehandler-øst-2`  | Sara Saksbehandler   | `L900003` | NAV Kontroll Øst Seksjon 2   | Nei    |
-| `saksbehandler-vest-1` | Silje Saksbehandler  | `L900004` | NAV Kontroll Vest Seksjon 1  | Nei    |
-| `saksbehandler-vest-2` | Stian Saksbehandler  | `L900005` | NAV Kontroll Vest Seksjon 2  | Nei    |
+| `saksbehandler-analyse` (default) | Bjarte Byråkratsen | `L999999` | NAV Kontroll Analyse Seksjon 1 | Nei    |
+| `leder-analyse`        | Stian Sjeferud       | `L900006` | NAV Kontroll Analyse Seksjon 1 | Ja     |
+| `leder-øst`            | Ove Overordnerud     | `L900000` | NAV Kontroll Øst Seksjon 1   | Ja     |
+| `leder-vest`           | Kari Kommandørsen    | `L900001` | NAV Kontroll Vest Seksjon 1  | Ja     |
+| `saksbehandler-øst-1`  | Ulrikke Utrederson   | `L900002` | NAV Kontroll Øst Seksjon 1   | Nei    |
+| `saksbehandler-øst-2`  | Trine Trygdesen      | `L900003` | NAV Kontroll Øst Seksjon 2   | Nei    |
+| `saksbehandler-vest-1` | Kjell Kontrollsen    | `L900004` | NAV Kontroll Vest Seksjon 1  | Nei    |
+| `saksbehandler-vest-2` | Gunnar Granskeren    | `L900005` | NAV Kontroll Vest Seksjon 2  | Nei    |
 
 De tre lederprofilene og deres saksbehandlere under seg (én leder per enhet) gjør det mulig å
 teste overføring av saker mellom saksbehandlere i samme enhet og på tvers av enheter
