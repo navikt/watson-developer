@@ -50,6 +50,11 @@ select label in "${PROFILE_LABELS[@]}"; do
     echo "Ugyldig valg, prøv igjen."
 done
 
+if [[ -z "${BRUKERPROFIL:-}" ]]; then
+    echo "Ingen brukerprofil valgt (avbrutt). Avslutter."
+    exit 1
+fi
+
 echo -e "${GREEN}✓${NC}  Starter Tilt som ${BOLD}${label}${NC} (BRUKERPROFIL=${BRUKERPROFIL})"
 echo
 

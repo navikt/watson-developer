@@ -21,10 +21,14 @@ BRUKERPROFIL="${BRUKERPROFIL:-saksbehandler-analyse}"
 # login_hint=<profil> treffer en egen requestMapping i mock-oauth2-server som gir et
 # token for den navngitte lokalbrukeren (saksbehandler-analyse, leder-analyse, leder-øst,
 # leder-vest, saksbehandler-øst-1 osv.), se k8s/watson-admin-api/mock-oauth2-server.yaml
-TOKEN_PARAMS="grant_type=client_credentials&client_id=watson-admin-api&client_secret=mock-secret&login_hint=$BRUKERPROFIL"
-
+#
+# --data-urlencode brukes for login_hint fordi profilnavnene inneholder ikke-ASCII
+# tegn (f.eks. "ø" i leder-øst), som curl ikke url-enkoder automatisk med -d.
 TOKEN=$(curl -sf -X POST http://localhost:8090/azuread/token \
-  -d "$TOKEN_PARAMS" | \
+  -d "grant_type=client_credentials" \
+  -d "client_id=watson-admin-api" \
+  -d "client_secret=mock-secret" \
+  --data-urlencode "login_hint=$BRUKERPROFIL" | \
   python3 -c "import sys,json; print(json.load(sys.stdin)['access_token'])")
 
 cd "$SCRIPT_DIR/../../watson-sak-frontend"

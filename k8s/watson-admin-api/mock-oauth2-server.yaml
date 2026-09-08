@@ -3,6 +3,10 @@ kind: ConfigMap
 metadata:
   name: mock-oauth2-config
 data:
+  # Merk: "groups"-verdiene "local-basic-id", "local-utvidet-id" og "local-leder-id"
+  # er bevisst ikke ekte Azure AD-objekt-IDer (UUID). De er interne konfignøkler
+  # som matches mot GRUPPER-miljøvariabelen i watson-admin-api sin
+  # application-local.yml (se Grupper.kt), ikke ekte NOM/Azure AD-grupper.
   JSON_CONFIG: |
     {
       "interactiveLogin": true,
