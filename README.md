@@ -46,7 +46,7 @@ Repoer med ukommiterte endringer i sporede filer hoppes over, slik at ingenting 
 ## Starte lokalmiljøet interaktivt
 
 ```bash
-./scripts/start.sh
+./start
 ```
 
 Spør hvilken bruker du vil logge inn som i `watson-sak-frontend` (saksbehandler eller leder,
@@ -107,12 +107,15 @@ parent/
 ├── watson-developer/          ← dette repoet
 │   ├── Tiltfile
 │   ├── sync.sh
+│   ├── start
 │   ├── kind/cluster.yaml
 │   ├── k8s/watson-admin-api/
 │   ├── scripts/
 │   │   ├── clone-repos.sh
 │   │   ├── setup-kind.sh
 │   │   ├── sync-repos.sh
+│   │   ├── start.sh
+│   │   ├── start-sak-frontend.sh
 │   │   └── doctor.sh
 │   └── docs/
 │       ├── arkitektur/

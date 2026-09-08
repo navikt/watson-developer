@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Snarvei til scripts/start.sh — spør hvilken brukerprofil du vil logge inn som
+# og kjører tilt up. Bevisst unntak fra konvensjonen om at skript bor i scripts/:
+# dette er kun en tynn wrapper som gir en kort kommando (./start) for en
+# operasjon man kjører ofte.
+exec "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/scripts/start.sh" "$@"
