@@ -59,18 +59,29 @@ Med Tilt kjører lederoversikten i stedet mot en ekte lokal `watson-admin-api`
 Sett profilen ved oppstart:
 
 ```bash
-BRUKERPROFIL=leder tilt up watson-sak-frontend
+BRUKERPROFIL=leder-øst tilt up watson-sak-frontend
 ```
 
 `BRUKERPROFIL` styrer hvilket OAuth-token `start-sak-frontend.sh` henter fra
-mock-oauth2-server: `leder` gir et token for lokal-lederbrukeren (NAVident `L900000`), som
-backenden (via `NomClientMock`/`mock-saksbehandlere.json`) anerkjenner som leder for enheten
-`ka864v` (NAV Kontroll Analyse Seksjon 1). Uten `BRUKERPROFIL` (eller med
-`BRUKERPROFIL=saksbehandler`) beholder Tilt dagens standard og logger deg inn som vanlig
-saksbehandler (`L999999`).
+mock-oauth2-server, og dermed hvilken mock-bruker (via `NomClientMock`/`mock-saksbehandlere.json`)
+backenden logger deg inn som:
+
+| `BRUKERPROFIL`         | Navn                 | NAVident  | Enhet                        | Leder? |
+| ---------------------- | -------------------- | --------- | ---------------------------- | ------ |
+| `saksbehandler`        | Lokal Utvikler       | `L999999` | NAV Kontroll Analyse Seksjon 1 | Nei    |
+| `leder-øst`            | Lars Leder           | `L900000` | NAV Kontroll Øst Seksjon 1   | Ja     |
+| `leder-vest`           | Lisa Leder           | `L900001` | NAV Kontroll Vest Seksjon 1  | Ja     |
+| `saksbehandler-øst-1`  | Simen Saksbehandler  | `L900002` | NAV Kontroll Øst Seksjon 1   | Nei    |
+| `saksbehandler-øst-2`  | Sara Saksbehandler   | `L900003` | NAV Kontroll Øst Seksjon 2   | Nei    |
+| `saksbehandler-vest-1` | Silje Saksbehandler  | `L900004` | NAV Kontroll Vest Seksjon 1  | Nei    |
+| `saksbehandler-vest-2` | Stian Saksbehandler  | `L900005` | NAV Kontroll Vest Seksjon 2  | Nei    |
+
+De to lederprofilene og deres to saksbehandlere under seg (én leder per enhet) gjør det mulig å
+teste overføring av saker mellom saksbehandlere i samme enhet og på tvers av enheter (Øst/Vest).
+Uten `BRUKERPROFIL` beholder Tilt dagens standard og logger deg inn som `saksbehandler`.
 
 Starter du Tilt fra en allerede kjørende sesjon, stopp frontend-ressursen først og start den
-på nytt med miljøvariabelen satt, f.eks. `BRUKERPROFIL=leder tilt trigger watson-sak-frontend`
+på nytt med miljøvariabelen satt, f.eks. `BRUKERPROFIL=leder-øst tilt trigger watson-sak-frontend`
 (eller restart via Tilt UI etter å ha eksportert variabelen i terminalen Tilt kjører i).
 
 ---

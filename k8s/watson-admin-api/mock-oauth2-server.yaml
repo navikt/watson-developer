@@ -27,15 +27,85 @@ data:
             },
             {
               "requestParam": "login_hint",
-              "match": "leder",
+              "match": "leder-øst",
               "claims": {
                 "aud": ["watson-admin-api"],
-                "sub": "local-leder-user",
+                "sub": "local-leder-ost-user",
                 "NAVident": "L900000",
-                "name": "Lokal Leder",
-                "preferred_username": "local-leder@nav.no",
+                "name": "Lars Leder",
+                "preferred_username": "lars.leder@nav.no",
                 "oid": "00000000-0000-0000-0000-000000000002",
                 "groups": ["222dedb1-a80d-48c9-b8d3-1e8149be9063", "b734a20d-63e3-4b44-bb77-87f7f0b7f48a", "local-leder-id"],
+                "exp": 2147483647
+              }
+            },
+            {
+              "requestParam": "login_hint",
+              "match": "leder-vest",
+              "claims": {
+                "aud": ["watson-admin-api"],
+                "sub": "local-leder-vest-user",
+                "NAVident": "L900001",
+                "name": "Lisa Leder",
+                "preferred_username": "lisa.leder@nav.no",
+                "oid": "00000000-0000-0000-0000-000000000003",
+                "groups": ["222dedb1-a80d-48c9-b8d3-1e8149be9063", "b734a20d-63e3-4b44-bb77-87f7f0b7f48a", "local-leder-id"],
+                "exp": 2147483647
+              }
+            },
+            {
+              "requestParam": "login_hint",
+              "match": "saksbehandler-øst-1",
+              "claims": {
+                "aud": ["watson-admin-api"],
+                "sub": "local-saksbehandler-ost-1-user",
+                "NAVident": "L900002",
+                "name": "Simen Saksbehandler",
+                "preferred_username": "simen.saksbehandler@nav.no",
+                "oid": "00000000-0000-0000-0000-000000000004",
+                "groups": ["222dedb1-a80d-48c9-b8d3-1e8149be9063", "b734a20d-63e3-4b44-bb77-87f7f0b7f48a"],
+                "exp": 2147483647
+              }
+            },
+            {
+              "requestParam": "login_hint",
+              "match": "saksbehandler-øst-2",
+              "claims": {
+                "aud": ["watson-admin-api"],
+                "sub": "local-saksbehandler-ost-2-user",
+                "NAVident": "L900003",
+                "name": "Sara Saksbehandler",
+                "preferred_username": "sara.saksbehandler@nav.no",
+                "oid": "00000000-0000-0000-0000-000000000005",
+                "groups": ["222dedb1-a80d-48c9-b8d3-1e8149be9063", "b734a20d-63e3-4b44-bb77-87f7f0b7f48a"],
+                "exp": 2147483647
+              }
+            },
+            {
+              "requestParam": "login_hint",
+              "match": "saksbehandler-vest-1",
+              "claims": {
+                "aud": ["watson-admin-api"],
+                "sub": "local-saksbehandler-vest-1-user",
+                "NAVident": "L900004",
+                "name": "Silje Saksbehandler",
+                "preferred_username": "silje.saksbehandler@nav.no",
+                "oid": "00000000-0000-0000-0000-000000000006",
+                "groups": ["222dedb1-a80d-48c9-b8d3-1e8149be9063", "b734a20d-63e3-4b44-bb77-87f7f0b7f48a"],
+                "exp": 2147483647
+              }
+            },
+            {
+              "requestParam": "login_hint",
+              "match": "saksbehandler-vest-2",
+              "claims": {
+                "aud": ["watson-admin-api"],
+                "sub": "local-saksbehandler-vest-2-user",
+                "NAVident": "L900005",
+                "name": "Stian Saksbehandler",
+                "preferred_username": "stian.saksbehandler@nav.no",
+                "oid": "00000000-0000-0000-0000-000000000007",
+                "groups": ["222dedb1-a80d-48c9-b8d3-1e8149be9063", "b734a20d-63e3-4b44-bb77-87f7f0b7f48a"],
                 "exp": 2147483647
               }
             },
@@ -73,7 +143,7 @@ spec:
         app: mock-oauth2-server
       annotations:
         # Bump config-version når JSON_CONFIG endres for å tvinge pod-restart
-        config-version: "7"
+        config-version: "8"
     spec:
       containers:
         - name: mock-oauth2-server
