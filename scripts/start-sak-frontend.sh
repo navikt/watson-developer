@@ -16,15 +16,12 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-BRUKERPROFIL="${BRUKERPROFIL:-saksbehandler}"
+BRUKERPROFIL="${BRUKERPROFIL:-saksbehandler-analyse}"
 
-TOKEN_PARAMS="grant_type=client_credentials&client_id=watson-admin-api&client_secret=mock-secret"
-if [[ "$BRUKERPROFIL" != "saksbehandler" ]]; then
-  # login_hint=<profil> treffer en egen requestMapping i mock-oauth2-server som gir
-  # et token for den navngitte lokalbrukeren (leder-øst, leder-vest, saksbehandler-øst-1
-  # osv.), se k8s/watson-admin-api/mock-oauth2-server.yaml
-  TOKEN_PARAMS="$TOKEN_PARAMS&login_hint=$BRUKERPROFIL"
-fi
+# login_hint=<profil> treffer en egen requestMapping i mock-oauth2-server som gir et
+# token for den navngitte lokalbrukeren (saksbehandler-analyse, leder-analyse, leder-øst,
+# leder-vest, saksbehandler-øst-1 osv.), se k8s/watson-admin-api/mock-oauth2-server.yaml
+TOKEN_PARAMS="grant_type=client_credentials&client_id=watson-admin-api&client_secret=mock-secret&login_hint=$BRUKERPROFIL"
 
 TOKEN=$(curl -sf -X POST http://localhost:8090/azuread/token \
   -d "$TOKEN_PARAMS" | \

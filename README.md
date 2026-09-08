@@ -68,7 +68,8 @@ backenden logger deg inn som:
 
 | `BRUKERPROFIL`         | Navn                 | NAVident  | Enhet                        | Leder? |
 | ---------------------- | -------------------- | --------- | ---------------------------- | ------ |
-| `saksbehandler`        | Lokal Utvikler       | `L999999` | NAV Kontroll Analyse Seksjon 1 | Nei    |
+| `saksbehandler-analyse` (default) | Lokal Utvikler | `L999999` | NAV Kontroll Analyse Seksjon 1 | Nei    |
+| `leder-analyse`        | Lene Leder           | `L900006` | NAV Kontroll Analyse Seksjon 1 | Ja     |
 | `leder-øst`            | Lars Leder           | `L900000` | NAV Kontroll Øst Seksjon 1   | Ja     |
 | `leder-vest`           | Lisa Leder           | `L900001` | NAV Kontroll Vest Seksjon 1  | Ja     |
 | `saksbehandler-øst-1`  | Simen Saksbehandler  | `L900002` | NAV Kontroll Øst Seksjon 1   | Nei    |
@@ -76,9 +77,10 @@ backenden logger deg inn som:
 | `saksbehandler-vest-1` | Silje Saksbehandler  | `L900004` | NAV Kontroll Vest Seksjon 1  | Nei    |
 | `saksbehandler-vest-2` | Stian Saksbehandler  | `L900005` | NAV Kontroll Vest Seksjon 2  | Nei    |
 
-De to lederprofilene og deres to saksbehandlere under seg (én leder per enhet) gjør det mulig å
-teste overføring av saker mellom saksbehandlere i samme enhet og på tvers av enheter (Øst/Vest).
-Uten `BRUKERPROFIL` beholder Tilt dagens standard og logger deg inn som `saksbehandler`.
+De tre lederprofilene og deres saksbehandlere under seg (én leder per enhet) gjør det mulig å
+teste overføring av saker mellom saksbehandlere i samme enhet og på tvers av enheter
+(Analyse/Øst/Vest). Uten `BRUKERPROFIL` beholder Tilt dagens standard og logger deg inn som
+`saksbehandler-analyse`.
 
 Starter du Tilt fra en allerede kjørende sesjon, stopp frontend-ressursen først og start den
 på nytt med miljøvariabelen satt, f.eks. `BRUKERPROFIL=leder-øst tilt trigger watson-sak-frontend`

@@ -27,6 +27,34 @@ data:
             },
             {
               "requestParam": "login_hint",
+              "match": "saksbehandler-analyse",
+              "claims": {
+                "aud": ["watson-admin-api"],
+                "sub": "local-dev-user",
+                "NAVident": "L999999",
+                "name": "Lokal Utvikler",
+                "preferred_username": "lokal.utvikler@nav.no",
+                "oid": "00000000-0000-0000-0000-000000000001",
+                "groups": ["222dedb1-a80d-48c9-b8d3-1e8149be9063", "b734a20d-63e3-4b44-bb77-87f7f0b7f48a"],
+                "exp": 2147483647
+              }
+            },
+            {
+              "requestParam": "login_hint",
+              "match": "leder-analyse",
+              "claims": {
+                "aud": ["watson-admin-api"],
+                "sub": "local-leder-analyse-user",
+                "NAVident": "L900006",
+                "name": "Lene Leder",
+                "preferred_username": "lene.leder@nav.no",
+                "oid": "00000000-0000-0000-0000-000000000008",
+                "groups": ["222dedb1-a80d-48c9-b8d3-1e8149be9063", "b734a20d-63e3-4b44-bb77-87f7f0b7f48a", "local-leder-id"],
+                "exp": 2147483647
+              }
+            },
+            {
+              "requestParam": "login_hint",
               "match": "leder-øst",
               "claims": {
                 "aud": ["watson-admin-api"],
@@ -143,7 +171,7 @@ spec:
         app: mock-oauth2-server
       annotations:
         # Bump config-version når JSON_CONFIG endres for å tvinge pod-restart
-        config-version: "8"
+        config-version: "9"
     spec:
       containers:
         - name: mock-oauth2-server
