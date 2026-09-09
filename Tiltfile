@@ -31,7 +31,7 @@ k8s_resource(
 # Manuell restart via Tilt UI eller: tilt trigger watson-admin-api
 local_resource(
     'watson-admin-api',
-    serve_cmd='cd ../watson-admin-api && export JAVA_HOME="$(/usr/libexec/java_home -v 21)" && export PATH="$JAVA_HOME/bin:$PATH" && SPRING_PROFILES_ACTIVE=local ./gradlew bootRun',
+    serve_cmd='cd repos/watson-admin-api && export JAVA_HOME="$(/usr/libexec/java_home -v 21)" && export PATH="$JAVA_HOME/bin:$PATH" && SPRING_PROFILES_ACTIVE=local ./gradlew bootRun',
     resource_deps=['postgres', 'mock-oauth2-server', 'watson-pdfgen'],
     readiness_probe=probe(
         http_get=http_get_action(port=8080, path='/actuator/health'),
@@ -48,14 +48,14 @@ local_resource(
 
 wiremock_jar = str(local('find ~/.gradle/caches -name "wiremock-standalone-3.13.2.jar" | grep -v sources | head -1')).strip()
 if not wiremock_jar:
-    fail("wiremock-standalone-3.13.2.jar ikke funnet i ~/.gradle/caches. Kjør: cd ../nav-persondata-api && ./gradlew test")
+    fail("wiremock-standalone-3.13.2.jar ikke funnet i ~/.gradle/caches. Kjør: cd repos/nav-persondata-api && ./gradlew test")
 
 # WireMock for nav-persondata-api — mocker alle nedstrøms-API-er (PDL, NOM, AAREG, m.fl.)
 # nav-persondata-api forventer WireMock på port 7164 (${WIREMOCK_PORT:7164})
 # Manuell restart via Tilt UI eller: tilt trigger nav-persondata-api-wiremock
 local_resource(
     'nav-persondata-api-wiremock',
-    serve_cmd='export JAVA_HOME="$(/usr/libexec/java_home -v 21)" && export PATH="$JAVA_HOME/bin:$PATH" && java -jar ' + wiremock_jar + ' --port 7164 --root-dir ../nav-persondata-api/src/test/resources',
+    serve_cmd='export JAVA_HOME="$(/usr/libexec/java_home -v 21)" && export PATH="$JAVA_HOME/bin:$PATH" && java -jar ' + wiremock_jar + ' --port 7164 --root-dir repos/nav-persondata-api/src/test/resources',
     resource_deps=['mock-oauth2-server'],
     readiness_probe=probe(
         http_get=http_get_action(port=7164, path='/__admin/health'),
@@ -72,7 +72,7 @@ local_resource(
 # Manuell restart via Tilt UI eller: tilt trigger nav-persondata-api
 local_resource(
     'nav-persondata-api',
-    serve_cmd='cd ../nav-persondata-api && export JAVA_HOME="$(/usr/libexec/java_home -v 21)" && export PATH="$JAVA_HOME/bin:$PATH" && SPRING_PROFILES_ACTIVE=local SERVER_PORT=8081 ./gradlew bootRun',
+    serve_cmd='cd repos/nav-persondata-api && export JAVA_HOME="$(/usr/libexec/java_home -v 21)" && export PATH="$JAVA_HOME/bin:$PATH" && SPRING_PROFILES_ACTIVE=local SERVER_PORT=8081 ./gradlew bootRun',
     resource_deps=['mock-oauth2-server', 'nav-persondata-api-wiremock'],
     readiness_probe=probe(
         http_get=http_get_action(port=8081, path='/actuator/health'),
@@ -123,7 +123,7 @@ local_resource(
 
 local_resource(
     'watson-pdfgen',
-    cmd='cd ../watson-pdfgen && docker build --tag watson-pdfgen:local .',
+    cmd='cd repos/watson-pdfgen && docker build --tag watson-pdfgen:local .',
     serve_cmd='docker rm -f watson-pdfgen >/dev/null 2>&1 || true; docker run --rm --name watson-pdfgen -p 8082:8080 watson-pdfgen:local',
     readiness_probe=probe(
         http_get=http_get_action(port=8082, path='/internal/is_ready'),

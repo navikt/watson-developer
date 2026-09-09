@@ -26,6 +26,7 @@ alle repoer klonet, kind-kluster oppe og Tilt klar til å starte.
 
 Du skal **kjøre** kommandoene i dette dokumentet — ikke bare vise dem til brukeren.
 For hvert steg:
+
 1. Kjør kommandoen
 2. Vent på output
 3. Verifiser at resultatet matcher «Forventet resultat»
@@ -44,6 +45,7 @@ Hvis et steg feiler, vis feilen tydelig og foreslå løsning før du fortsetter.
 ```
 
 **Hva dette gjør:**
+
 - Installerer `cplt` (kernel-sandbox for AI-agenter)
 - Installerer `nav-pilot` (Nav-kunnskap for Copilot)
 - Detekterer node version manager og genererer cplt-config
@@ -52,6 +54,7 @@ Hvis et steg feiler, vis feilen tydelig og foreslå løsning før du fortsetter.
 **Forventet resultat:** `✅ Ferdig!` uten feil.
 
 **Hvis det feiler:**
+
 - `Homebrew er ikke installert` → Kjør `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
 - `Dette scriptet støtter kun macOS` → Denne skillen er kun for macOS
 
@@ -62,6 +65,7 @@ Hvis et steg feiler, vis feilen tydelig og foreslå løsning før du fortsetter.
 ```
 
 **Hva dette gjør:**
+
 - Verifiserer at alle nødvendige verktøy er installert
 - Sjekker minsteversjonskrav (Java 21+, Node 20+)
 
@@ -69,15 +73,15 @@ Hvis et steg feiler, vis feilen tydelig og foreslå løsning før du fortsetter.
 
 **Hvis det feiler — installer manglende verktøy:**
 
-| Verktøy | Installasjonskommando |
-|---------|----------------------|
-| kind | `brew install kind` |
-| tilt | `brew install tilt` |
-| kubectl | `brew install kubectl` |
-| gcloud | Se https://cloud.google.com/sdk/docs/install |
-| java 21 | `brew install --cask temurin@21` |
-| node | `brew install node` |
-| pnpm | `corepack enable` |
+| Verktøy | Installasjonskommando                        |
+| ------- | -------------------------------------------- |
+| kind    | `brew install kind`                          |
+| tilt    | `brew install tilt`                          |
+| kubectl | `brew install kubectl`                       |
+| gcloud  | Se https://cloud.google.com/sdk/docs/install |
+| java 21 | `brew install --cask temurin@21`             |
+| node    | `brew install node`                          |
+| pnpm    | `corepack enable`                            |
 
 Etter installasjon av manglende verktøy, kjør `./scripts/doctor.sh` på nytt for å bekrefte.
 
@@ -88,7 +92,8 @@ Etter installasjon av manglende verktøy, kjør `./scripts/doctor.sh` på nytt f
 ```
 
 **Hva dette gjør:**
-- Kloner alle Watson-porteføljens repoer til forelderkatalogen
+
+- Kloner alle Watson-porteføljens repoer til `repos/`
 - Hvis de allerede finnes: kjører `git pull --ff-only`
 
 **Forventet resultat:** Alle repoer klonet/oppdatert uten feil.
@@ -97,6 +102,7 @@ Etter installasjon av manglende verktøy, kjør `./scripts/doctor.sh` på nytt f
 `Kloning feilet` — hvis du ser slike meldinger, løs problemet og kjør på nytt.
 
 **Hvis det feiler:**
+
 - `Permission denied (publickey)` → SSH-nøkkel er ikke konfigurert for GitHub. Kjør `gh auth login` eller legg til SSH-nøkkel.
 - `Kloning feilet` → Sjekk at du har tilgang til navikt-organisasjonen.
 
@@ -109,6 +115,7 @@ docker info > /dev/null 2>&1 && echo "Docker kjører" || echo "Docker kjører IK
 **Forventet resultat:** `Docker kjører`
 
 **Hvis det feiler:**
+
 - Start Docker Desktop manuelt (åpne Finder → Applications → Docker)
 - Vent 10–15 sekunder og prøv igjen
 
@@ -119,12 +126,14 @@ docker info > /dev/null 2>&1 && echo "Docker kjører" || echo "Docker kjører IK
 ```
 
 **Hva dette gjør:**
+
 - Oppretter et Kubernetes-kluster kalt `watson` via kind
 - Setter kubectl-kontekst til `kind-watson`
 
 **Forventet resultat:** `✓ Klar — kjør 'tilt up' for å starte lokalmiljøet`
 
 **Hvis det feiler:**
+
 - Docker må kjøre (se steg 4).
 - Hvis kind finnes men Docker er nede: `kind delete cluster --name watson` og prøv igjen.
 
@@ -142,6 +151,7 @@ echo "Tilt startet (PID: $TILT_PID)"
 ```
 
 **Hva dette gjør:**
+
 - Starter lokalt utviklingsmiljø med PostgreSQL og mock-oauth2-server i kind
 - Starter watson-admin-api og watson-sak-frontend som lokale prosesser
 - `--stream` kjører uten interaktivt UI (logger til stdout)
@@ -171,6 +181,7 @@ curl -sf http://localhost:8080/actuator/health | head -1
 **Forventet resultat:** Begge curl-kommandoene returnerer JSON.
 
 **Hvis det feiler:**
+
 - Sjekk Tilt-logger: `tilt logs` (i en annen terminal)
 - Sjekk Tilt UI: http://localhost:10350
 - Restart: `tilt down && tilt up --stream &`
@@ -221,11 +232,11 @@ Tips:
 
 Hvis noe feiler underveis:
 
-| Problem | Løsning |
-|---------|---------|
-| Docker kjører ikke | Start Docker Desktop |
-| Port opptatt (5432, 8080, 8090) | Stopp prosessen som bruker porten: `lsof -i :<port>` |
-| kind-kluster i dårlig tilstand | `kind delete cluster --name watson && ./scripts/setup-kind.sh` |
-| Tilt viser røde ressurser | Sjekk logger i Tilt UI, restart med `tilt down && tilt up` |
-| npm/pnpm feil i frontend | `cd ../watson-sak-frontend && pnpm install` |
-| Gradle-feil i backend | `cd ../watson-admin-api && ./gradlew clean build` |
+| Problem                         | Løsning                                                        |
+| ------------------------------- | -------------------------------------------------------------- |
+| Docker kjører ikke              | Start Docker Desktop                                           |
+| Port opptatt (5432, 8080, 8090) | Stopp prosessen som bruker porten: `lsof -i :<port>`           |
+| kind-kluster i dårlig tilstand  | `kind delete cluster --name watson && ./scripts/setup-kind.sh` |
+| Tilt viser røde ressurser       | Sjekk logger i Tilt UI, restart med `tilt down && tilt up`     |
+| npm/pnpm feil i frontend        | `cd repos/watson-sak-frontend && pnpm install`                 |
+| Gradle-feil i backend           | `cd repos/watson-admin-api && ./gradlew clean build`           |

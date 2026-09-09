@@ -16,7 +16,7 @@ Tre ting denne skillen hjelper deg med:
 2. [Velge navn på et nytt event](#navngi-et-nytt-event)
 3. [Avgjøre om noe er et eget event eller en parameter](#nytt-event-eller-ny-parameter)
 
-Referanseimplementasjon: [`app/analytics/analytics.tsx`](../watson-sak-frontend/app/analytics/analytics.tsx)
+Referanseimplementasjon: [`app/analytics/analytics.tsx`](../../../repos/watson-sak-frontend/app/analytics/analytics.tsx)
 
 ---
 
@@ -41,14 +41,12 @@ Ikke kall `sporHendelse` direkte fra komponenter — samle dem i en `analytics`-
 import { sporHendelse } from "~/analytics/analytics";
 
 export const analytics = {
-  sakOpprettet: (saktype: string) =>
-    sporHendelse("sak opprettet", { saktype }),
+  sakOpprettet: (saktype: string) => sporHendelse("sak opprettet", { saktype }),
 
   filterBrukt: (kategori: string, verdi: string) =>
     sporHendelse("filter brukt", { kategori, verdi }),
 
-  sokUtfort: (kilde: string) =>
-    sporHendelse("søk utført", { kilde }),
+  sokUtfort: (kilde: string) => sporHendelse("søk utført", { kilde }),
 };
 ```
 
@@ -90,14 +88,14 @@ export default function Root() {
 
 Eventnavn beskriver hva brukeren **gjorde**, på norsk bokmål, med mellomrom som separator. Maks 50 tegn.
 
-| ✅ Riktig | ❌ Feil | Feil fordi |
-|-----------|---------|------------|
-| `sak opprettet` | `createCase` | Engelsk |
-| `filter brukt` | `filterBrukt` | camelCase |
-| `søk utført` | `søk` | For vagt, ikke fortidsform |
-| `dokument lastet ned` | `download` | Engelsk |
-| `notat lagret` | `noteSaved` | Engelsk, camelCase |
-| `varsler åpnet` | `openNotifications` | Engelsk |
+| ✅ Riktig             | ❌ Feil             | Feil fordi                 |
+| --------------------- | ------------------- | -------------------------- |
+| `sak opprettet`       | `createCase`        | Engelsk                    |
+| `filter brukt`        | `filterBrukt`       | camelCase                  |
+| `søk utført`          | `søk`               | For vagt, ikke fortidsform |
+| `dokument lastet ned` | `download`          | Engelsk                    |
+| `notat lagret`        | `noteSaved`         | Engelsk, camelCase         |
+| `varsler åpnet`       | `openNotifications` | Engelsk                    |
 
 ### Vanlige verb å bruke
 
@@ -135,21 +133,21 @@ modal åpnet    ≠  modal lukket     → to events (ulik retning)
 
 Det er **samme handling**, men i ulik kontekst, med ulik metadata, eller ulike varianter:
 
-| Situasjon | Gjør dette |
-|-----------|-----------|
-| Samme knapp finnes flere steder i appen | `sporHendelse("søk utført", { kilde: "saksliste" })` |
-| Handlingen gjelder ulike typer objekter | `sporHendelse("dokument lastet ned", { type: "PDF" })` |
-| Du vil skille på hvilken variant/flyt brukeren var i | `sporHendelse("sak opprettet", { saktype: "EØS-sak" })` |
-| Du vil måle et steg i en sekvens | `sporHendelse("skjema steg fullført", { steg: "Personopplysninger" })` |
+| Situasjon                                            | Gjør dette                                                             |
+| ---------------------------------------------------- | ---------------------------------------------------------------------- |
+| Samme knapp finnes flere steder i appen              | `sporHendelse("søk utført", { kilde: "saksliste" })`                   |
+| Handlingen gjelder ulike typer objekter              | `sporHendelse("dokument lastet ned", { type: "PDF" })`                 |
+| Du vil skille på hvilken variant/flyt brukeren var i | `sporHendelse("sak opprettet", { saktype: "EØS-sak" })`                |
+| Du vil måle et steg i en sekvens                     | `sporHendelse("skjema steg fullført", { steg: "Personopplysninger" })` |
 
 ### Eksempel: sak-handlinger i Watson
 
 ```typescript
 // ✅ Riktig: fire ulike hendelser
-sporHendelse("sak opprettet",    { saktype: "EØS-sak" });
-sporHendelse("sak lukket",       { aarsak: "Henlagt" });
+sporHendelse("sak opprettet", { saktype: "EØS-sak" });
+sporHendelse("sak lukket", { aarsak: "Henlagt" });
 sporHendelse("sak satt på vent", { antallDager: 7 });
-sporHendelse("sak redigert",     { felt: "tittel" });
+sporHendelse("sak redigert", { felt: "tittel" });
 
 // ❌ Feil: én hendelse med type-parameter
 sporHendelse("sak handling", { handling: "opprettet", saktype: "EØS-sak" });
@@ -173,20 +171,20 @@ sporHendelse("avansert søk utført");
 
 Bruk disse før du lager egne. Kilde: [navikt/analytics-taxonomy](https://github.com/navikt/analytics-taxonomy)
 
-| Event | Påkrevde attributter | Automatisk? |
-|-------|---------------------|-------------|
-| `besøk` | — | ✅ Nav-dekoratøren |
-| `navigere` | `lenketekst`, `destinasjon` | ✅ Nav-dekoratøren (kan suppleres) |
-| `søk` | `destinasjon`, `søkeord` | Nei |
-| `filtervalg` | `kategori`, `filternavn` | Nei |
-| `last ned` | `type`, `tema`, `tittel` | Nei |
-| `accordion åpnet/lukket` | `tekst` | Nei |
-| `modal åpnet/lukket` | `tekst` | Nei |
-| `alert vist` | `variant`, `tekst` | Nei |
-| `skjema åpnet` | `skjemanavn`, `skjemaId` | Nei |
-| `skjema startet` | `skjemanavn`, `skjemaId` | Nei |
-| `skjema fullført` | `skjemanavn`, `skjemaId` | Nei |
-| `skjema validering feilet` | `skjemanavn`, `skjemaId` | Nei |
+| Event                      | Påkrevde attributter        | Automatisk?                        |
+| -------------------------- | --------------------------- | ---------------------------------- |
+| `besøk`                    | —                           | ✅ Nav-dekoratøren                 |
+| `navigere`                 | `lenketekst`, `destinasjon` | ✅ Nav-dekoratøren (kan suppleres) |
+| `søk`                      | `destinasjon`, `søkeord`    | Nei                                |
+| `filtervalg`               | `kategori`, `filternavn`    | Nei                                |
+| `last ned`                 | `type`, `tema`, `tittel`    | Nei                                |
+| `accordion åpnet/lukket`   | `tekst`                     | Nei                                |
+| `modal åpnet/lukket`       | `tekst`                     | Nei                                |
+| `alert vist`               | `variant`, `tekst`          | Nei                                |
+| `skjema åpnet`             | `skjemanavn`, `skjemaId`    | Nei                                |
+| `skjema startet`           | `skjemanavn`, `skjemaId`    | Nei                                |
+| `skjema fullført`          | `skjemanavn`, `skjemaId`    | Nei                                |
+| `skjema validering feilet` | `skjemanavn`, `skjemaId`    | Nei                                |
 
 > `skjema åpnet` = siden lastet. `skjema startet` = brukeren trykket «Start». Ikke forveksle disse.
 
@@ -194,12 +192,12 @@ Bruk disse før du lager egne. Kilde: [navikt/analytics-taxonomy](https://github
 
 ## Personvern
 
-| ❌ Send aldri | ✅ Send heller |
-|--------------|--------------|
-| Fødselsnummer, d-nummer, aktørId | Sakstype, status, kategori |
-| Fritekst brukeren har skrevet | Forhåndsdefinerte svaralternativer |
-| Navn, adresse, kontaktinfo | Generiske labels: «utfylt», «tomt» |
-| Token-verdier eller interne ID-er | Anonyme teller: antall, indeks |
+| ❌ Send aldri                     | ✅ Send heller                     |
+| --------------------------------- | ---------------------------------- |
+| Fødselsnummer, d-nummer, aktørId  | Sakstype, status, kategori         |
+| Fritekst brukeren har skrevet     | Forhåndsdefinerte svaralternativer |
+| Navn, adresse, kontaktinfo        | Generiske labels: «utfylt», «tomt» |
+| Token-verdier eller interne ID-er | Anonyme teller: antall, indeks     |
 
 ---
 
