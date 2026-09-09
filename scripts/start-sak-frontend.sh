@@ -31,7 +31,7 @@ TOKEN=$(curl -sf -X POST http://localhost:8090/azuread/token \
   --data-urlencode "login_hint=$BRUKERPROFIL" | \
   python3 -c "import sys,json; print(json.load(sys.stdin)['access_token'])")
 
-cd "$SCRIPT_DIR/../../watson-sak-frontend"
+cd "$SCRIPT_DIR/../repos/watson-sak-frontend"
 
 exec env CLUSTER=local \
   FARO_URL=http://localhost:9999 \

@@ -170,9 +170,9 @@ echo -e "${BOLD}cplt-konfigurasjon:${NC}"
 CONFIG_DIR="$HOME/.config/cplt"
 CONFIG_FILE="$CONFIG_DIR/config.toml"
 
-# Resolve watson parent directory
+# Resolve watson-developer sin rotkatalog (repos/ med alle sibling-repoer ligger under denne)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-WATSON_PARENT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+WATSON_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 # Bygg read-array
 # - Xcode CLI tools (git, clang etc.)
@@ -201,8 +201,8 @@ else
 # Xcode CLI tools (git, clang etc.) + node version manager + gradle.properties
 # (GitHub Packages-credentials for watson-admin-api) + detektert JDK
 read = $READ_PATHS
-# Watson-porteføljens forelderkatalog (alle repoer) + rtk (token-optimalisert CLI-proxy)
-write = ["$WATSON_PARENT", "$HOME/Library/Application Support/rtk"]
+# watson-developer (inkl. repos/ med alle klonede sibling-repoer) + rtk (token-optimalisert CLI-proxy)
+write = ["$WATSON_ROOT", "$HOME/Library/Application Support/rtk"]
 # Vite dev server (watson-sak-frontend)
 ports = [5174]
 

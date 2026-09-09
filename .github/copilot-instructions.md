@@ -13,14 +13,14 @@ Watson er Nav Kontrolls system for å avdekke trygdesvindel. `watson-developer` 
 
 ## Portefølje
 
-| Repo | Beskrivelse |
-|------|-------------|
-| `watson-admin-api` | Spring Boot 4 + Kotlin — kontrollsaker, tilgangsstyring, Kafka, PostgreSQL |
-| `watson-sak-frontend` | React Router v7 + Aksel — saksbehandler-UI |
-| `watson-sok` | React Router v7 + Aksel — brukeroppslag (fnr/d-nummer) |
-| `nav-persondata-api` | Spring Boot + Kotlin — persondata, ytelser, arbeidsforhold |
+| Repo                  | Beskrivelse                                                                |
+| --------------------- | -------------------------------------------------------------------------- |
+| `watson-admin-api`    | Spring Boot 4 + Kotlin — kontrollsaker, tilgangsstyring, Kafka, PostgreSQL |
+| `watson-sak-frontend` | React Router v7 + Aksel — saksbehandler-UI                                 |
+| `watson-sok`          | React Router v7 + Aksel — brukeroppslag (fnr/d-nummer)                     |
+| `nav-persondata-api`  | Spring Boot + Kotlin — persondata, ytelser, arbeidsforhold                 |
 
-Repoer klones til `../` med `./scripts/clone-repos.sh`.
+Repoer klones til `repos/` med `./scripts/clone-repos.sh`.
 
 Synkroniser alle repoer med `./sync.sh` (sjekker ut standardbranch og gjør `pull --ff-only` i hvert git-repo i foreldremappen, hopper over repoer med ukommiterte endringer i sporede filer).
 
@@ -34,17 +34,20 @@ Synkroniser alle repoer med `./sync.sh` (sjekker ut standardbranch og gjør `pul
 ## Regler for dette repoet
 
 ### Shell-skript
+
 - Alltid `set -euo pipefail` øverst
 - Idempotente — trygge å kjøre flere ganger
 - Fargeutskrift: grønn (✓ OK), gul (⟳ hopper over), rød (✗ feil)
 - Legg skript i `scripts/` — ikke i rotkatalogen. Eneste unntak er `sync.sh`, en tynn wrapper som `exec`-er `scripts/sync-repos.sh`
 
 ### Tiltfile
+
 - Starlark (Python-dialekt)
 - Infrastruktur-ressurser merkes `labels=['infra']`, backend merkes `labels=['backend']`
 - Bruk `local_resource()` for prosesser som kjører utenfor kind
 
 ### Dokumentasjon
+
 - Norsk bokmål i all dokumentasjon
 - Arkitekturdokumenter i `docs/arkitektur/`
 - Onboarding-innhold i `docs/onboarding/`
@@ -64,10 +67,10 @@ Ikke legg til Kotlin-, TypeScript- eller Java-filer her. Applikasjonene bor i si
 
 ### Repoer og terminologi
 
-- **«frontend»** betyr `../watson-sak-frontend`
-- **«backend»** betyr `../watson-admin-api`
-- For detaljer om frontend, se `../watson-sak-frontend/.github/copilot-instructions.md`
-- For detaljer om backend, se `../watson-admin-api/.github/copilot-instructions.md`
+- **«frontend»** betyr `repos/watson-sak-frontend`
+- **«backend»** betyr `repos/watson-admin-api`
+- For detaljer om frontend, se `repos/watson-sak-frontend/.github/copilot-instructions.md`
+- For detaljer om backend, se `repos/watson-admin-api/.github/copilot-instructions.md`
 
 ### Før du begynner
 

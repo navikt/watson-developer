@@ -6,8 +6,8 @@ shopt -s nullglob
 
 WIREMOCK_URL="${WIREMOCK_URL:-http://localhost:7164}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-MAPPINGS_DIR="$SCRIPT_DIR/../../nav-persondata-api/src/test/resources/mappings"
-FILES_DIR="$SCRIPT_DIR/../../nav-persondata-api/src/test/resources/__files"
+MAPPINGS_DIR="$SCRIPT_DIR/../repos/nav-persondata-api/src/test/resources/mappings"
+FILES_DIR="$SCRIPT_DIR/../repos/nav-persondata-api/src/test/resources/__files"
 
 echo "→ Venter på WireMock på $WIREMOCK_URL ..."
 ready=0

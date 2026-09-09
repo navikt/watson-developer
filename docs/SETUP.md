@@ -9,19 +9,19 @@ Detaljert guide for å sette opp Watson-porteføljens lokale utviklingsmiljø.
 
 ## Verktøykrav
 
-| Verktøy | Installasjon | Brukes til |
-|---------|-------------|-----------|
-| [cplt](https://github.com/navikt/cplt) | `brew install navikt/tap/cplt` | Kernel-sandbox for AI-agenter |
-| [nav-pilot](https://ki-utvikling.nav.no/nav-pilot/docs) | `brew install navikt/tap/nav-pilot` | Nav-kunnskap for GitHub Copilot |
-| [rtk](https://github.com/rtk-ai/rtk) | `brew install rtk` | Komprimerer terminaloutput — reduserer tokenforbruk i Copilot |
-| [kind](https://kind.sigs.k8s.io/docs/user/quick-start/#installation) | `brew install kind` | Lokal Kubernetes-kluster |
-| [tilt](https://docs.tilt.dev/install.html) | `brew install tilt` | Lokal utviklingsserver |
-| [kubectl](https://kubernetes.io/docs/tasks/tools/) | `brew install kubectl` | Kubernetes-klient |
-| [gcloud](https://cloud.google.com/sdk/docs/install) | se lenke | GCP-autentisering og secrets |
-| [k9s](https://k9scli.io/topics/install/) | `brew install k9s` | Kubernetes dashboard (valgfritt) |
-| Java 21 | `brew install --cask temurin@21` | watson-admin-api, nav-persondata-api |
-| Node.js LTS | `brew install node` | watson-sak-frontend, watson-sok |
-| [pnpm](https://pnpm.io/installation) | `corepack enable` | Pakkebehandler for frontend |
+| Verktøy                                                              | Installasjon                        | Brukes til                                                    |
+| -------------------------------------------------------------------- | ----------------------------------- | ------------------------------------------------------------- |
+| [cplt](https://github.com/navikt/cplt)                               | `brew install navikt/tap/cplt`      | Kernel-sandbox for AI-agenter                                 |
+| [nav-pilot](https://ki-utvikling.nav.no/nav-pilot/docs)              | `brew install navikt/tap/nav-pilot` | Nav-kunnskap for GitHub Copilot                               |
+| [rtk](https://github.com/rtk-ai/rtk)                                 | `brew install rtk`                  | Komprimerer terminaloutput — reduserer tokenforbruk i Copilot |
+| [kind](https://kind.sigs.k8s.io/docs/user/quick-start/#installation) | `brew install kind`                 | Lokal Kubernetes-kluster                                      |
+| [tilt](https://docs.tilt.dev/install.html)                           | `brew install tilt`                 | Lokal utviklingsserver                                        |
+| [kubectl](https://kubernetes.io/docs/tasks/tools/)                   | `brew install kubectl`              | Kubernetes-klient                                             |
+| [gcloud](https://cloud.google.com/sdk/docs/install)                  | se lenke                            | GCP-autentisering og secrets                                  |
+| [k9s](https://k9scli.io/topics/install/)                             | `brew install k9s`                  | Kubernetes dashboard (valgfritt)                              |
+| Java 21                                                              | `brew install --cask temurin@21`    | watson-admin-api, nav-persondata-api                          |
+| Node.js LTS                                                          | `brew install node`                 | watson-sak-frontend, watson-sok                               |
+| [pnpm](https://pnpm.io/installation)                                 | `corepack enable`                   | Pakkebehandler for frontend                                   |
 
 Kjør `./scripts/doctor.sh` for å se hva som mangler.
 
@@ -61,7 +61,7 @@ Skriptet verifiserer at alle nødvendige verktøy er installert med riktig versj
 ./scripts/clone-repos.sh
 ```
 
-Kloner alle repoer i porteføljen til foreldrekatalogen (`../`).
+Kloner alle repoer i porteføljen til `repos/`.
 Idempotent — kjør igjen for å oppdatere eksisterende repoer med `git pull`.
 
 ### 4. Opprett kind-kluster
@@ -143,7 +143,7 @@ Tiltak, i prioritert rekkefølge:
 `watson-admin-api` har en `docker-compose.yml` som alternativ til Tilt:
 
 ```bash
-cd ../watson-admin-api
+cd repos/watson-admin-api
 docker-compose up
 ```
 

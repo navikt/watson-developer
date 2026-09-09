@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Resolve the parent directory (where sibling repos will be cloned)
+# Resolve repos-katalogen (der sibling-repoer klones), oppretter den om nødvendig
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PARENT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+REPOS_DIR="$SCRIPT_DIR/../repos"
+mkdir -p "$REPOS_DIR"
+REPOS_DIR="$(cd "$REPOS_DIR" && pwd)"
 
 # Watson repos to clone
 REPOS=(
@@ -20,12 +22,12 @@ YELLOW='\033[0;33m'
 RED='\033[0;31m'
 NC='\033[0m'
 
-echo "📁 Kloner watson-repoer til: $PARENT_DIR"
+echo "📁 Kloner watson-repoer til: $REPOS_DIR"
 echo ""
 
 for repo_url in "${REPOS[@]}"; do
   repo_name=$(basename "$repo_url" .git)
-  repo_path="$PARENT_DIR/$repo_name"
+  repo_path="$REPOS_DIR/$repo_name"
 
   if [ -d "$repo_path" ]; then
     echo -e "${YELLOW}⟳${NC} $repo_name eksisterer allerede — oppdaterer..."

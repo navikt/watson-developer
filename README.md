@@ -11,12 +11,12 @@ Inngangsport og utviklermiljø for **Team Holmes** sin Watson-portefølje.
 
 ## Portefølje
 
-| Repo | Teknologi | Beskrivelse | Dokumentasjon |
-|------|-----------|-------------|---------------|
-| [watson-admin-api](https://github.com/navikt/watson-admin-api) | Spring Boot 4 + Kotlin | Kjernebackend — kontrollsaker, tilgangskontroll, Kafka | |
-| [watson-sak-frontend](https://github.com/navikt/watson-sak-frontend) | React Router v7 + Aksel | Saksbehandler-UI for kontrollsaker | [Confluence](https://confluence.adeo.no/spaces/THLMS/pages/720913429/Watson+Sak) |
-| [watson-sok](https://github.com/navikt/watson-sok) | React Router v7 + Aksel | Oppslag på brukere (fnr / d-nummer) | [Confluence](https://confluence.adeo.no/spaces/THLMS/pages/720908266/Watson+S%C3%B8k) |
-| [nav-persondata-api](https://github.com/navikt/nav-persondata-api) | Spring Boot + Kotlin | Persondata, ytelser og arbeidsforhold | [Confluence](https://confluence.adeo.no/spaces/THLMS/pages/720908266/Watson+S%C3%B8k) |
+| Repo                                                                 | Teknologi               | Beskrivelse                                            | Dokumentasjon                                                                         |
+| -------------------------------------------------------------------- | ----------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------- |
+| [watson-admin-api](https://github.com/navikt/watson-admin-api)       | Spring Boot 4 + Kotlin  | Kjernebackend — kontrollsaker, tilgangskontroll, Kafka |                                                                                       |
+| [watson-sak-frontend](https://github.com/navikt/watson-sak-frontend) | React Router v7 + Aksel | Saksbehandler-UI for kontrollsaker                     | [Confluence](https://confluence.adeo.no/spaces/THLMS/pages/720913429/Watson+Sak)      |
+| [watson-sok](https://github.com/navikt/watson-sok)                   | React Router v7 + Aksel | Oppslag på brukere (fnr / d-nummer)                    | [Confluence](https://confluence.adeo.no/spaces/THLMS/pages/720908266/Watson+S%C3%B8k) |
+| [nav-persondata-api](https://github.com/navikt/nav-persondata-api)   | Spring Boot + Kotlin    | Persondata, ytelser og arbeidsforhold                  | [Confluence](https://confluence.adeo.no/spaces/THLMS/pages/720908266/Watson+S%C3%B8k) |
 
 ---
 
@@ -38,7 +38,7 @@ Ny i teamet? Start med [onboarding-sjekklisten](docs/onboarding/sjekkliste.md).
 ./sync.sh
 ```
 
-Sjekker ut standardbranchen (det `origin/HEAD` peker på, med fallback til `main`/`master`) og henter nyeste endringer i alle git-repoer i foreldrekatalogen.
+Sjekker ut standardbranchen (det `origin/HEAD` peker på, med fallback til `main`/`master`) og henter nyeste endringer i alle git-repoer i `repos/`.
 Repoer med ukommiterte endringer i sporede filer hoppes over, slik at ingenting går tapt.
 
 ---
@@ -60,7 +60,7 @@ terminalen. Praktisk når du ikke trenger å huske hvilken profil-id som hører 
 I `watson-sak-frontend` kan lederoversikten startes direkte med mockdata:
 
 ```bash
-cd ../watson-sak-frontend
+cd repos/watson-sak-frontend
 pnpm dev:leder
 ```
 
@@ -78,16 +78,16 @@ BRUKERPROFIL=leder-øst tilt up watson-sak-frontend
 mock-oauth2-server, og dermed hvilken mock-bruker (via `NomClientMock`/`mock-saksbehandlere.json`)
 backenden logger deg inn som:
 
-| `BRUKERPROFIL`         | Navn                 | NAVident  | Enhet                        | Leder? |
-| ---------------------- | -------------------- | --------- | ---------------------------- | ------ |
+| `BRUKERPROFIL`                    | Navn               | NAVident  | Enhet                          | Leder? |
+| --------------------------------- | ------------------ | --------- | ------------------------------ | ------ |
 | `saksbehandler-analyse` (default) | Bjarte Byråkratsen | `L999999` | NAV Kontroll Analyse Seksjon 1 | Nei    |
-| `leder-analyse`        | Stian Sjeferud       | `L900006` | NAV Kontroll Analyse Seksjon 1 | Ja     |
-| `leder-øst`            | Ove Overordnerud     | `L900000` | NAV Kontroll Øst Seksjon 1   | Ja     |
-| `leder-vest`           | Kari Kommandørsen    | `L900001` | NAV Kontroll Vest Seksjon 1  | Ja     |
-| `saksbehandler-øst-1`  | Ulrikke Utrederson   | `L900002` | NAV Kontroll Øst Seksjon 1   | Nei    |
-| `saksbehandler-øst-2`  | Trine Trygdesen      | `L900003` | NAV Kontroll Øst Seksjon 2   | Nei    |
-| `saksbehandler-vest-1` | Kjell Kontrollsen    | `L900004` | NAV Kontroll Vest Seksjon 1  | Nei    |
-| `saksbehandler-vest-2` | Gunnar Granskeren    | `L900005` | NAV Kontroll Vest Seksjon 2  | Nei    |
+| `leder-analyse`                   | Stian Sjeferud     | `L900006` | NAV Kontroll Analyse Seksjon 1 | Ja     |
+| `leder-øst`                       | Ove Overordnerud   | `L900000` | NAV Kontroll Øst Seksjon 1     | Ja     |
+| `leder-vest`                      | Kari Kommandørsen  | `L900001` | NAV Kontroll Vest Seksjon 1    | Ja     |
+| `saksbehandler-øst-1`             | Ulrikke Utrederson | `L900002` | NAV Kontroll Øst Seksjon 1     | Nei    |
+| `saksbehandler-øst-2`             | Trine Trygdesen    | `L900003` | NAV Kontroll Øst Seksjon 2     | Nei    |
+| `saksbehandler-vest-1`            | Kjell Kontrollsen  | `L900004` | NAV Kontroll Vest Seksjon 1    | Nei    |
+| `saksbehandler-vest-2`            | Gunnar Granskeren  | `L900005` | NAV Kontroll Vest Seksjon 2    | Nei    |
 
 De tre lederprofilene og deres saksbehandlere under seg (én leder per enhet) gjør det mulig å
 teste overføring av saker mellom saksbehandlere i samme enhet og på tvers av enheter
@@ -103,49 +103,49 @@ på nytt med miljøvariabelen satt, f.eks. `BRUKERPROFIL=leder-øst tilt trigger
 ## Katalogstruktur
 
 ```
-parent/
-├── watson-developer/          ← dette repoet
-│   ├── Tiltfile
-│   ├── sync.sh
-│   ├── start
-│   ├── kind/cluster.yaml
-│   ├── k8s/watson-admin-api/
-│   ├── scripts/
-│   │   ├── clone-repos.sh
-│   │   ├── setup-kind.sh
-│   │   ├── sync-repos.sh
-│   │   ├── start.sh
-│   │   ├── start-sak-frontend.sh
-│   │   └── doctor.sh
-│   └── docs/
-│       ├── arkitektur/
-│       ├── domene/
-│       └── onboarding/
-├── nav-persondata-api/
-├── watson-admin-api/
-├── watson-sak-frontend/
-└── watson-sok/
+watson-developer/
+├── Tiltfile
+├── sync.sh
+├── start
+├── kind/cluster.yaml
+├── k8s/watson-admin-api/
+├── scripts/
+│   ├── clone-repos.sh
+│   ├── setup-kind.sh
+│   ├── sync-repos.sh
+│   ├── start.sh
+│   ├── start-sak-frontend.sh
+│   └── doctor.sh
+├── docs/
+│   ├── arkitektur/
+│   ├── domene/
+│   └── onboarding/
+└── repos/                      ← klonede sibling-repoer (git-ignorert)
+    ├── nav-persondata-api/
+    ├── watson-admin-api/
+    ├── watson-sak-frontend/
+    └── watson-sok/
 ```
 
 ---
 
 ## Dokumentasjon
 
-| Dokument | Innhold |
-|----------|---------|
-| [docs/SETUP.md](docs/SETUP.md) | Detaljert oppsett — verktøykrav og steg-for-steg |
-| [docs/LOKALMILJO.md](docs/LOKALMILJO.md) | Teknisk: hybrid-modus, porter, token, deployment |
-| [docs/arkitektur/](docs/arkitektur/README.md) | Systemkart, autentisering og dataflyt |
-| [docs/domene/ordbok.md](docs/domene/ordbok.md) | Domenebegreper og forkortelser |
-| [docs/onboarding/sjekkliste.md](docs/onboarding/sjekkliste.md) | Sjekkliste for nye utviklere |
+| Dokument                                                       | Innhold                                          |
+| -------------------------------------------------------------- | ------------------------------------------------ |
+| [docs/SETUP.md](docs/SETUP.md)                                 | Detaljert oppsett — verktøykrav og steg-for-steg |
+| [docs/LOKALMILJO.md](docs/LOKALMILJO.md)                       | Teknisk: hybrid-modus, porter, token, deployment |
+| [docs/arkitektur/](docs/arkitektur/README.md)                  | Systemkart, autentisering og dataflyt            |
+| [docs/domene/ordbok.md](docs/domene/ordbok.md)                 | Domenebegreper og forkortelser                   |
+| [docs/onboarding/sjekkliste.md](docs/onboarding/sjekkliste.md) | Sjekkliste for nye utviklere                     |
 
 ---
 
 ## Nyttige lenker
 
-| Ressurs | Lenke |
-|---------|-------|
-| GitHub-team | [navikt/holmes](https://github.com/orgs/navikt/teams/holmes) |
+| Ressurs      | Lenke                                                          |
+| ------------ | -------------------------------------------------------------- |
+| GitHub-team  | [navikt/holmes](https://github.com/orgs/navikt/teams/holmes)   |
 | Nais console | [console.nav.cloud.nais.io](https://console.nav.cloud.nais.io) |
-| Slack | `#team-holmes` — legg til kanalene manuelt |
-| Confluence | [Team Holmes](https://confluence.adeo.no/spaces/THLMS) |
+| Slack        | `#team-holmes` — legg til kanalene manuelt                     |
+| Confluence   | [Team Holmes](https://confluence.adeo.no/spaces/THLMS)         |

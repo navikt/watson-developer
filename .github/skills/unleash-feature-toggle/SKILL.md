@@ -26,22 +26,22 @@ Unleash-dashboardet: [holmes-unleash-web.iap.nav.cloud.nais.io](https://holmes-u
 
 Format: `<prefix>-v-<major>-<minor>`
 
-| Kontekst | Prefix | Eksempel |
-|----------|--------|---------|
-| Funksjonalitet i watson-sok | `watson-sok` | `watson-sok-v-1-2` |
-| Funksjonalitet i watson-sak | `watson-sak` | `watson-sak-v-2-0` |
-| Generell / tverrgående | _(fritt valg med begrunnelse)_ | `ny-tilgangspolicy` |
+| Kontekst                    | Prefix                         | Eksempel            |
+| --------------------------- | ------------------------------ | ------------------- |
+| Funksjonalitet i watson-sok | `watson-sok`                   | `watson-sok-v-1-2`  |
+| Funksjonalitet i watson-sak | `watson-sak`                   | `watson-sak-v-2-0`  |
+| Generell / tverrgående      | _(fritt valg med begrunnelse)_ | `ny-tilgangspolicy` |
 
 Versjonsnummeret speiler hvilken release funksjonaliteten tilhører.
 
 ### Steg 2 — Velg type i Unleash-dashboardet
 
-| Type | Bruk når |
-|------|---------|
-| **Release** | Ny funksjonalitet som skal rulles ut og deretter fjernes — vanligste valg |
-| **Experiment** | A/B-testing eller gradvis utrulling til en andel brukere |
-| **Operational** | Driftsbryter som kan leve lenger (f.eks. nødstopp for en integrasjon) |
-| **Permission** | Tilgangskontroll per brukergruppe |
+| Type            | Bruk når                                                                  |
+| --------------- | ------------------------------------------------------------------------- |
+| **Release**     | Ny funksjonalitet som skal rulles ut og deretter fjernes — vanligste valg |
+| **Experiment**  | A/B-testing eller gradvis utrulling til en andel brukere                  |
+| **Operational** | Driftsbryter som kan leve lenger (f.eks. nødstopp for en integrasjon)     |
+| **Permission**  | Tilgangskontroll per brukergruppe                                         |
 
 ### Steg 3 — Legg til i backend
 
@@ -98,9 +98,11 @@ Bruk denne sjekklisten når en toggle er verifisert i prod og skal fjernes.
 ### Sjekkliste
 
 #### Unleash-dashboardet
+
 - [ ] Arkiver eller slett togglen i dashboardet
 
 #### Backend
+
 - [ ] Fjern enum-verdien fra `Toggle.kt`
 - [ ] Fjern alle `toggles.isEnabled(Toggle.X)`-sjekker
 - [ ] Behold kun den nye kodeveien — slett `else`-grenen og fallback-kode
@@ -108,14 +110,17 @@ Bruk denne sjekklisten når en toggle er verifisert i prod og skal fjernes.
 - [ ] Kjør testene og verifiser at ingenting brekker
 
 #### Frontend (om togglen var i bruk der)
+
 - [ ] Fjern `useFlag("toggle-navn")`-kallet
 - [ ] Behold kun den nye kodeveien — slett betinget rendering/logikk
 - [ ] Fjern eventuelle kommentarer som refererer til togglen
 
 #### Tverrrepo-søk (unngå å glemme noe)
+
 Søk etter toggle-navnet i alle repoer:
+
 ```bash
-grep -r "watson-sok-v-1-2" ../watson-sok ../nav-persondata-api ../watson-sak-frontend
+grep -r "watson-sok-v-1-2" repos/watson-sok repos/nav-persondata-api repos/watson-sak-frontend
 ```
 
 ---

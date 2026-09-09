@@ -3,9 +3,9 @@
 # watson-developer (repo-roten for denne hooken).
 #
 # Siden agenten alltid startes i watson-developer, men faktiske kodeendringer
-# ofte skjer i søsken-repoer klonet til ../ (f.eks. watson-sak-frontend,
+# ofte skjer i søsken-repoer klonet til repos/ (f.eks. watson-sak-frontend,
 # watson-sok), kan vi ikke stole på sesjonens cwd for å vite hvilket repo som
-# ble endret. I stedet skanner vi alle søsken-kataloger i ../, finner de som
+# ble endret. I stedet skanner vi alle kataloger i repos/, finner de som
 # har et "format:fix"-script i package.json OG uncommitted git-endringer, og
 # kjører "pnpm format:fix" i hver av dem.
 #
@@ -25,11 +25,11 @@ fi
 
 script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 repo_root=$(git -C "$script_dir" rev-parse --show-toplevel 2>/dev/null || echo "")
-parent_dir=$(dirname "${repo_root:-$script_dir}")
+repos_dir="${repo_root:-$(dirname "$script_dir")}/repos"
 
 errors=""
 
-for dir in "$parent_dir"/*/; do
+for dir in "$repos_dir"/*/; do
   dir="${dir%/}"
 
   [ -f "$dir/package.json" ] || continue
