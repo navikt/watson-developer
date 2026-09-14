@@ -42,6 +42,15 @@ ikke er tilgjengelig eller installasjonen feiler.
 Installerer [cplt](https://github.com/navikt/cplt) (kernel-sandbox for AI-agenter) og
 [nav-pilot](https://ki-utvikling.nav.no/nav-pilot/docs) (Nav-kunnskap for Copilot).
 Genererer cplt-config tilpasset Watson-porteføljen. Idempotent — trygt å kjøre flere ganger.
+Scriptet krever python3.11+ (for `tomllib`) og installerer det selv automatisk
+med Homebrew hvis det mangler, siden dette steget kjøres før `doctor.sh`.
+
+Sandboxen får bevisst ikke lesetilgang til `~/.kube/config` — den inneholder
+som regel cluster-admin-credentials, og det lokale kind-klusteret trenger
+ikke den eksponeringen selv om det ikke inneholder ekte hemmeligheter. Kjør
+`kubectl`/`tilt` direkte i terminalen (utenfor sandboxen), eller legg til
+tilgangen selv i `~/.config/cplt/config.toml` hvis du ønsker at agenten skal
+kunne bruke dem.
 
 Installer deretter [rtk](https://github.com/rtk-ai/rtk) for å komprimere terminaloutput (testresultater, diff, kubectl) før det når Copilots kontekstvindu:
 

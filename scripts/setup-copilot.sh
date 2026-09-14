@@ -176,21 +176,22 @@ WATSON_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 # Bygg read-array
 # - Xcode CLI tools (git, clang etc.)
-# - kubeconfig for kubectl/kind og Tilt. Det lokale kind-klusteret har ingen
-#   hemmeligheter av verdi (kun testdata), så vi bruker standardplasseringen
-#   ~/.kube/config i stedet for en egen prosjekt-lokal kopi — det unngår at
-#   direkte `kubectl`/`tilt`-kommandoer (f.eks. README sitt
-#   `BRUKERPROFIL=... tilt up ...`-eksempel) feiler fordi KUBECONFIG ikke er
-#   satt i akkurat det skallet. Vi gir uansett kun lesetilgang til selve
-#   config-filen, ikke hele ~/.kube-katalogen.
 # - node version manager (hvis detektert)
 # - ~/.gradle/gradle.properties: watson-admin-api sitt gradlew leser denne for
 #   GitHub Packages-credentials (gpr.user/gpr.key) allerede før build starter
 # - detektert JDK (Homebrew eller jenv-styrt) — se detect_java_home over.
 #   Gradle kan trenge å lese JDK-filer direkte (f.eks. under toolchain-oppdagelse),
 #   så vi legger til stien uansett hvilken JDK som ble funnet.
-KUBECONFIG_PATH="$HOME/.kube/config"
-READ_PATHS='["/Applications/Xcode.app", "'"$HOME"'/.gradle/gradle.properties", "'"$KUBECONFIG_PATH"'"'
+#
+# NB: ~/.kube/config gis bevisst IKKE lesetilgang her. Filen inneholder som
+# regel et klientsertifikat/-nøkkel eller token med cluster-admin-tilgang til
+# klusteret (kind lagrer ikke bare metadata der), og det er ikke ønskelig at
+# sandbox-agenten skal ha slik tilgang som standard — selv om det lokale
+# kind-klusteret ikke inneholder ekte hemmeligheter. Kjør kubectl/Tilt direkte
+# i terminalen (utenfor sandboxen), eller legg til tilgangen selv i
+# ~/.config/cplt/config.toml hvis du bevisst ønsker at agenten skal kunne
+# bruke kubectl/Tilt.
+READ_PATHS='["/Applications/Xcode.app", "'"$HOME"'/.gradle/gradle.properties"'
 if [[ -n "$NODE_PATH" ]]; then
     READ_PATHS="$READ_PATHS, \"$NODE_PATH\""
 fi
@@ -208,26 +209,56 @@ READ_PATHS="$READ_PATHS]"
 # seksjoner) skrives aldri om og forblir byte-for-byte uendret.
 #
 # - Ved oppretting: fylles read/write/ports/sandbox med alle stiene scriptet
-#   har detektert (Xcode, gradle.properties, kubeconfig, evt. node/JDK).
+#   har detektert (Xcode, gradle.properties, evt. node/JDK).
 # - Ved oppdatering av en eksisterende config: kun det som er strengt
-#   nødvendig legges til (kubeconfig i read, watson-root i write, "gradle" i
-#   allow_cache_exec). En eventuell gammel foreldrekatalog-tilgang i write
+#   nødvendig legges til (watson-root i write, "gradle" i allow_cache_exec,
+#   port 5174 i ports). En eventuell gammel foreldrekatalog-tilgang i write
 #   fjernes samtidig (fra før repoer ble klonet til `repos/` under
-#   prosjektroten).
+#   prosjektroten), og en eventuell tidligere kubeconfig-lesetilgang (fra en
+#   tidligere versjon av dette scriptet) fjernes siden den ikke lenger gis
+#   automatisk — se begrunnelse ovenfor.
 RTK_PATH="$HOME/Library/Application Support/rtk"
 FRESH_WRITE_PATHS='["'"$WATSON_ROOT"'", "'"$RTK_PATH"'"]'
 FRESH_CACHE_EXEC='["ms-playwright", "gradle"]'
 PORTS_JSON='[5174]'
-REQUIRED_READ='["'"$KUBECONFIG_PATH"'"]'
 REQUIRED_WRITE='["'"$WATSON_ROOT"'"]'
 REQUIRED_CACHE_EXEC='["gradle"]'
+REQUIRED_PORTS='[5174]'
+LEGACY_KUBECONFIG_PATH="$HOME/.kube/config"
 
-if ! command -v python3 &>/dev/null; then
-    fail "python3 er ikke installert — nødvendig for å generere/oppdatere cplt-config (brew install python@3.12)"
+# Finn en brukbar python3.11+ (kreves for tomllib, som brukes til å lese/
+# skrive cplt-config trygt). Dette scriptet kjøres som steg 1 i oppsettet —
+# før doctor.sh (steg 2), som ellers ville auto-installert Python — så vi
+# bootstrapper Python selv her i stedet for å bare feile på en ren maskin.
+resolve_python() {
+    local candidate
+    for candidate in python3 python3.13 python3.12 python3.11; do
+        if command -v "$candidate" &>/dev/null \
+            && "$candidate" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 11) else 1)' 2>/dev/null; then
+            command -v "$candidate"
+            return 0
+        fi
+    done
+    return 1
+}
+
+PYTHON_BIN="$(resolve_python || true)"
+if [[ -z "$PYTHON_BIN" ]]; then
+    info "Fant ingen python3.11+ — installerer python@3.12 automatisk med Homebrew..."
+    brew install python@3.12 &>/dev/null || true
+    # python@3.12 er keg-only i Homebrew og legger ikke nødvendigvis en
+    # uversjonert `python3` på PATH — let derfor eksplisitt etter formelens
+    # egen binærkatalog og legg den til PATH før vi prøver på nytt.
+    BREW_PY_PREFIX="$(brew --prefix python@3.12 2>/dev/null || true)"
+    if [[ -n "$BREW_PY_PREFIX" && -d "$BREW_PY_PREFIX/libexec/bin" ]]; then
+        export PATH="$BREW_PY_PREFIX/libexec/bin:$PATH"
+    elif [[ -n "$BREW_PY_PREFIX" && -d "$BREW_PY_PREFIX/bin" ]]; then
+        export PATH="$BREW_PY_PREFIX/bin:$PATH"
+    fi
+    PYTHON_BIN="$(resolve_python || true)"
 fi
-if ! python3 -c 'import sys; sys.exit(0 if sys.version_info >= (3, 11) else 1)' 2>/dev/null; then
-    PY_VERSION="$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")' 2>/dev/null || echo "ukjent")"
-    fail "python3 $PY_VERSION er for gammel — trenger 3.11+ for tomllib (brukes til å lese/skrive cplt-config). Kjør: brew install python@3.12"
+if [[ -z "$PYTHON_BIN" ]]; then
+    fail "Fant ikke python3.11+ (kreves for tomllib, brukt til å lese/skrive cplt-config), og automatisk installasjon feilet. Kjør: brew install python@3.12, og sørg for at \$(brew --prefix python@3.12)/libexec/bin er på PATH"
 fi
 
 mkdir -p "$CONFIG_DIR"
@@ -248,25 +279,29 @@ except ModuleNotFoundError:
     sys.exit(3)
 
 (config_file, fresh_read_raw, fresh_write_raw, fresh_cache_exec_raw,
- ports_raw, required_read_raw, required_write_raw,
- required_cache_exec_raw) = sys.argv[1:9]
+ ports_raw, required_write_raw, required_cache_exec_raw,
+ required_ports_raw, legacy_kubeconfig_path) = sys.argv[1:10]
 
 config_file = Path(config_file)
 fresh_read = json.loads(fresh_read_raw)
 fresh_write = json.loads(fresh_write_raw)
 fresh_cache_exec = json.loads(fresh_cache_exec_raw)
 ports = json.loads(ports_raw)
-required_read = json.loads(required_read_raw)
 required_write = json.loads(required_write_raw)
 required_cache_exec = json.loads(required_cache_exec_raw)
+required_ports = json.loads(required_ports_raw)
 
 # Stier fra en eventuell tidligere versjon av dette scriptet som skal fjernes
-# på migrering, siden de representerer bredere tilgang enn det som nå kreves:
-# - ~/.kube (hele katalogen) — erstattet av en avgrenset prosjekt-kubeconfig.
+# på migrering, siden de representerer bredere/utdatert tilgang enn det som
+# nå kreves:
+# - ~/.kube (hele katalogen) og selve kubeconfig-filen — en tidligere versjon
+#   av dette scriptet ga lesetilgang til kubeconfig automatisk, men det er
+#   ikke lenger tilfelle (se begrunnelse i setup-copilot.sh om cluster-admin-
+#   credentials). Fjernes hvis funnet fra en tidligere kjøring.
 # - foreldrekatalogen til watson-root — brukt av en eldre generasjon av dette
 #   scriptet (før repoer ble klonet til `repos/` under prosjektroten), og gir
 #   fortsatt skrivetilgang til alle søsken-kataloger hvis den blir stående.
-LEGACY_READ_REMOVE = {str(Path.home() / ".kube")}
+LEGACY_READ_REMOVE = {str(Path.home() / ".kube"), legacy_kubeconfig_path}
 watson_root = required_write[0] if required_write else None
 LEGACY_WRITE_REMOVE = {str(Path(watson_root).parent)} if watson_root else set()
 
@@ -382,18 +417,23 @@ sandbox = data.get("sandbox", {})
 
 existing_read = list(allow.get("read", []))
 existing_write = list(allow.get("write", []))
+existing_ports = list(allow.get("ports", []))
 existing_cache_exec = list(sandbox.get("allow_cache_exec", []))
 
+# Vi legger ikke lenger noe til i read automatisk (se begrunnelse ovenfor om
+# kubeconfig/cluster-admin-credentials), men fjerner fortsatt eventuelle
+# gamle, bredere read-tilganger fra tidligere versjoner av dette scriptet.
 new_read = [p for p in existing_read if p not in LEGACY_READ_REMOVE]
 new_write = [p for p in existing_write if p not in LEGACY_WRITE_REMOVE]
+new_ports = list(existing_ports)
 new_cache_exec = list(existing_cache_exec)
 
-for value in required_read:
-    if value not in new_read:
-        new_read.append(value)
 for value in required_write:
     if value not in new_write:
         new_write.append(value)
+for value in required_ports:
+    if value not in new_ports:
+        new_ports.append(value)
 for value in required_cache_exec:
     if value not in new_cache_exec:
         new_cache_exec.append(value)
@@ -401,6 +441,7 @@ for value in required_cache_exec:
 needs_update = (
     new_read != existing_read
     or new_write != existing_write
+    or new_ports != existing_ports
     or new_cache_exec != existing_cache_exec
 )
 
@@ -413,6 +454,8 @@ if new_read != existing_read:
     updated_text = upsert_array(updated_text, "allow", "read", new_read)
 if new_write != existing_write:
     updated_text = upsert_array(updated_text, "allow", "write", new_write)
+if new_ports != existing_ports:
+    updated_text = upsert_array(updated_text, "allow", "ports", new_ports)
 if new_cache_exec != existing_cache_exec:
     updated_text = upsert_array(updated_text, "sandbox", "allow_cache_exec", new_cache_exec)
 
@@ -426,9 +469,10 @@ except tomllib.TOMLDecodeError as exc:
 
 verify_read = verify_data.get("allow", {}).get("read", [])
 verify_write = verify_data.get("allow", {}).get("write", [])
+verify_ports = verify_data.get("allow", {}).get("ports", [])
 verify_cache_exec = verify_data.get("sandbox", {}).get("allow_cache_exec", [])
 if (verify_read != new_read or verify_write != new_write
-        or verify_cache_exec != new_cache_exec):
+        or verify_ports != new_ports or verify_cache_exec != new_cache_exec):
     print("PATCH_VERIFICATION_FAILED unexpected array contents after patch")
     sys.exit(6)
 
@@ -440,9 +484,9 @@ print(f"UPDATED {backup_file}")
 PY
 
 set +e
-MERGE_RESULT="$(python3 "$MERGE_SCRIPT_FILE" \
+MERGE_RESULT="$("$PYTHON_BIN" "$MERGE_SCRIPT_FILE" \
     "$CONFIG_FILE" "$READ_PATHS" "$FRESH_WRITE_PATHS" "$FRESH_CACHE_EXEC" "$PORTS_JSON" \
-    "$REQUIRED_READ" "$REQUIRED_WRITE" "$REQUIRED_CACHE_EXEC")"
+    "$REQUIRED_WRITE" "$REQUIRED_CACHE_EXEC" "$REQUIRED_PORTS" "$LEGACY_KUBECONFIG_PATH")"
 set -e
 rm -f "$MERGE_SCRIPT_FILE"
 trap - EXIT

@@ -52,20 +52,36 @@ check_cmd() {
     fail "$cmd er ikke installert — $install_hint"
 }
 
+java_runnable() {
+    command -v java &>/dev/null && java -version &>/dev/null
+}
+
+# Har maskinen en ekte JDK installert i det hele tatt (uavhengig av om PATH
+# peker til en ødelagt jenv-shim)? macOS sin egen /usr/bin/java er kun en
+# stub som ber om installasjon når ingen ekte JDK finnes — /usr/libexec/
+# java_home er den pålitelige måten å sjekke dette på.
+has_real_jdk() {
+    /usr/libexec/java_home &>/dev/null
+}
+
 check_java_version() {
-    if ! command -v java &>/dev/null; then
-        if brew_install "temurin@21" "true" && command -v java &>/dev/null; then
+    if ! command -v java &>/dev/null || { ! has_real_jdk && [[ "$(command -v java)" == "/usr/bin/java" ]]; }; then
+        # Ingen ekte JDK finnes — kun evt. macOS' egen java-stub, som ikke kan
+        # kjøre. Prøv auto-installasjon i stedet for å anta java er
+        # installert bare fordi kommandoen finnes på PATH.
+        if brew_install "temurin@21" "true" && java_runnable; then
             ok "java auto-installert — verifiserer versjon"
             INSTALLED=$((INSTALLED + 1))
         else
-            fail "java er ikke installert — brew install --cask temurin@21"
+            fail "java er ikke installert (fant kun macOS' java-stub) — brew install --cask temurin@21"
             return
         fi
     fi
 
     local java_output
     java_output=$(java -version 2>&1) || {
-        # `java` finnes på PATH, men klarer ikke å kjøre — vanligvis en ødelagt
+        # `java` finnes på PATH og en ekte JDK finnes et sted på maskinen, men
+        # java-kommandoen klarer likevel ikke å kjøre — vanligvis en ødelagt
         # jenv-shim (peker på en avinstallert jenv-versjon) eller sandbox som
         # blokkerer lesing av libjli.dylib i JDK-installasjonen.
         if echo "$java_output" | grep -q "jenv"; then
@@ -117,11 +133,23 @@ echo "────────────────────────�
 
 check_python_version() {
     if ! command -v python3 &>/dev/null; then
-        if brew_install "python@3.12" && command -v python3 &>/dev/null; then
+        if brew_install "python@3.12"; then
+            # python@3.12 er keg-only i Homebrew og legger ikke nødvendigvis en
+            # uversjonert `python3` på PATH — let derfor eksplisitt etter
+            # formelens egen binærkatalog og legg den til PATH om nødvendig.
+            local brew_py_prefix
+            brew_py_prefix="$(brew --prefix python@3.12 2>/dev/null || true)"
+            if [[ -n "$brew_py_prefix" && -d "$brew_py_prefix/libexec/bin" ]]; then
+                export PATH="$brew_py_prefix/libexec/bin:$PATH"
+            elif [[ -n "$brew_py_prefix" && -d "$brew_py_prefix/bin" ]]; then
+                export PATH="$brew_py_prefix/bin:$PATH"
+            fi
+        fi
+        if command -v python3 &>/dev/null; then
             ok "python3 auto-installert — verifiserer versjon"
             INSTALLED=$((INSTALLED + 1))
         else
-            fail "python3 er ikke installert — brew install python@3.12"
+            fail "python3 er ikke installert (eller ikke på PATH etter installasjon) — brew install python@3.12, og sørg for at \$(brew --prefix python@3.12)/libexec/bin er på PATH"
             return
         fi
     fi

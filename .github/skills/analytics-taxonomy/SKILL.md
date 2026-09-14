@@ -16,7 +16,7 @@ Tre ting denne skillen hjelper deg med:
 2. [Velge navn på et nytt event](#navngi-et-nytt-event)
 3. [Avgjøre om noe er et eget event eller en parameter](#nytt-event-eller-ny-parameter)
 
-Referanseimplementasjon: [`app/analytics/analytics.tsx`](../../../repos/watson-sak-frontend/app/analytics/analytics.tsx)
+Referanseimplementasjon: [`app/analytics/analytics.tsx`](https://github.com/navikt/watson-sak-frontend/blob/main/app/analytics/analytics.tsx)
 
 ---
 

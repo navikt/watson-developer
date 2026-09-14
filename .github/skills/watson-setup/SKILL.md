@@ -52,8 +52,11 @@ steg feiler, vis feilen tydelig og foreslå løsning før du fortsetter.
 ```
 
 Skriptet installerer `cplt` og `nav-pilot`, detekterer node version manager og
-genererer cplt-konfigurasjon med lesetilgang til `~/.kube/config` (for
-kubectl/Tilt), Gradle og skrivetilgang til prosjektet og repoene.
+genererer cplt-konfigurasjon med lesetilgang til Gradle-credentials og
+skrivetilgang til prosjektet og repoene. Sandboxen får bevisst ikke
+lesetilgang til `~/.kube/config` (inneholder cluster-admin-credentials) —
+kjør `kubectl`/`tilt` direkte i terminalen utenfor sandboxen, eller legg til
+tilgangen selv hvis du ønsker det.
 
 **Forventet resultat:** `✅ Ferdig!` uten feil.
 
@@ -61,15 +64,16 @@ kubectl/Tilt), Gradle og skrivetilgang til prosjektet og repoene.
 
 - `Homebrew er ikke installert` → Se https://brew.sh.
 - `Dette scriptet støtter kun macOS` → Skillen støtter bare macOS.
-- `python3 er ikke installert` eller `python3 … er for gammel` → Kjør
-  `brew install python@3.12` og prøv igjen (kreves for `tomllib`, som brukes
-  til å lese/oppdatere cplt-config).
+- `python3 er ikke installert` eller `python3 … er for gammel` → Scriptet
+  prøver å installere `python@3.12` automatisk med Homebrew (kreves for
+  `tomllib`, som brukes til å lese/oppdatere cplt-config). Hvis dette feiler,
+  kjør `brew install python@3.12` manuelt og prøv igjen.
 
 **Stopp her hvis skriptet varsler at cplt-tilgangene først trer i kraft etter
 restart** (meldingen «Denne økten kjører allerede inne i cplt-sandboxen …»
-eller «Restart 'copilot' …»). De nye tilgangene til kubeconfig og Gradle er
-da ikke aktive i denne økten ennå, og de neste stegene (spesielt klargjøring
-av `repos/` og kind-klusteret) kan feile med «Operation not permitted». Be
+eller «Restart 'copilot' …»). Den nye tilgangen til Gradle er da ikke aktiv i
+denne økten ennå, og de neste stegene (spesielt klargjøring av `repos/`) kan
+feile med «Operation not permitted». Be
 brukeren avslutte og starte Copilot-økten på nytt, og fortsett først når en
 ny økt kjører skriptet på nytt uten dette varselet.
 
