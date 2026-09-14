@@ -52,8 +52,8 @@ steg feiler, vis feilen tydelig og foreslå løsning før du fortsetter.
 ```
 
 Skriptet installerer `cplt` og `nav-pilot`, detekterer node version manager og
-genererer cplt-konfigurasjon med tilgang til prosjektets kubeconfig, Gradle og
-repoene.
+genererer cplt-konfigurasjon med lesetilgang til `~/.kube/config` (for
+kubectl/Tilt), Gradle og skrivetilgang til prosjektet og repoene.
 
 **Forventet resultat:** `✅ Ferdig!` uten feil.
 
@@ -67,11 +67,11 @@ repoene.
 
 **Stopp her hvis skriptet varsler at cplt-tilgangene først trer i kraft etter
 restart** (meldingen «Denne økten kjører allerede inne i cplt-sandboxen …»
-eller «Restart 'copilot' …»). De nye tilgangene til prosjektets kubeconfig og
-Gradle er da ikke aktive i denne økten ennå, og de neste stegene (spesielt
-klargjøring av `repos/` og kind-klusteret) kan feile med «Operation not
-permitted». Be brukeren avslutte og starte Copilot-økten på nytt, og fortsett
-først når en ny økt kjører skriptet på nytt uten dette varselet.
+eller «Restart 'copilot' …»). De nye tilgangene til kubeconfig og Gradle er
+da ikke aktive i denne økten ennå, og de neste stegene (spesielt klargjøring
+av `repos/` og kind-klusteret) kan feile med «Operation not permitted». Be
+brukeren avslutte og starte Copilot-økten på nytt, og fortsett først når en
+ny økt kjører skriptet på nytt uten dette varselet.
 
 ### Steg 2: Pre-flight-sjekk
 
@@ -81,8 +81,10 @@ først når en ny økt kjører skriptet på nytt uten dette varselet.
 
 **Forventet resultat:** `✅ Alt er på plass`.
 
-Installer manglende verktøy med Homebrew eller `corepack enable` for pnpm, og
-kjør `./scripts/doctor.sh` på nytt.
+Skriptet installerer manglende verktøy automatisk via Homebrew der det er
+mulig (kind, tilt, kubectl, gcloud, k9s, java, node, pnpm, python). Hvis
+auto-installasjon feiler (f.eks. Homebrew mangler), installer manglende
+verktøy manuelt og kjør `./scripts/doctor.sh` på nytt.
 
 ### Steg 3: Klon repoene
 
@@ -123,7 +125,7 @@ Hvis det feiler, start Docker Desktop, vent 10–15 sekunder og prøv igjen.
 ```
 
 Skriptet oppretter klusteret `watson` og setter kubectl-konteksten til
-`kind-watson` i prosjektets git-ignorerte `.kube/config`.
+`kind-watson`.
 
 **Forventet resultat:** `✓ Klar — kjør './start' for å starte lokalmiljøet`.
 

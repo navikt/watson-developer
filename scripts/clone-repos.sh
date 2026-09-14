@@ -54,7 +54,7 @@ for repo_url in "${REPOS[@]}"; do
 
   if [[ "$repo_name" == "watson-sak-frontend" || "$repo_name" == "watson-sok" ]]; then
     echo -e "  ${YELLOW}📦${NC} Installerer frontend-avhengigheter..."
-    (cd "$repo_path" && pnpm install)
+    (cd "$repo_path" && pnpm install --frozen-lockfile)
   fi
 done
 

@@ -24,7 +24,10 @@ Detaljert guide for å sette opp Watson-porteføljens lokale utviklingsmiljø.
 | [pnpm](https://pnpm.io/installation)                                 | `corepack enable`                   | Pakkebehandler for frontend                                   |
 | Python 3.11+                                                         | `brew install python@3.12`          | `tomllib` — leser/oppdaterer cplt-config i setup-copilot.sh   |
 
-Kjør `./scripts/doctor.sh` for å se hva som mangler.
+Kjør `./scripts/doctor.sh` for å se hva som mangler — skriptet installerer
+manglende verktøy automatisk med Homebrew (`corepack enable` for pnpm) der det
+er mulig, og faller tilbake til å vise installasjonskommandoen hvis Homebrew
+ikke er tilgjengelig eller installasjonen feiler.
 
 ---
 
@@ -54,7 +57,9 @@ brew install rtk && rtk init -g --copilot
 ./scripts/doctor.sh
 ```
 
-Skriptet verifiserer at alle nødvendige verktøy er installert med riktig versjon.
+Skriptet verifiserer at alle nødvendige verktøy er installert med riktig
+versjon, og installerer manglende verktøy automatisk via Homebrew (eller
+`corepack enable` for pnpm) der det er mulig.
 
 ### 3. Klon alle Watson-repoer
 
@@ -71,8 +76,7 @@ Idempotent — kjør igjen for å oppdatere eksisterende repoer med `git pull`.
 ./scripts/setup-kind.sh
 ```
 
-Oppretter kind-klusteret `watson` og setter kubectl-kontekst i prosjektets
-git-ignorerte `.kube/config`.
+Oppretter kind-klusteret `watson` og setter kubectl-kontekst.
 Idempotent — trygt å kjøre flere ganger.
 
 ### 5. Start lokalmiljøet

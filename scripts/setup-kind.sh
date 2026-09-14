@@ -6,9 +6,6 @@ set -euo pipefail
 CLUSTER_NAME="watson"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG="$SCRIPT_DIR/../kind/cluster.yaml"
-WATSON_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-export KUBECONFIG="$WATSON_ROOT/.kube/config"
-mkdir -p "$(dirname "$KUBECONFIG")"
 
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
@@ -27,13 +24,6 @@ else
     echo -e "${GREEN}✓${NC}  Kluster opprettet"
 fi
 
-# Sikrer at konteksten finnes i prosjektets $KUBECONFIG uansett om klusteret
-# ble opprettet nå eller fantes fra før (f.eks. opprettet før denne prosjekt-
-# lokale kubeconfigen ble innført, med kontekst kun i ~/.kube/config).
-echo -e "⚙  Henter kubeconfig for '${CLUSTER_NAME}' til $KUBECONFIG..."
-kind export kubeconfig --name "${CLUSTER_NAME}"
-
 echo -e "⚙  Setter kubectl context til kind-${CLUSTER_NAME}..."
 kubectl config use-context "kind-${CLUSTER_NAME}"
-echo -e "${GREEN}✓${NC}  Klar — kjør './start' for å starte lokalmiljøet"
-echo "   (bruk ./start eller eksporter KUBECONFIG=$KUBECONFIG selv før du kjører 'tilt up' direkte)"
+echo -e "${GREEN}✓${NC}  Klar — kjør './start' (eller 'tilt up') for å starte lokalmiljøet"

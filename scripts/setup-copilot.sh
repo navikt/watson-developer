@@ -176,14 +176,20 @@ WATSON_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 # Bygg read-array
 # - Xcode CLI tools (git, clang etc.)
-# - prosjektets kubeconfig for kubectl/kind og Tilt
+# - kubeconfig for kubectl/kind og Tilt. Det lokale kind-klusteret har ingen
+#   hemmeligheter av verdi (kun testdata), så vi bruker standardplasseringen
+#   ~/.kube/config i stedet for en egen prosjekt-lokal kopi — det unngår at
+#   direkte `kubectl`/`tilt`-kommandoer (f.eks. README sitt
+#   `BRUKERPROFIL=... tilt up ...`-eksempel) feiler fordi KUBECONFIG ikke er
+#   satt i akkurat det skallet. Vi gir uansett kun lesetilgang til selve
+#   config-filen, ikke hele ~/.kube-katalogen.
 # - node version manager (hvis detektert)
 # - ~/.gradle/gradle.properties: watson-admin-api sitt gradlew leser denne for
 #   GitHub Packages-credentials (gpr.user/gpr.key) allerede før build starter
 # - detektert JDK (Homebrew eller jenv-styrt) — se detect_java_home over.
 #   Gradle kan trenge å lese JDK-filer direkte (f.eks. under toolchain-oppdagelse),
 #   så vi legger til stien uansett hvilken JDK som ble funnet.
-KUBECONFIG_PATH="$WATSON_ROOT/.kube/config"
+KUBECONFIG_PATH="$HOME/.kube/config"
 READ_PATHS='["/Applications/Xcode.app", "'"$HOME"'/.gradle/gradle.properties", "'"$KUBECONFIG_PATH"'"'
 if [[ -n "$NODE_PATH" ]]; then
     READ_PATHS="$READ_PATHS, \"$NODE_PATH\""
@@ -205,10 +211,9 @@ READ_PATHS="$READ_PATHS]"
 #   har detektert (Xcode, gradle.properties, kubeconfig, evt. node/JDK).
 # - Ved oppdatering av en eksisterende config: kun det som er strengt
 #   nødvendig legges til (kubeconfig i read, watson-root i write, "gradle" i
-#   allow_cache_exec). To tidligere, bredere tilganger fjernes samtidig:
-#   den gamle `~/.kube`-tilgangen (erstattet av avgrenset prosjekt-kubeconfig)
-#   og en eventuell gammel foreldrekatalog-tilgang i write (fra før repoer
-#   ble klonet til `repos/` under prosjektroten).
+#   allow_cache_exec). En eventuell gammel foreldrekatalog-tilgang i write
+#   fjernes samtidig (fra før repoer ble klonet til `repos/` under
+#   prosjektroten).
 RTK_PATH="$HOME/Library/Application Support/rtk"
 FRESH_WRITE_PATHS='["'"$WATSON_ROOT"'", "'"$RTK_PATH"'"]'
 FRESH_CACHE_EXEC='["ms-playwright", "gradle"]'
@@ -278,7 +283,7 @@ def find_toplevel_section_span(text, section_name):
     """Find the (start, end) char span of a top-level `[section]` table's
     body, i.e. everything between its header line and the next line that
     starts a new table (`[...]`), or EOF. Returns None if not found."""
-    header_pattern = re.compile(rf"(?m)^\[{re.escape(section_name)}\]\s*$")
+    header_pattern = re.compile(rf"(?m)^\[{re.escape(section_name)}\][ \t]*(#.*)?$")
     header_match = header_pattern.search(text)
     if not header_match:
         return None
@@ -434,9 +439,11 @@ config_file.write_text(updated_text, encoding="utf-8")
 print(f"UPDATED {backup_file}")
 PY
 
+set +e
 MERGE_RESULT="$(python3 "$MERGE_SCRIPT_FILE" \
     "$CONFIG_FILE" "$READ_PATHS" "$FRESH_WRITE_PATHS" "$FRESH_CACHE_EXEC" "$PORTS_JSON" \
     "$REQUIRED_READ" "$REQUIRED_WRITE" "$REQUIRED_CACHE_EXEC")"
+set -e
 rm -f "$MERGE_SCRIPT_FILE"
 trap - EXIT
 
