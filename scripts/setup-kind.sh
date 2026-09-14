@@ -27,6 +27,12 @@ else
     echo -e "${GREEN}✓${NC}  Kluster opprettet"
 fi
 
+# Sikrer at konteksten finnes i prosjektets $KUBECONFIG uansett om klusteret
+# ble opprettet nå eller fantes fra før (f.eks. opprettet før denne prosjekt-
+# lokale kubeconfigen ble innført, med kontekst kun i ~/.kube/config).
+echo -e "⚙  Henter kubeconfig for '${CLUSTER_NAME}' til $KUBECONFIG..."
+kind export kubeconfig --name "${CLUSTER_NAME}"
+
 echo -e "⚙  Setter kubectl context til kind-${CLUSTER_NAME}..."
 kubectl config use-context "kind-${CLUSTER_NAME}"
 echo -e "${GREEN}✓${NC}  Klar — kjør './start' for å starte lokalmiljøet"

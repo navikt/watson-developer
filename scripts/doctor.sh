@@ -78,11 +78,29 @@ echo ""
 echo -e "${BOLD}🔍 Watson Developer — pre-flight sjekk${NC}"
 echo "────────────────────────────────────────"
 
+check_python_version() {
+    if ! command -v python3 &>/dev/null; then
+        fail "python3 er ikke installert — brew install python@3.12"
+        return
+    fi
+    local version
+    version=$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
+    if python3 -c 'import sys; sys.exit(0 if sys.version_info >= (3, 11) else 1)'; then
+        ok "python3 $version (≥3.11 ✓, kreves for tomllib i setup-copilot.sh)"
+    else
+        fail "python3 $version er for gammel — krever 3.11+ (for tomllib). brew install python@3.12"
+    fi
+}
+
 echo ""
 echo -e "${BOLD}Lokal Kubernetes:${NC}"
 check_cmd "kind"    "brew install kind   (https://kind.sigs.k8s.io)"
 check_cmd "tilt"    "brew install tilt   (https://docs.tilt.dev/install.html)"
 check_cmd "kubectl" "brew install kubectl"
+
+echo ""
+echo -e "${BOLD}AI-verktøy (cplt-konfigurasjon):${NC}"
+check_python_version
 
 echo ""
 echo -e "${BOLD}GCP og Kubernetes-administrasjon:${NC}"

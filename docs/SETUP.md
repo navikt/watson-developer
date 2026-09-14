@@ -22,6 +22,7 @@ Detaljert guide for å sette opp Watson-porteføljens lokale utviklingsmiljø.
 | Java 21                                                              | `brew install --cask temurin@21`    | watson-admin-api, nav-persondata-api                          |
 | Node.js LTS                                                          | `brew install node`                 | watson-sak-frontend, watson-sok                               |
 | [pnpm](https://pnpm.io/installation)                                 | `corepack enable`                   | Pakkebehandler for frontend                                   |
+| Python 3.11+                                                         | `brew install python@3.12`          | `tomllib` — leser/oppdaterer cplt-config i setup-copilot.sh   |
 
 Kjør `./scripts/doctor.sh` for å se hva som mangler.
 

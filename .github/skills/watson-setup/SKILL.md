@@ -20,6 +20,7 @@ utvikleren.
 - macOS
 - Homebrew installert
 - Docker Desktop installert og kjørende
+- Python 3.11+ (`brew install python@3.12`) — kreves for `tomllib` i steg 1
 - GitHub-tilgang til navikt-repoene
 - Skillen kjøres fra watson-developer-repoets rotkatalog
 
@@ -60,6 +61,9 @@ repoene.
 
 - `Homebrew er ikke installert` → Se https://brew.sh.
 - `Dette scriptet støtter kun macOS` → Skillen støtter bare macOS.
+- `python3 er ikke installert` eller `python3 … er for gammel` → Kjør
+  `brew install python@3.12` og prøv igjen (kreves for `tomllib`, som brukes
+  til å lese/oppdatere cplt-config).
 
 **Stopp her hvis skriptet varsler at cplt-tilgangene først trer i kraft etter
 restart** (meldingen «Denne økten kjører allerede inne i cplt-sandboxen …»
