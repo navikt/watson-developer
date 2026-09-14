@@ -21,18 +21,32 @@ info() { echo -e "  ${YELLOW}⚙${NC}  $1"; }
 # Brukes kun når kommandoen mangler helt — feil/gammel versjon av et verktøy
 # som allerede er installert rører vi ikke ved (kan være styrt av jenv/nvm
 # eller bevisst valgt av utvikleren).
+#
+# Kjører IKKE inni cplt-sandboxen: den gir kun skrivetilgang til
+# prosjektroten og RTK sin katalog, mens Homebrew skriver til
+# /opt/homebrew eller /usr/local. Et forsøk der ville bare feile med en
+# forvirrende "Operation not permitted" — vi sjekker derfor $__CPLT_WRAPPED
+# og hopper rett til å be brukeren installere manuelt i en vanlig terminal.
 brew_install() {
     local formula="$1"
     local cask="${2:-false}"
+    if [[ -n "${__CPLT_WRAPPED:-}" ]]; then
+        return 2
+    fi
     if ! command -v brew &>/dev/null; then
         return 1
     fi
     info "Installerer $formula automatisk med Homebrew..."
+    local log_file status
+    log_file="$(mktemp -t watson-doctor-brew.XXXXXX.log)"
     if [[ "$cask" == "true" ]]; then
-        brew install --cask "$formula" &>/tmp/watson-doctor-brew.log
+        brew install --cask "$formula" &>"$log_file"
     else
-        brew install "$formula" &>/tmp/watson-doctor-brew.log
+        brew install "$formula" &>"$log_file"
     fi
+    status=$?
+    rm -f "$log_file"
+    return $status
 }
 
 check_cmd() {
@@ -130,6 +144,9 @@ check_node_lts() {
 echo ""
 echo -e "${BOLD}🔍 Watson Developer — pre-flight sjekk${NC}"
 echo "────────────────────────────────────────"
+if [[ -n "${__CPLT_WRAPPED:-}" ]]; then
+    warn "Kjører inni cplt-sandboxen — auto-installasjon av manglende verktøy er slått av her (Homebrew skriver utenfor sandboxens tillatte områder). Manglende verktøy må installeres i en vanlig terminal utenfor sandboxen."
+fi
 
 check_python_version() {
     if ! command -v python3 &>/dev/null; then

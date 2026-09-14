@@ -85,10 +85,15 @@ ny økt kjører skriptet på nytt uten dette varselet.
 
 **Forventet resultat:** `✅ Alt er på plass`.
 
-Skriptet installerer manglende verktøy automatisk via Homebrew der det er
-mulig (kind, tilt, kubectl, gcloud, k9s, java, node, pnpm, python). Hvis
-auto-installasjon feiler (f.eks. Homebrew mangler), installer manglende
-verktøy manuelt og kjør `./scripts/doctor.sh` på nytt.
+Utenfor cplt-sandboxen installerer skriptet manglende verktøy automatisk via
+Homebrew der det er mulig (kind, tilt, kubectl, gcloud, k9s, java, node,
+pnpm, python). **Kjører denne skillen inni cplt-sandboxen** (som er det
+vanlige), **skjer ingen auto-installasjon** — Homebrew skriver til
+`/opt/homebrew`/`/usr/local`, utenfor det sandboxen har skrivetilgang til.
+Skriptet varsler om dette og lister opp hva som mangler; be brukeren
+installere de manglende verktøyene i en vanlig terminal utenfor Copilot-økten
+(eller kjøre `./scripts/doctor.sh` der selv), og fortsett når `./scripts/doctor.sh`
+rapporterer `✅ Alt er på plass` i denne sandboxen.
 
 ### Steg 3: Klon repoene
 

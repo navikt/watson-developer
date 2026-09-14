@@ -68,7 +68,10 @@ brew install rtk && rtk init -g --copilot
 
 Skriptet verifiserer at alle nødvendige verktøy er installert med riktig
 versjon, og installerer manglende verktøy automatisk via Homebrew (eller
-`corepack enable` for pnpm) der det er mulig.
+`corepack enable` for pnpm) der det er mulig. Auto-installasjon er slått av
+når skriptet kjører inni cplt-sandboxen (f.eks. via `watson-setup`-skillen) —
+Homebrew skriver utenfor det sandboxen har skrivetilgang til. Kjør skriptet
+i en vanlig terminal for å få tools auto-installert, eller installer manuelt.
 
 ### 3. Klon alle Watson-repoer
 
