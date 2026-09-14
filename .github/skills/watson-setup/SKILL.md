@@ -61,6 +61,14 @@ repoene.
 - `Homebrew er ikke installert` → Se https://brew.sh.
 - `Dette scriptet støtter kun macOS` → Skillen støtter bare macOS.
 
+**Stopp her hvis skriptet varsler at cplt-tilgangene først trer i kraft etter
+restart** (meldingen «Denne økten kjører allerede inne i cplt-sandboxen …»
+eller «Restart 'copilot' …»). De nye tilgangene til prosjektets kubeconfig og
+Gradle er da ikke aktive i denne økten ennå, og de neste stegene (spesielt
+klargjøring av `repos/` og kind-klusteret) kan feile med «Operation not
+permitted». Be brukeren avslutte og starte Copilot-økten på nytt, og fortsett
+først når en ny økt kjører skriptet på nytt uten dette varselet.
+
 ### Steg 2: Pre-flight-sjekk
 
 ```bash
@@ -111,9 +119,9 @@ Hvis det feiler, start Docker Desktop, vent 10–15 sekunder og prøv igjen.
 ```
 
 Skriptet oppretter klusteret `watson` og setter kubectl-konteksten til
-`kind-watson`.
+`kind-watson` i prosjektets git-ignorerte `.kube/config`.
 
-**Forventet resultat:** `✓ Klar — kjør 'tilt up' for å starte lokalmiljøet`.
+**Forventet resultat:** `✓ Klar — kjør './start' for å starte lokalmiljøet`.
 
 Hvis det feiler, kontroller at Docker kjører. Hvis kind-klusteret er i dårlig
 tilstand, kjør `kind delete cluster --name watson` og prøv på nytt.
@@ -127,7 +135,7 @@ Vis denne oppsummeringen:
 ✅ Watson-oppsettet er klart!
 
 Neste steg:
-  • Start lokalmiljøet med: tilt up
+  • Start lokalmiljøet med: ./start
   • Tilt UI:                http://localhost:10350
   • Swagger UI:             http://localhost:8080/swagger-ui/index.html
   • Watson Sak:             http://localhost:5174
@@ -149,6 +157,6 @@ Tips:
 | Docker kjører ikke | Start Docker Desktop. |
 | Port opptatt (5432, 8080, 8090) | Finn prosessen med `lsof -i :<port>` og stopp den. |
 | kind-kluster i dårlig tilstand | `kind delete cluster --name watson && ./scripts/setup-kind.sh` |
-| Tilt viser røde ressurser | Sjekk logger i Tilt UI etter at du har kjørt `tilt up`. |
+| Tilt viser røde ressurser | Sjekk logger i Tilt UI etter at du har kjørt `./start`. |
 | pnpm-feil i frontend | Kjør `cd repos/watson-sak-frontend && pnpm install` eller tilsvarende for `watson-sok`. |
 | Gradle-feil i backend | `cd repos/watson-admin-api && ./gradlew clean build` |

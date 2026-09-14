@@ -61,7 +61,7 @@ Ikke legg til Kotlin-, TypeScript- eller Java-filer her. Applikasjonene bor i si
 
 - Kind-kluster: postgres (5432) og mock-oauth2-server (8090)
 - Lokale prosesser: watson-admin-api (8080) via `./gradlew bootRun`
-- Start med: `./scripts/setup-kind.sh && tilt up`
+- Start med: `./scripts/setup-kind.sh && ./start`
 
 ## Arbeidsflyt for Copilot
 

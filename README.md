@@ -83,7 +83,7 @@ BRUKERPROFIL=leder-øst tilt up watson-sak-frontend
 mock-oauth2-server, og dermed hvilken mock-bruker (via `NomClientMock`/`mock-saksbehandlere.json`)
 backenden logger deg inn som:
 
-| `BRUKERPROFIL`                    | Navn               | Navident  | Enhet                          | Leder? |
+| `BRUKERPROFIL`                    | Navn               | NAVident  | Enhet                          | Leder? |
 | --------------------------------- | ------------------ | --------- | ------------------------------ | ------ |
 | `saksbehandler-analyse` (default) | Bjarte Byråkratsen | `L999999` | Nav Kontroll Analyse Seksjon 1 | Nei    |
 | `leder-analyse`                   | Stian Sjeferud     | `L900006` | Nav Kontroll Analyse Seksjon 1 | Ja     |

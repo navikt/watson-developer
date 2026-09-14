@@ -41,7 +41,7 @@ Manuell sjekkliste:
 - [ ] Klon `watson-developer`: `git clone git@github.com:navikt/watson-developer.git`
 - [ ] Klon alle Watson-repoer: `./scripts/clone-repos.sh`
 - [ ] Opprett kind-kluster: `./scripts/setup-kind.sh`
-- [ ] Start lokalmiljøet: `tilt up`
+- [ ] Start lokalmiljøet: `./start`
 - [ ] Verifiser at [Tilt UI](http://localhost:10350) viser grønne ressurser
 - [ ] Verifiser at [Swagger UI](http://localhost:8080/swagger-ui/index.html) svarer
 - [ ] Hent et testtoken og gjør et API-kall (se [LOKALMILJO.md](../LOKALMILJO.md#hent-token-for-lokal-testing))

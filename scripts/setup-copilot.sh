@@ -193,100 +193,195 @@ if [[ -n "$JAVA_HOME_PATH" ]]; then
 fi
 READ_PATHS="$READ_PATHS]"
 
-# Sjekk om en eksisterende config allerede har tilgangene denne versjonen av
-# scriptet krever. Hvis ja, lar vi den være i fred — brukeren kan ha gjort
-# egne tilpasninger.
-CONFIG_NEEDS_UPDATE=true
-if [[ -f "$CONFIG_FILE" ]]; then
-    if grep -qF "$KUBECONFIG_PATH" "$CONFIG_FILE" &&
-        grep -qF "write = " "$CONFIG_FILE" &&
-        grep -qF "\"$WATSON_ROOT\"" "$CONFIG_FILE" &&
-        grep -qE 'allow_cache_exec[^]]*"gradle"' "$CONFIG_FILE"; then
-        CONFIG_NEEDS_UPDATE=false
-    fi
+# Config genereres/oppdateres av et Python-hjelpescript (bruker tomllib, som
+# krever Python 3.11+) i stedet for regex-basert tekstsplitting. Det gir
+# korrekt håndtering av enkelt-/dobbeltfnutter, multiline-arrays og
+# inline-kommentarer i en eksisterende config, og bevarer ukjente
+# seksjoner/nøkler brukeren måtte ha lagt til selv.
+#
+# - Ved oppretting: fylles read/write/ports/sandbox med alle stiene scriptet
+#   har detektert (Xcode, gradle.properties, kubeconfig, evt. node/JDK).
+# - Ved oppdatering av en eksisterende config: kun det som er strengt
+#   nødvendig legges til (kubeconfig i read, watson-root i write, "gradle" i
+#   allow_cache_exec) — øvrige verdier og seksjoner bevares uendret. Den
+#   gamle brede `~/.kube`-tilgangen fjernes samtidig, siden vi nå bruker en
+#   avgrenset prosjekt-kubeconfig.
+RTK_PATH="$HOME/Library/Application Support/rtk"
+FRESH_WRITE_PATHS='["'"$WATSON_ROOT"'", "'"$RTK_PATH"'"]'
+FRESH_CACHE_EXEC='["ms-playwright", "gradle"]'
+PORTS_JSON='[5174]'
+REQUIRED_READ='["'"$KUBECONFIG_PATH"'"]'
+REQUIRED_WRITE='["'"$WATSON_ROOT"'"]'
+REQUIRED_CACHE_EXEC='["gradle"]'
+
+if ! command -v python3 &>/dev/null; then
+    fail "python3 er ikke installert — nødvendig for å generere/oppdatere cplt-config"
 fi
+
+mkdir -p "$CONFIG_DIR"
+MERGE_SCRIPT_FILE="$(mktemp -t watson-cplt-config-merge.XXXXXX.py)"
+trap 'rm -f "$MERGE_SCRIPT_FILE"' EXIT
+
+cat > "$MERGE_SCRIPT_FILE" <<'PY'
+import datetime
+import json
+import sys
+from pathlib import Path
+
+try:
+    import tomllib
+except ModuleNotFoundError:
+    print("NO_TOMLLIB")
+    sys.exit(3)
+
+(config_file, fresh_read_raw, fresh_write_raw, fresh_cache_exec_raw,
+ ports_raw, required_read_raw, required_write_raw,
+ required_cache_exec_raw) = sys.argv[1:9]
+
+config_file = Path(config_file)
+fresh_read = json.loads(fresh_read_raw)
+fresh_write = json.loads(fresh_write_raw)
+fresh_cache_exec = json.loads(fresh_cache_exec_raw)
+ports = json.loads(ports_raw)
+required_read = json.loads(required_read_raw)
+required_write = json.loads(required_write_raw)
+required_cache_exec = json.loads(required_cache_exec_raw)
+
+DEFAULT_SANDBOX = {
+    "allow_gpg_signing": True,
+    "allow_env_files": True,
+    "allow_localhost_any": True,
+    "quiet": False,
+}
+
+
+def serialize_value(value):
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, (int, float)):
+        return str(value)
+    if isinstance(value, str):
+        return json.dumps(value)
+    if isinstance(value, list):
+        return "[" + ", ".join(serialize_value(v) for v in value) + "]"
+    raise TypeError(f"Kan ikke serialisere TOML-verdi: {value!r}")
+
+
+def write_toml(data):
+    lines = []
+    for section, entries in data.items():
+        lines.append(f"[{section}]")
+        for key, value in entries.items():
+            lines.append(f"{key} = {serialize_value(value)}")
+        lines.append("")
+    return "\n".join(lines).rstrip() + "\n"
+
+
+if not config_file.exists():
+    data = {
+        "allow": {"read": fresh_read, "write": fresh_write, "ports": ports},
+        "sandbox": {**DEFAULT_SANDBOX, "allow_cache_exec": fresh_cache_exec},
+    }
+    config_file.parent.mkdir(parents=True, exist_ok=True)
+    config_file.write_text(write_toml(data), encoding="utf-8")
+    print("CREATED")
+    sys.exit(0)
+
+raw = config_file.read_text(encoding="utf-8")
+try:
+    data = tomllib.loads(raw)
+except tomllib.TOMLDecodeError as exc:
+    print(f"PARSE_ERROR {exc}")
+    sys.exit(4)
+
+allow = dict(data.get("allow", {}))
+sandbox = dict(data.get("sandbox", {}))
+
+existing_read = list(allow.get("read", []))
+existing_write = list(allow.get("write", []))
+existing_cache_exec = list(sandbox.get("allow_cache_exec", []))
+
+# Fjern den tidligere brede ~/.kube-tilgangen — vi bruker nå en avgrenset
+# prosjekt-kubeconfig i stedet.
+home_kube = str(Path.home() / ".kube")
+filtered_read = [path for path in existing_read if path != home_kube]
+needs_update = filtered_read != existing_read
+existing_read = filtered_read
+
+for value in required_read:
+    if value not in existing_read:
+        existing_read.append(value)
+        needs_update = True
+for value in required_write:
+    if value not in existing_write:
+        existing_write.append(value)
+        needs_update = True
+for value in required_cache_exec:
+    if value not in existing_cache_exec:
+        existing_cache_exec.append(value)
+        needs_update = True
+
+if not needs_update:
+    print("ALREADY_OK")
+    sys.exit(0)
+
+allow["read"] = existing_read
+allow["write"] = existing_write
+allow.setdefault("ports", ports)
+sandbox["allow_cache_exec"] = existing_cache_exec
+for key, value in DEFAULT_SANDBOX.items():
+    sandbox.setdefault(key, value)
+
+data["allow"] = allow
+data["sandbox"] = sandbox
+
+try:
+    serialized = write_toml(data)
+except TypeError as exc:
+    print(f"UNSUPPORTED_STRUCTURE {exc}")
+    sys.exit(5)
+
+timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+backup_file = config_file.with_name(f"{config_file.name}.bak.{timestamp}")
+backup_file.write_text(raw, encoding="utf-8")
+config_file.write_text(serialized, encoding="utf-8")
+print(f"UPDATED {backup_file}")
+PY
+
+MERGE_RESULT="$(python3 "$MERGE_SCRIPT_FILE" \
+    "$CONFIG_FILE" "$READ_PATHS" "$FRESH_WRITE_PATHS" "$FRESH_CACHE_EXEC" "$PORTS_JSON" \
+    "$REQUIRED_READ" "$REQUIRED_WRITE" "$REQUIRED_CACHE_EXEC")"
+rm -f "$MERGE_SCRIPT_FILE"
+trap - EXIT
 
 CONFIG_CHANGED=false
-
-if [[ -f "$CONFIG_FILE" && "$CONFIG_NEEDS_UPDATE" == true ]]; then
-    BACKUP_FILE="$CONFIG_FILE.bak.$(date +%Y%m%d-%H%M%S)"
-    cp "$CONFIG_FILE" "$BACKUP_FILE"
-    info "Tok backup av eksisterende config: $BACKUP_FILE"
-fi
-
-if [[ ! -f "$CONFIG_FILE" ]]; then
-    mkdir -p "$CONFIG_DIR"
-    cat > "$CONFIG_FILE" <<EOF
-[allow]
-# Xcode CLI tools (git, clang etc.) + prosjektets kubeconfig + node version manager +
-# gradle.properties (GitHub Packages-credentials for watson-admin-api) +
-# detektert JDK
-read = $READ_PATHS
-# watson-developer (inkl. repos/ med alle klonede sibling-repoer) + rtk (token-optimalisert CLI-proxy)
-write = ["$WATSON_ROOT", "$HOME/Library/Application Support/rtk"]
-# Vite dev server (watson-sak-frontend)
-ports = [5174]
-
-[sandbox]
-allow_gpg_signing = true
-allow_env_files = true
-allow_localhost_any = true
-allow_cache_exec = ["ms-playwright", "gradle"]
-quiet = false
-EOF
-    ok "Opprettet $CONFIG_FILE"
-    CONFIG_CHANGED=true
-elif [[ "$CONFIG_NEEDS_UPDATE" == true ]]; then
-    python3 - "$CONFIG_FILE" "$KUBECONFIG_PATH" "$WATSON_ROOT" <<'PY'
-import json
-import re
-import sys
-
-config_file, kubeconfig_path, watson_root = sys.argv[1:]
-text = open(config_file, encoding="utf-8").read()
-
-
-def update_array(text, section_name, key, required, remove=()):
-    section_pattern = re.compile(
-        rf"(?ms)(^\[{re.escape(section_name)}\]\s*$.*?)(?=^\[|\Z)"
-    )
-    section_match = section_pattern.search(text)
-    if not section_match:
-        text += f"\n[{section_name}]\n{key} = [{json.dumps(required)}]\n"
-        return text
-
-    section = section_match.group(1)
-    key_pattern = re.compile(rf"(?m)^{re.escape(key)}\s*=\s*\[(.*?)\]\s*$")
-    key_match = key_pattern.search(section)
-    if key_match:
-        values = re.findall(r'"([^"]*)"', key_match.group(1))
-        values = [value for value in values if value not in remove]
-        for value in required:
-            if value not in values:
-                values.append(value)
-        replacement = f"{key} = [{', '.join(json.dumps(value) for value in values)}]"
-        section = section[:key_match.start()] + replacement + section[key_match.end():]
-    else:
-        section = section.rstrip() + f"\n{key} = [{', '.join(json.dumps(value) for value in required)}]\n"
-    return text[:section_match.start(1)] + section + text[section_match.end(1):]
-
-
-text = update_array(
-    text,
-    "allow",
-    "read",
-    [kubeconfig_path],
-    remove=(f"{__import__('os').path.expanduser('~/.kube')}",),
-)
-text = update_array(text, "allow", "write", [watson_root])
-text = update_array(text, "sandbox", "allow_cache_exec", ["gradle"])
-open(config_file, "w", encoding="utf-8").write(text)
-PY
-    ok "Oppdaterte $CONFIG_FILE med nødvendige tilganger uten å overskrive øvrige innstillinger"
-    CONFIG_CHANGED=true
-else
-    skip "Config finnes allerede med nødvendige tilganger: $CONFIG_FILE"
-fi
+case "$MERGE_RESULT" in
+    CREATED)
+        ok "Opprettet $CONFIG_FILE"
+        CONFIG_CHANGED=true
+        ;;
+    UPDATED*)
+        BACKUP_FILE="${MERGE_RESULT#UPDATED }"
+        info "Tok backup av eksisterende config: $BACKUP_FILE"
+        ok "Oppdaterte $CONFIG_FILE med nødvendige tilganger uten å overskrive øvrige innstillinger"
+        CONFIG_CHANGED=true
+        ;;
+    ALREADY_OK)
+        skip "Config finnes allerede med nødvendige tilganger: $CONFIG_FILE"
+        ;;
+    NO_TOMLLIB)
+        fail "python3 mangler tomllib (krever Python 3.11+) — kan ikke sjekke/oppdatere $CONFIG_FILE trygt"
+        ;;
+    PARSE_ERROR*)
+        fail "Kunne ikke lese $CONFIG_FILE som TOML: ${MERGE_RESULT#PARSE_ERROR }"
+        ;;
+    UNSUPPORTED_STRUCTURE*)
+        fail "$CONFIG_FILE har en struktur dette skriptet ikke støtter å oppdatere automatisk (${MERGE_RESULT#UNSUPPORTED_STRUCTURE }). Rediger filen manuelt."
+        ;;
+    *)
+        fail "Uventet resultat fra cplt-config-oppdatering: $MERGE_RESULT"
+        ;;
+esac
 
 # ─── Restart-sjekk ────────────────────────────────────────────────────────────
 # cplt-sandboxen leser config ved oppstart av den sandboxede prosessen.
