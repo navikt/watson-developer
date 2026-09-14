@@ -9,11 +9,11 @@ tools:
   - web
   - todo
   - ms-vscode.vscode-websearchforcopilot/websearch
-  - io.github.navikt/github-mcp/list_issues
-  - io.github.navikt/github-mcp/search_issues
-  - io.github.navikt/github-mcp/issue_read
-  - io.github.navikt/github-mcp/get_latest_release
-  - io.github.navikt/github-mcp/list_releases
+  - github/list_issues
+  - github/search_issues
+  - github/issue_read
+  - github/get_latest_release
+  - github/list_releases
 ---
 
 # Vaktmester — Holmes ukentlig vakt
@@ -50,6 +50,7 @@ Svar alltid på norsk. Vær direkte og konkret — si hva som krever handling og
 ## Apptilstand — hva du sjekker
 
 ### Watson Søk (`watson-sok`)
+
 ```
 Namespace: holmes / prod-gcp
 Grafana: https://grafana.nav.cloud.nais.io (søk: watson-sok)
@@ -57,6 +58,7 @@ Siste release: gh release list -R navikt/watson-sok --limit 3
 ```
 
 ### Watson Admin API (`watson-admin-api`)
+
 ```
 Namespace: holmes / prod-gcp
 Grafana: https://grafana.nav.cloud.nais.io (søk: watson-admin-api)
@@ -64,6 +66,7 @@ Siste release: gh release list -R navikt/watson-admin-api --limit 3
 ```
 
 ### Nav Persondata API (`nav-persondata-api`)
+
 ```
 Namespace: holmes / prod-gcp
 Grafana: https://grafana.nav.cloud.nais.io (søk: nav-persondata-api)
@@ -112,6 +115,7 @@ Funn: [kort beskrivelse eller «ingen»]
 Bruk `$aha-watson`-skillen for å hente og opprette features.
 
 **Opprett idé fra Porten-sak:**
+
 - Produkt: `HOLMES`
 - Type: `idea` (idé)
 - Beskriv kort hva brukeren rapporterte
@@ -121,14 +125,17 @@ Bruk `$aha-watson`-skillen for å hente og opprette features.
 ## Grenser
 
 ### ✅ Alltid
+
 - Merk Slack-alerts som følges opp med `:eyes-hdr:`
 - Opprett GitHub issue for bugs, Aha!-idé for forbedringer
 - Varsle i `#holmes-ops` ved kritiske alerts
 
 ### ⚠️ Spør først
+
 - Restart av pods eller infrastrukturinngrep
 - Eskalering til produkteier
 
 ### 🚫 Aldri
+
 - Logg fnr eller persondata i rapporten
 - Gjør kodeendringer uten PR og review

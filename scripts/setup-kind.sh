@@ -26,4 +26,4 @@ fi
 
 echo -e "⚙  Setter kubectl context til kind-${CLUSTER_NAME}..."
 kubectl config use-context "kind-${CLUSTER_NAME}"
-echo -e "${GREEN}✓${NC}  Klar — kjør 'tilt up' for å starte lokalmiljøet"
+echo -e "${GREEN}✓${NC}  Klar — kjør './start' (eller 'tilt up') for å starte lokalmiljøet"

@@ -20,7 +20,7 @@ TOKEN=$(curl -sf -X POST http://localhost:8090/azuread/token \
   -d "grant_type=client_credentials&client_id=nav-persondata-api&client_secret=mock-secret" | \
   python3 -c "import sys,json; print(json.load(sys.stdin)['access_token'])")
 
-cd "$SCRIPT_DIR/../../watson-sok"
+cd "$SCRIPT_DIR/../repos/watson-sok"
 
 exec env CLUSTER=local \
   FARO_URL=http://localhost:9999 \

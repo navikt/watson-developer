@@ -5,25 +5,27 @@ Watson er Nav Kontrolls system for å avdekke og forebygge misbruk av Nav-ytelse
 
 ## Portefølje
 
-| Repo | Rolle | Teknologi |
-|------|-------|-----------|
-| `watson-admin-api` | Kjernebackend | Spring Boot 4 + Kotlin + PostgreSQL + Kafka |
-| `watson-sak-frontend` | Saksbehandler-UI | React Router v7 + Aksel + TypeScript |
-| `watson-sok` | Brukeroppslag | React Router v7 + Aksel + TypeScript |
-| `nav-persondata-api` | Persondata-API | Spring Boot + Kotlin |
+| Repo                  | Rolle            | Teknologi                                   |
+| --------------------- | ---------------- | ------------------------------------------- |
+| `watson-admin-api`    | Kjernebackend    | Spring Boot 4 + Kotlin + PostgreSQL + Kafka |
+| `watson-sak-frontend` | Saksbehandler-UI | React Router v7 + Aksel + TypeScript        |
+| `watson-sok`          | Brukeroppslag    | React Router v7 + Aksel + TypeScript        |
+| `nav-persondata-api`  | Persondata-API   | Spring Boot + Kotlin                        |
 
-Sibling-repoer klones til `../` (foreldrekatalog) med `./scripts/clone-repos.sh`.
+Sibling-repoer klones til `repos/` med `./scripts/clone-repos.sh`.
 Alle repoer synkroniseres til nyeste standardbranch med `./sync.sh`.
 
 ## Dette repoet
 
 `watson-developer` inneholder:
+
 - `Tiltfile` — lokal utviklingsserver (Tilt + kind)
-- `sync.sh` — synkroniser alle repoer i foreldrekatalogen til nyeste standardbranch
+- `sync.sh` — synkroniser alle repoer i `repos/` til nyeste standardbranch
 - `kind/cluster.yaml` — lokal Kubernetes-kluster
 - `k8s/` — Kubernetes-manifester for lokal infrastruktur
 - `scripts/` — hjelpeskript (klon repoer, sett opp kluster, pre-flight sjekk)
 - `docs/` — arkitektur, domene og onboarding-dokumentasjon
+- `repos/` — klonede sibling-repoer (git-ignorert)
 
 ## Domene
 
@@ -41,6 +43,7 @@ Alle repoer synkroniseres til nyeste standardbranch med `./sync.sh`.
 ## Relaterte agenter
 
 Hver applikasjon i porteføljen har egne agenter under `.github/agents/`:
+
 - `auth-agent` — Azure AD, token-validering
 - `nais-agent` — Nais-deployment, GCP-ressurser
 - `observability-agent` — Prometheus, Grafana

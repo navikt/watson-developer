@@ -15,6 +15,7 @@ misbruk av Nav-ytelser (trygdesvindel). Watson er deres primærverktøy.
 ## Kjerneentiteter
 
 ### Kontrollsak
+
 En sak opprettet av en saksbehandler i Nav Kontroll for å undersøke mulig
 misbruk av Nav-ytelser hos en bruker. En kontrollsak er knyttet til ett
 fødselsnummer og har en type, status og ansvarlig saksbehandler.
@@ -23,12 +24,14 @@ fødselsnummer og har en type, status og ansvarlig saksbehandler.
 - **Engelsk**: _control case_
 
 ### Kontrollsakstype
+
 Kategoriserer hva slags misbruk som undersøkes, f.eks. arbeid ved siden av ytelse,
 feilaktige opplysninger om bosted, osv.
 
 - **Kodeterm**: `kontrollsakstype` / `KontrollSaksType`
 
 ### Saksbehandler
+
 Nav Kontroll-ansatt som bruker Watson. Identifiseres med NAVident (en bokstav + 6 sifre,
 f.eks. `X123456`).
 
@@ -36,6 +39,7 @@ f.eks. `X123456`).
 - Lagres ikke som personopplysning — kun NAVident refereres
 
 ### Bruker / Kontrollsubjekt
+
 Personen som kontrolleres. Identifiseres med fødselsnummer (fnr) eller d-nummer.
 Persondata hentes fra `nav-persondata-api` — lagres ikke i Watson-databasen.
 
@@ -47,6 +51,7 @@ Persondata hentes fra `nav-persondata-api` — lagres ikke i Watson-databasen.
 ## Tekniske begreper
 
 ### NOM — Nasjonal organisasjonsmaster
+
 Nav-internt system som er master for organisasjonsstruktur og ansattdata.
 Watson bruker NOM for å hente informasjon om saksbehandlere.
 
@@ -54,6 +59,7 @@ Watson bruker NOM for å hente informasjon om saksbehandlere.
 - **Kodeterm**: `nom` / `NomClient`
 
 ### Populasjonstilgangskontroll
+
 Tjeneste som avgjør om en saksbehandler har tilgang til å se informasjon
 om en spesifikk bruker, basert på saksbehandlerens AD-gruppe og brukerens
 tilknytning.
@@ -62,6 +68,7 @@ tilknytning.
 - **Kodeterm**: `tilgangskontroll` / `TilgangskontrollClient`
 
 ### Oppgave
+
 Nav-internt oppgavesystem. Watson oppretter og oppdaterer oppgaver i
 tilknytning til kontrollsaker.
 
@@ -72,10 +79,10 @@ tilknytning til kontrollsaker.
 
 ## Tilgangsgrupper (Azure AD)
 
-| Gruppe | Kortform | Tilgang |
-|--------|----------|---------|
-| `0000-GA-kontroll-Oppslag-Bruker-Basic` | Basic | Les tilgang — søk og oppslag |
-| `0000-GA-kontroll-Oppslag-Bruker-Utvidet` | Utvidet | Skrivetilgang — full saksbehandling |
+| Gruppe                                    | Kortform | Tilgang                             |
+| ----------------------------------------- | -------- | ----------------------------------- |
+| `0000-GA-kontroll-Oppslag-Bruker-Basic`   | Basic    | Les tilgang — søk og oppslag        |
+| `0000-GA-kontroll-Oppslag-Bruker-Utvidet` | Utvidet  | Skrivetilgang — full saksbehandling |
 
 Tilgangsgrupper sjekkes av `watson-admin-api` via token claims. Ingen bruker
 skal ha tilgang uten å være i minst én av disse gruppene.
@@ -91,14 +98,14 @@ status-enum og overganger.
 
 ## Forkortelser
 
-| Forkortelse | Betyr |
-|-------------|-------|
-| fnr | Fødselsnummer (11 siffer) |
-| d-nr | D-nummer (identitetsnummer for utenlandske statsborgere) |
-| NAVident | Ansatt-ID i Nav (f.eks. `X123456`) |
-| NOM | Nasjonal organisasjonsmaster |
-| PTK | Populasjonstilgangskontroll |
-| OBO | On-Behalf-Of (token exchange-mønster i Azure AD) |
+| Forkortelse | Betyr                                                    |
+| ----------- | -------------------------------------------------------- |
+| fnr         | Fødselsnummer (11 siffer)                                |
+| d-nr        | D-nummer (identitetsnummer for utenlandske statsborgere) |
+| NAVident    | Ansatt-ID i Nav (f.eks. `X123456`)                       |
+| NOM         | Nasjonal organisasjonsmaster                             |
+| PTK         | Populasjonstilgangskontroll                              |
+| OBO         | On-Behalf-Of (token exchange-mønster i Azure AD)         |
 
 ---
 

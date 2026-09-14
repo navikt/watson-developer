@@ -2,24 +2,26 @@
 set -euo pipefail
 
 # Sjekker ut standardbranch (via origin/HEAD, fallback main/master) og henter
-# nyeste endringer i alle git-repoer i foreldremappen.
+# nyeste endringer i alle git-repoer i repos-mappen.
 # Idempotent — trygt å kjøre flere ganger.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PARENT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+REPOS_DIR="$SCRIPT_DIR/../repos"
+mkdir -p "$REPOS_DIR"
+REPOS_DIR="$(cd "$REPOS_DIR" && pwd)"
 
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 RED='\033[0;31m'
 NC='\033[0m'
 
-echo "🔄 Synkroniserer repoer i: $PARENT_DIR"
+echo "🔄 Synkroniserer repoer i: $REPOS_DIR"
 echo ""
 
 failed=0
 found=0
 
-for repo_path in "$PARENT_DIR"/*/; do
+for repo_path in "$REPOS_DIR"/*/; do
   [ -d "$repo_path/.git" ] || continue
   found=$((found + 1))
   repo_name="$(basename "$repo_path")"
@@ -68,7 +70,7 @@ done
 
 echo ""
 if [ "$found" -eq 0 ]; then
-  echo -e "${YELLOW}⟳${NC} Fant ingen git-repoer i $PARENT_DIR"
+  echo -e "${YELLOW}⟳${NC} Fant ingen git-repoer i $REPOS_DIR"
   exit 0
 fi
 

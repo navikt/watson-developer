@@ -8,13 +8,13 @@ Beskriver hvordan Watson-porteføljens lokale utviklingsmiljø fungerer.
 
 Infrastruktur kjører i kind (Kubernetes), applikasjoner kjører som lokale prosesser:
 
-| Tjeneste | Kjøres i | Port |
-|----------|----------|------|
-| PostgreSQL | kind | 5432 |
-| mock-oauth2-server | kind | 8090 |
-| watson-admin-api | lokal (`bootRun`) | 8080 |
+| Tjeneste            | Kjøres i                     | Port |
+| ------------------- | ---------------------------- | ---- |
+| PostgreSQL          | kind                         | 5432 |
+| mock-oauth2-server  | kind                         | 8090 |
+| watson-admin-api    | lokal (`bootRun`)            | 8080 |
 | watson-sak-frontend | lokal (`pnpm run dev:local`) | 5174 |
-| watson-pdfgen | lokal Docker-container | 8082 |
+| watson-pdfgen       | lokal Docker-container       | 8082 |
 
 > OAuth2 access token for watson-sak-frontend hentes automatisk fra mock-oauth2-server ved Tilt-oppstart.
 
@@ -32,14 +32,14 @@ tilt trigger <ressursnavn>
 
 ## Nyttige lenker (når Tilt er oppe)
 
-| Tjeneste | URL |
-|----------|-----|
-| Tilt UI | http://localhost:10350 |
-| Swagger UI | http://localhost:8080/swagger-ui/index.html |
-| Health | http://localhost:8080/actuator/health |
-| Watson Sak | http://localhost:5174 |
-| Watson PDF-gen health | http://localhost:8082/internal/is_ready |
-| mock-oauth2-server | http://localhost:8090 |
+| Tjeneste              | URL                                         |
+| --------------------- | ------------------------------------------- |
+| Tilt UI               | http://localhost:10350                      |
+| Swagger UI            | http://localhost:8080/swagger-ui/index.html |
+| Health                | http://localhost:8080/actuator/health       |
+| Watson Sak            | http://localhost:5174                       |
+| Watson PDF-gen health | http://localhost:8082/internal/is_ready     |
+| mock-oauth2-server    | http://localhost:8090                       |
 
 ---
 
@@ -57,10 +57,10 @@ Tokenet kan brukes i `Authorization: Bearer <token>` for å kalle watson-admin-a
 
 ## Miljøer og deployment
 
-| Miljø | Plattform | Deployment |
-|-------|-----------|-----------|
-| dev | Nais GCP (nav-dev-gcp) | Ved merge til `main` |
-| prod | Nais GCP (nav-prod-gcp) | Ved ny GitHub Release |
+| Miljø | Plattform               | Deployment            |
+| ----- | ----------------------- | --------------------- |
+| dev   | Nais GCP (nav-dev-gcp)  | Ved merge til `main`  |
+| prod  | Nais GCP (nav-prod-gcp) | Ved ny GitHub Release |
 
 Se GitHub Actions i hvert repo for detaljer. Dev-deployment kan trigges manuelt via Actions-fanen.
 
