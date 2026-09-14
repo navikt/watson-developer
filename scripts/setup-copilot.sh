@@ -176,13 +176,14 @@ WATSON_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 # Bygg read-array
 # - Xcode CLI tools (git, clang etc.)
+# - ~/.kube for kubectl/kind and Tilt
 # - node version manager (hvis detektert)
 # - ~/.gradle/gradle.properties: watson-admin-api sitt gradlew leser denne for
 #   GitHub Packages-credentials (gpr.user/gpr.key) allerede før build starter
 # - detektert JDK (Homebrew eller jenv-styrt) — se detect_java_home over.
 #   Gradle kan trenge å lese JDK-filer direkte (f.eks. under toolchain-oppdagelse),
 #   så vi legger til stien uansett hvilken JDK som ble funnet.
-READ_PATHS='["/Applications/Xcode.app", "'"$HOME"'/.gradle/gradle.properties"'
+READ_PATHS='["/Applications/Xcode.app", "'"$HOME"'/.gradle/gradle.properties", "'"$HOME"'/.kube"'
 if [[ -n "$NODE_PATH" ]]; then
     READ_PATHS="$READ_PATHS, \"$NODE_PATH\""
 fi
@@ -191,15 +192,31 @@ if [[ -n "$JAVA_HOME_PATH" ]]; then
 fi
 READ_PATHS="$READ_PATHS]"
 
+# Sjekk om en eksisterende config allerede har tilgangene denne versjonen av
+# scriptet krever (~/.kube og gradle i allow_cache_exec). Hvis ja, lar vi den
+# være i fred — brukeren kan ha gjort egne tilpasninger.
+CONFIG_NEEDS_UPDATE=true
 if [[ -f "$CONFIG_FILE" ]]; then
-    skip "Config finnes allerede: $CONFIG_FILE"
-    info "Slett filen og kjør scriptet på nytt for å regenerere"
-else
+    if grep -qF "$HOME/.kube" "$CONFIG_FILE" && grep -qE 'allow_cache_exec[^]]*"gradle"' "$CONFIG_FILE"; then
+        CONFIG_NEEDS_UPDATE=false
+    fi
+fi
+
+CONFIG_CHANGED=false
+
+if [[ -f "$CONFIG_FILE" && "$CONFIG_NEEDS_UPDATE" == true ]]; then
+    BACKUP_FILE="$CONFIG_FILE.bak.$(date +%Y%m%d-%H%M%S)"
+    cp "$CONFIG_FILE" "$BACKUP_FILE"
+    info "Tok backup av eksisterende config: $BACKUP_FILE"
+fi
+
+if [[ ! -f "$CONFIG_FILE" || "$CONFIG_NEEDS_UPDATE" == true ]]; then
     mkdir -p "$CONFIG_DIR"
     cat > "$CONFIG_FILE" <<EOF
 [allow]
-# Xcode CLI tools (git, clang etc.) + node version manager + gradle.properties
-# (GitHub Packages-credentials for watson-admin-api) + detektert JDK
+# Xcode CLI tools (git, clang etc.) + ~/.kube + node version manager +
+# gradle.properties (GitHub Packages-credentials for watson-admin-api) +
+# detektert JDK
 read = $READ_PATHS
 # watson-developer (inkl. repos/ med alle klonede sibling-repoer) + rtk (token-optimalisert CLI-proxy)
 write = ["$WATSON_ROOT", "$HOME/Library/Application Support/rtk"]
@@ -210,10 +227,35 @@ ports = [5174]
 allow_gpg_signing = true
 allow_env_files = true
 allow_localhost_any = true
-allow_cache_exec = ["ms-playwright"]
+allow_cache_exec = ["ms-playwright", "gradle"]
 quiet = false
 EOF
-    ok "Opprettet $CONFIG_FILE"
+    if [[ -n "${BACKUP_FILE:-}" ]]; then
+        ok "Oppdaterte $CONFIG_FILE med nye tilganger (~/.kube, gradle)"
+    else
+        ok "Opprettet $CONFIG_FILE"
+    fi
+    CONFIG_CHANGED=true
+else
+    skip "Config finnes allerede med nødvendige tilganger: $CONFIG_FILE"
+fi
+
+# ─── Restart-sjekk ────────────────────────────────────────────────────────────
+# cplt-sandboxen leser config ved oppstart av den sandboxede prosessen.
+# Hvis vi nettopp endret configen mens en agent/økt allerede kjører inne i
+# sandboxen (dvs. $__CPLT_WRAPPED er satt), vil den økten fortsette å bruke de
+# gamle tilgangene — og kommandoer som tilt/kubectl/gradle vil da feile med
+# "Operation not permitted" helt til økten restartes.
+if [[ "$CONFIG_CHANGED" == true ]]; then
+    echo ""
+    if [[ -n "${__CPLT_WRAPPED:-}" ]]; then
+        echo -e "${YELLOW}⚠${NC}  Denne økten kjører allerede inne i cplt-sandboxen med den forrige konfigurasjonen."
+        echo "   De nye tilgangene trer først i kraft i en ny økt."
+        echo "   Avslutt denne Copilot-økten og start den på nytt før du fortsetter,"
+        echo "   ellers vil kommandoer som tilt/kubectl/gradle sannsynligvis feile."
+    else
+        info "Restart 'copilot' (eller åpne en ny terminal) for at de nye cplt-tilgangene skal tre i kraft."
+    fi
 fi
 
 # ─── Shell-install ───────────────────────────────────────────────────────────

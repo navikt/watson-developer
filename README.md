@@ -80,14 +80,14 @@ backenden logger deg inn som:
 
 | `BRUKERPROFIL`                    | Navn               | NAVident  | Enhet                          | Leder? |
 | --------------------------------- | ------------------ | --------- | ------------------------------ | ------ |
-| `saksbehandler-analyse` (default) | Bjarte Byråkratsen | `L999999` | NAV Kontroll Analyse Seksjon 1 | Nei    |
-| `leder-analyse`                   | Stian Sjeferud     | `L900006` | NAV Kontroll Analyse Seksjon 1 | Ja     |
-| `leder-øst`                       | Ove Overordnerud   | `L900000` | NAV Kontroll Øst Seksjon 1     | Ja     |
-| `leder-vest`                      | Kari Kommandørsen  | `L900001` | NAV Kontroll Vest Seksjon 1    | Ja     |
-| `saksbehandler-øst-1`             | Ulrikke Utrederson | `L900002` | NAV Kontroll Øst Seksjon 1     | Nei    |
-| `saksbehandler-øst-2`             | Trine Trygdesen    | `L900003` | NAV Kontroll Øst Seksjon 2     | Nei    |
-| `saksbehandler-vest-1`            | Kjell Kontrollsen  | `L900004` | NAV Kontroll Vest Seksjon 1    | Nei    |
-| `saksbehandler-vest-2`            | Gunnar Granskeren  | `L900005` | NAV Kontroll Vest Seksjon 2    | Nei    |
+| `saksbehandler-analyse` (default) | Bjarte Byråkratsen | `L999999` | Nav Kontroll Analyse Seksjon 1 | Nei    |
+| `leder-analyse`                   | Stian Sjeferud     | `L900006` | Nav Kontroll Analyse Seksjon 1 | Ja     |
+| `leder-øst`                       | Ove Overordnerud   | `L900000` | Nav Kontroll Øst Seksjon 1     | Ja     |
+| `leder-vest`                      | Kari Kommandørsen  | `L900001` | Nav Kontroll Vest Seksjon 1    | Ja     |
+| `saksbehandler-øst-1`             | Ulrikke Utrederson | `L900002` | Nav Kontroll Øst Seksjon 1     | Nei    |
+| `saksbehandler-øst-2`             | Trine Trygdesen    | `L900003` | Nav Kontroll Øst Seksjon 2     | Nei    |
+| `saksbehandler-vest-1`            | Kjell Kontrollsen  | `L900004` | Nav Kontroll Vest Seksjon 1    | Nei    |
+| `saksbehandler-vest-2`            | Gunnar Granskeren  | `L900005` | Nav Kontroll Vest Seksjon 2    | Nei    |
 
 De tre lederprofilene og deres saksbehandlere under seg (én leder per enhet) gjør det mulig å
 teste overføring av saker mellom saksbehandlere i samme enhet og på tvers av enheter

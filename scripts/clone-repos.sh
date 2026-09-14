@@ -9,11 +9,11 @@ REPOS_DIR="$(cd "$REPOS_DIR" && pwd)"
 
 # Watson repos to clone
 REPOS=(
-  "git@github.com:navikt/nav-persondata-api.git"
-  "git@github.com:navikt/watson-admin-api.git"
-  "git@github.com:navikt/watson-sak-frontend.git"
-  "git@github.com:navikt/watson-sok.git"
-  "git@github.com:navikt/watson-pdfgen.git"
+  "https://github.com/navikt/nav-persondata-api.git"
+  "https://github.com/navikt/watson-admin-api.git"
+  "https://github.com/navikt/watson-sak-frontend.git"
+  "https://github.com/navikt/watson-sok.git"
+  "https://github.com/navikt/watson-pdfgen.git"
 )
 
 # Colors
@@ -50,6 +50,11 @@ for repo_url in "${REPOS[@]}"; do
   if [ -f "$repo_path/setup.sh" ]; then
     echo -e "  ${YELLOW}⚙${NC}  Kjører setup.sh..."
     (cd "$repo_path" && bash setup.sh)
+  fi
+
+  if [[ "$repo_name" == "watson-sak-frontend" || "$repo_name" == "watson-sok" ]]; then
+    echo -e "  ${YELLOW}📦${NC} Installerer frontend-avhengigheter..."
+    (cd "$repo_path" && pnpm install)
   fi
 done
 

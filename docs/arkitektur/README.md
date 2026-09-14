@@ -55,18 +55,18 @@ graph TD
 
 Alle Watson-applikasjoner bruker **Azure AD** med **Wonderwall sidecar** for autentisering av saksbehandlere.
 
-| Tjeneste | Autentisering | Tilgangsgrupper |
-|----------|--------------|----------------|
-| watson-sak-frontend | Azure AD Sidecar (Wonderwall) | Basic + Utvidet |
-| watson-sok | Azure AD Sidecar (Wonderwall) | Basic + Utvidet |
-| watson-admin-api | token-validation-spring (Azure AD) | Basic + Utvidet |
-| nav-persondata-api | Azure AD OBO | Delegert fra kallende tjeneste |
+| Tjeneste            | Autentisering                      | Tilgangsgrupper                |
+| ------------------- | ---------------------------------- | ------------------------------ |
+| watson-sak-frontend | Azure AD Sidecar (Wonderwall)      | Basic + Utvidet                |
+| watson-sok          | Azure AD Sidecar (Wonderwall)      | Basic + Utvidet                |
+| watson-admin-api    | token-validation-spring (Azure AD) | Basic + Utvidet                |
+| nav-persondata-api  | Azure AD OBO                       | Delegert fra kallende tjeneste |
 
 ### Tilgangsgrupper
 
-| Gruppe | AD-navn | Tilgang |
-|--------|---------|---------|
-| Basic | `0000-GA-kontroll-Oppslag-Bruker-Basic` | Søk og oppslag |
+| Gruppe  | AD-navn                                   | Tilgang             |
+| ------- | ----------------------------------------- | ------------------- |
+| Basic   | `0000-GA-kontroll-Oppslag-Bruker-Basic`   | Søk og oppslag      |
 | Utvidet | `0000-GA-kontroll-Oppslag-Bruker-Utvidet` | Full saksbehandling |
 
 ---
@@ -116,21 +116,23 @@ Lokale prosesser (utenfor kind)
 
 ## Nais-konfigurasjon (produksjon)
 
-| Parameter | Verdi |
-|-----------|-------|
-| Namespace | `holmes` |
-| Kluster dev | `nav-dev-gcp` |
-| Kluster prod | `nav-prod-gcp` |
-| Database | GCP Cloud SQL PostgreSQL 15 |
-| Kafka pool | `nav-prod` / `nav-dev` |
+| Parameter    | Verdi                       |
+| ------------ | --------------------------- |
+| Namespace    | `holmes`                    |
+| Kluster dev  | `nav-dev-gcp`               |
+| Kluster prod | `nav-prod-gcp`              |
+| Database     | GCP Cloud SQL PostgreSQL 15 |
+| Kafka pool   | `nav-prod` / `nav-dev`      |
 
 ### accessPolicy (watson-admin-api)
 
 Inbound:
+
 - `watson-sak` (namespace: holmes)
 - `azure-token-generator` (namespace: nais) — for testing
 
 Outbound:
+
 - `nom-api` (namespace: nom)
 - `populasjonstilgangskontroll` (namespace: tilgangsmaskin)
 - `oppgave` (namespace: oppgavehandtering)
