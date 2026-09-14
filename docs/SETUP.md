@@ -70,13 +70,14 @@ Idempotent — kjør igjen for å oppdatere eksisterende repoer med `git pull`.
 ./scripts/setup-kind.sh
 ```
 
-Oppretter kind-klusteret `watson` og setter kubectl-kontekst.
+Oppretter kind-klusteret `watson` og setter kubectl-kontekst i prosjektets
+git-ignorerte `.kube/config`.
 Idempotent — trygt å kjøre flere ganger.
 
 ### 5. Start lokalmiljøet
 
 ```bash
-tilt up
+./start
 ```
 
 Åpne [Tilt UI](http://localhost:10350) for status og logger.

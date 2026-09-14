@@ -176,14 +176,15 @@ WATSON_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 # Bygg read-array
 # - Xcode CLI tools (git, clang etc.)
-# - ~/.kube for kubectl/kind and Tilt
+# - prosjektets kubeconfig for kubectl/kind og Tilt
 # - node version manager (hvis detektert)
 # - ~/.gradle/gradle.properties: watson-admin-api sitt gradlew leser denne for
 #   GitHub Packages-credentials (gpr.user/gpr.key) allerede før build starter
 # - detektert JDK (Homebrew eller jenv-styrt) — se detect_java_home over.
 #   Gradle kan trenge å lese JDK-filer direkte (f.eks. under toolchain-oppdagelse),
 #   så vi legger til stien uansett hvilken JDK som ble funnet.
-READ_PATHS='["/Applications/Xcode.app", "'"$HOME"'/.gradle/gradle.properties", "'"$HOME"'/.kube"'
+KUBECONFIG_PATH="$WATSON_ROOT/.kube/config"
+READ_PATHS='["/Applications/Xcode.app", "'"$HOME"'/.gradle/gradle.properties", "'"$KUBECONFIG_PATH"'"'
 if [[ -n "$NODE_PATH" ]]; then
     READ_PATHS="$READ_PATHS, \"$NODE_PATH\""
 fi
@@ -193,11 +194,14 @@ fi
 READ_PATHS="$READ_PATHS]"
 
 # Sjekk om en eksisterende config allerede har tilgangene denne versjonen av
-# scriptet krever (~/.kube og gradle i allow_cache_exec). Hvis ja, lar vi den
-# være i fred — brukeren kan ha gjort egne tilpasninger.
+# scriptet krever. Hvis ja, lar vi den være i fred — brukeren kan ha gjort
+# egne tilpasninger.
 CONFIG_NEEDS_UPDATE=true
 if [[ -f "$CONFIG_FILE" ]]; then
-    if grep -qF "$HOME/.kube" "$CONFIG_FILE" && grep -qE 'allow_cache_exec[^]]*"gradle"' "$CONFIG_FILE"; then
+    if grep -qF "$KUBECONFIG_PATH" "$CONFIG_FILE" &&
+        grep -qF "write = " "$CONFIG_FILE" &&
+        grep -qF "\"$WATSON_ROOT\"" "$CONFIG_FILE" &&
+        grep -qE 'allow_cache_exec[^]]*"gradle"' "$CONFIG_FILE"; then
         CONFIG_NEEDS_UPDATE=false
     fi
 fi
@@ -210,11 +214,11 @@ if [[ -f "$CONFIG_FILE" && "$CONFIG_NEEDS_UPDATE" == true ]]; then
     info "Tok backup av eksisterende config: $BACKUP_FILE"
 fi
 
-if [[ ! -f "$CONFIG_FILE" || "$CONFIG_NEEDS_UPDATE" == true ]]; then
+if [[ ! -f "$CONFIG_FILE" ]]; then
     mkdir -p "$CONFIG_DIR"
     cat > "$CONFIG_FILE" <<EOF
 [allow]
-# Xcode CLI tools (git, clang etc.) + ~/.kube + node version manager +
+# Xcode CLI tools (git, clang etc.) + prosjektets kubeconfig + node version manager +
 # gradle.properties (GitHub Packages-credentials for watson-admin-api) +
 # detektert JDK
 read = $READ_PATHS
@@ -230,11 +234,55 @@ allow_localhost_any = true
 allow_cache_exec = ["ms-playwright", "gradle"]
 quiet = false
 EOF
-    if [[ -n "${BACKUP_FILE:-}" ]]; then
-        ok "Oppdaterte $CONFIG_FILE med nye tilganger (~/.kube, gradle)"
-    else
-        ok "Opprettet $CONFIG_FILE"
-    fi
+    ok "Opprettet $CONFIG_FILE"
+    CONFIG_CHANGED=true
+elif [[ "$CONFIG_NEEDS_UPDATE" == true ]]; then
+    python3 - "$CONFIG_FILE" "$KUBECONFIG_PATH" "$WATSON_ROOT" <<'PY'
+import json
+import re
+import sys
+
+config_file, kubeconfig_path, watson_root = sys.argv[1:]
+text = open(config_file, encoding="utf-8").read()
+
+
+def update_array(text, section_name, key, required, remove=()):
+    section_pattern = re.compile(
+        rf"(?ms)(^\[{re.escape(section_name)}\]\s*$.*?)(?=^\[|\Z)"
+    )
+    section_match = section_pattern.search(text)
+    if not section_match:
+        text += f"\n[{section_name}]\n{key} = [{json.dumps(required)}]\n"
+        return text
+
+    section = section_match.group(1)
+    key_pattern = re.compile(rf"(?m)^{re.escape(key)}\s*=\s*\[(.*?)\]\s*$")
+    key_match = key_pattern.search(section)
+    if key_match:
+        values = re.findall(r'"([^"]*)"', key_match.group(1))
+        values = [value for value in values if value not in remove]
+        for value in required:
+            if value not in values:
+                values.append(value)
+        replacement = f"{key} = [{', '.join(json.dumps(value) for value in values)}]"
+        section = section[:key_match.start()] + replacement + section[key_match.end():]
+    else:
+        section = section.rstrip() + f"\n{key} = [{', '.join(json.dumps(value) for value in required)}]\n"
+    return text[:section_match.start(1)] + section + text[section_match.end(1):]
+
+
+text = update_array(
+    text,
+    "allow",
+    "read",
+    [kubeconfig_path],
+    remove=(f"{__import__('os').path.expanduser('~/.kube')}",),
+)
+text = update_array(text, "allow", "write", [watson_root])
+text = update_array(text, "sandbox", "allow_cache_exec", ["gradle"])
+open(config_file, "w", encoding="utf-8").write(text)
+PY
+    ok "Oppdaterte $CONFIG_FILE med nødvendige tilganger uten å overskrive øvrige innstillinger"
     CONFIG_CHANGED=true
 else
     skip "Config finnes allerede med nødvendige tilganger: $CONFIG_FILE"

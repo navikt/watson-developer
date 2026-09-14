@@ -14,6 +14,7 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR/.."
+export KUBECONFIG="$PWD/.kube/config"
 
 # Profil-id, navn og rolle — samme sett som k8s/watson-admin-api/mock-oauth2-server.yaml
 # og watson-sak-frontend sin LOKALE_BRUKERPROFILER.

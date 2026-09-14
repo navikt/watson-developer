@@ -84,7 +84,10 @@ Credential directories are denied (`~/.ssh`, `~/.gnupg`, `~/.aws`, `~/.azure`, `
 
 A denial arrives as `EPERM` or "Operation not permitted". That is policy, not a bug and not something a retry or `sudo` fixes. Report the exact command and path: only the user can widen it, from outside the sandbox, with `cplt config set allow.read …` or the equivalent. Saying so is the most useful thing you can do, and an agent that never tries can never say it.
 
-Do not rummage through the user's home directory for its own sake. Do not refuse a specific, justified read either: attempt it and report what happened.
+Do not rummage through the user's home directory for its own sake. Never inspect,
+print, or disclose credential contents, tokens, kubeconfigs, or secret files,
+even when a path is explicitly allowed. Do not refuse a specific, justified
+non-credential read: attempt it and report what happened.
 
 
 ## Routing policy

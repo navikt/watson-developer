@@ -6,6 +6,9 @@ set -euo pipefail
 CLUSTER_NAME="watson"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG="$SCRIPT_DIR/../kind/cluster.yaml"
+WATSON_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+export KUBECONFIG="$WATSON_ROOT/.kube/config"
+mkdir -p "$(dirname "$KUBECONFIG")"
 
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'

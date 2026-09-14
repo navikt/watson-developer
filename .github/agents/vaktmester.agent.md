@@ -9,11 +9,11 @@ tools:
   - web
   - todo
   - ms-vscode.vscode-websearchforcopilot/websearch
-  - io.github.navikt/github-mcp/list_issues
-  - io.github.navikt/github-mcp/search_issues
-  - io.github.navikt/github-mcp/issue_read
-  - io.github.navikt/github-mcp/get_latest_release
-  - io.github.navikt/github-mcp/list_releases
+  - github/list_issues
+  - github/search_issues
+  - github/issue_read
+  - github/get_latest_release
+  - github/list_releases
 ---
 
 # Vaktmester — Holmes ukentlig vakt

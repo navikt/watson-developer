@@ -28,7 +28,8 @@ Inngangsport og utviklermiljø for **Team Holmes** sin Watson-portefølje.
 2. Start Copilot CLI med `copilot`.
 3. Gå ut av `/plan`-modus hvis Copilot CLI starter i denne modusen.
 4. Kjør skillen `/watson-setup`.
-5. Vent til oppsettet er ferdig. Skillen installerer verktøy, kloner repoer og starter infrastrukturen.
+5. Vent til oppsettet er ferdig. Skillen installerer verktøy, kloner repoer og oppretter kind-klusteret.
+6. Start lokalmiljøet med `./start` når skillen er ferdig.
 
 For manuelt oppsett, se [docs/SETUP.md](docs/SETUP.md).
 
@@ -82,7 +83,7 @@ BRUKERPROFIL=leder-øst tilt up watson-sak-frontend
 mock-oauth2-server, og dermed hvilken mock-bruker (via `NomClientMock`/`mock-saksbehandlere.json`)
 backenden logger deg inn som:
 
-| `BRUKERPROFIL`                    | Navn               | NAVident  | Enhet                          | Leder? |
+| `BRUKERPROFIL`                    | Navn               | Navident  | Enhet                          | Leder? |
 | --------------------------------- | ------------------ | --------- | ------------------------------ | ------ |
 | `saksbehandler-analyse` (default) | Bjarte Byråkratsen | `L999999` | Nav Kontroll Analyse Seksjon 1 | Nei    |
 | `leder-analyse`                   | Stian Sjeferud     | `L900006` | Nav Kontroll Analyse Seksjon 1 | Ja     |
@@ -128,7 +129,8 @@ watson-developer/
     ├── nav-persondata-api/
     ├── watson-admin-api/
     ├── watson-sak-frontend/
-    └── watson-sok/
+    ├── watson-sok/
+    └── watson-pdfgen/
 ```
 
 ---

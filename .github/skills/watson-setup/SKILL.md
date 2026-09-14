@@ -51,7 +51,8 @@ steg feiler, vis feilen tydelig og foreslå løsning før du fortsetter.
 ```
 
 Skriptet installerer `cplt` og `nav-pilot`, detekterer node version manager og
-genererer cplt-konfigurasjon med tilgang til `~/.kube`, Gradle og repoene.
+genererer cplt-konfigurasjon med tilgang til prosjektets kubeconfig, Gradle og
+repoene.
 
 **Forventet resultat:** `✅ Ferdig!` uten feil.
 
@@ -86,8 +87,9 @@ frontend-avhengighetene er installert.
 
 **Hvis det feiler:**
 
-- `Repository not found` eller `403` → Kjør `gh auth login` og kontroller at du
-  har tilgang til navikt-organisasjonen.
+- `Repository not found` eller `403` → Avslutt cplt/Copilot, kjør `gh auth login`
+  i en vanlig terminal utenfor sandboxen, og kontroller at du har tilgang til
+  navikt-organisasjonen. Start deretter Copilot på nytt og kjør kloningen igjen.
 - `Kloning feilet` → Kontroller tilgang til repoet og kjør skriptet på nytt.
 - `pnpm install` feiler → Kontroller Node.js/pnpm-versjon og kjør installasjonen
   på nytt i det aktuelle frontend-repoet.

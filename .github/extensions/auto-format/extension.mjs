@@ -5,7 +5,7 @@ import { execFile } from "node:child_process";
 import { resolve } from "node:path";
 import { joinSession } from "@github/copilot-sdk/extension";
 
-const frontendDir = resolve(process.cwd(), "..", "watson-sak-frontend");
+const frontendDir = resolve(process.cwd(), "repos", "watson-sak-frontend");
 let formatRunning = false;
 let session;
 
