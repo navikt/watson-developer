@@ -10,32 +10,32 @@ let formatRunning = false;
 let session;
 
 function isInFrontend(filePath) {
-    if (!filePath) return false;
-    return resolve(filePath).startsWith(frontendDir);
+  if (!filePath) return false;
+  return resolve(filePath).startsWith(frontendDir);
 }
 
 function runFormat() {
-    if (formatRunning) return;
-    formatRunning = true;
-    execFile("pnpm", ["format:fix"], { cwd: frontendDir }, (err, _stdout, stderr) => {
-        formatRunning = false;
-        if (err) {
-            session?.log(`auto-format: feil — ${stderr || err.message}`, { level: "warning" });
-        } else {
-            session?.log("auto-format: ✓ formatert", { ephemeral: true });
-        }
-    });
+  if (formatRunning) return;
+  formatRunning = true;
+  execFile("pnpm", ["format:fix"], { cwd: frontendDir }, (err, _stdout, stderr) => {
+    formatRunning = false;
+    if (err) {
+      session?.log(`auto-format: feil — ${stderr || err.message}`, { level: "warning" });
+    } else {
+      session?.log("auto-format: ✓ formatert", { ephemeral: true });
+    }
+  });
 }
 
 session = await joinSession({
-    hooks: {
-        onPostToolUse: async (input) => {
-            if (input.toolName === "edit" || input.toolName === "create") {
-                if (isInFrontend(input.toolArgs?.path)) {
-                    runFormat();
-                }
-            }
-        },
+  hooks: {
+    onPostToolUse: async (input) => {
+      if (input.toolName === "edit" || input.toolName === "create") {
+        if (isInFrontend(input.toolArgs?.path)) {
+          runFormat();
+        }
+      }
     },
-    tools: [],
+  },
+  tools: [],
 });

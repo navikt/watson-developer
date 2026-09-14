@@ -22,7 +22,7 @@ Watson er Nav Kontrolls system for å avdekke trygdesvindel. `watson-developer` 
 
 Repoer klones til `repos/` med `./scripts/clone-repos.sh`.
 
-Synkroniser alle repoer med `./sync.sh` (sjekker ut standardbranch og gjør `pull --ff-only` i hvert git-repo i foreldremappen, hopper over repoer med ukommiterte endringer i sporede filer).
+Synkroniser alle repoer med `./sync.sh` (sjekker ut standardbranch og gjør `pull --ff-only` i hvert git-repo i `repos/`, hopper over repoer med ukommiterte endringer i sporede filer).
 
 ## Plattform og autentisering
 
