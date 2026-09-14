@@ -22,9 +22,13 @@ Inngangsport og utviklermiljø for **Team Holmes** sin Watson-portefølje.
 
 ## Kom i gang
 
-> 💡 **Automatisk oppsett med Copilot:**
-> Aktiver skillen `watson-setup` (`@.github/skills/watson-setup/SKILL.md`).
-> Den installerer verktøy, kloner repoer og starter infrastrukturen.
+### Automatisk oppsett med Copilot
+
+1. Installer [GitHub Copilot CLI](https://docs.github.com/en/copilot/github-copilot-in-the-cli) ved å følge dokumentasjonen.
+2. Start Copilot CLI med `copilot`.
+3. Gå ut av `/plan`-modus hvis Copilot CLI starter i denne modusen.
+4. Kjør skillen `/watson-setup`.
+5. Vent til oppsettet er ferdig. Skillen installerer verktøy, kloner repoer og starter infrastrukturen.
 
 For manuelt oppsett, se [docs/SETUP.md](docs/SETUP.md).
 
