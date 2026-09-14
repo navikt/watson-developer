@@ -348,6 +348,13 @@ def find_array_span(text, start, end, key):
                 continue
             if ch == in_string:
                 in_string = None
+        elif ch == "#":
+            # TOML-kommentar: resten av linjen skal ignoreres (en `]` i en
+            # kommentar inne i en multiline-array skal ikke telle som
+            # array-slutt). Hopp til neste linjeskift.
+            newline = text.find("\n", i, end)
+            i = end if newline == -1 else newline
+            continue
         elif ch in ("'", '"'):
             in_string = ch
         elif ch == "[":

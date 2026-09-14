@@ -124,6 +124,13 @@ Hvis det feiler, start Docker Desktop, vent 10–15 sekunder og prøv igjen.
 
 ### Steg 5: Opprett kind-kluster
 
+**Dette steget må kjøres i en vanlig terminal utenfor cplt-sandboxen** —
+`setup-copilot.sh` (steg 1) gir bevisst ikke sandboxen lese-/skrivetilgang til
+`~/.kube/config` (se steg 1), og `kind create cluster`/
+`kubectl config use-context` må kunne opprette og skrive til den filen. Be
+brukeren kjøre kommandoen selv i et vanlig terminalvindu, og fortsett først
+når brukeren bekrefter at den er ferdig.
+
 ```bash
 ./scripts/setup-kind.sh
 ```
