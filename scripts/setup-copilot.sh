@@ -203,26 +203,27 @@ READ_PATHS="$READ_PATHS]"
 # Config genereres/oppdateres av et Python-hjelpescript i stedet for shell
 # heredocs. tomllib (krever Python 3.11+) brukes til å *lese* og verifisere
 # eksisterende config robust (håndterer enkelt-/dobbeltfnutter, multiline-
-# arrays og kommentarer riktig), men selve skrivingen skjer som en presis
-# tekst-patch av kun de konkrete `read`/`write`/`allow_cache_exec`-arrayene —
-# resten av filen (kommentarer, andre nøkler, nestede tabeller, ukjente
-# seksjoner) skrives aldri om og forblir byte-for-byte uendret.
+# arrays og kommentarer riktig), men selve skrivingen skjer som presise
+# tekst-patcher av de konkrete standardverdiene — resten av filen (kommentarer,
+# andre nøkler, nestede tabeller, ukjente seksjoner) skrives aldri om og
+# forblir byte-for-byte uendret.
 #
 # - Ved oppretting: fylles read/write/ports/sandbox med alle stiene scriptet
-#   har detektert (Xcode, gradle.properties, evt. node/JDK).
+#   har detektert (Xcode, gradle.properties, evt. node/JDK), og standardene
+#   under `[allow]`, `[sandbox]`, `[gh_guard]` og `[git_guard]` settes.
 # - Ved oppdatering av en eksisterende config: kun det som er strengt
-#   nødvendig legges til (watson-root i write, "gradle" i allow_cache_exec,
-#   port 5174 i ports). En eventuell gammel foreldrekatalog-tilgang i write
+#   nødvendig legges til (standardverdiene under, watson-root i write og
+#   port 5174 i ports). En eventuell gammel
+#   foreldrekatalog-tilgang i write
 #   fjernes samtidig (fra før repoer ble klonet til `repos/` under
 #   prosjektroten), og en eventuell tidligere kubeconfig-lesetilgang (fra en
 #   tidligere versjon av dette scriptet) fjernes siden den ikke lenger gis
 #   automatisk — se begrunnelse ovenfor.
 RTK_PATH="$HOME/Library/Application Support/rtk"
 FRESH_WRITE_PATHS='["'"$WATSON_ROOT"'", "'"$RTK_PATH"'"]'
-FRESH_CACHE_EXEC='["ms-playwright", "gradle"]'
+FRESH_CACHE_EXEC='["ms-playwright"]'
 PORTS_JSON='[5174]'
 REQUIRED_WRITE='["'"$WATSON_ROOT"'"]'
-REQUIRED_CACHE_EXEC='["gradle"]'
 REQUIRED_PORTS='[5174]'
 LEGACY_KUBECONFIG_PATH="$HOME/.kube/config"
 
@@ -279,8 +280,8 @@ except ModuleNotFoundError:
     sys.exit(3)
 
 (config_file, fresh_read_raw, fresh_write_raw, fresh_cache_exec_raw,
- ports_raw, required_write_raw, required_cache_exec_raw,
- required_ports_raw, legacy_kubeconfig_path) = sys.argv[1:10]
+ ports_raw, required_write_raw, required_ports_raw,
+ legacy_kubeconfig_path) = sys.argv[1:9]
 
 config_file = Path(config_file)
 fresh_read = json.loads(fresh_read_raw)
@@ -288,7 +289,6 @@ fresh_write = json.loads(fresh_write_raw)
 fresh_cache_exec = json.loads(fresh_cache_exec_raw)
 ports = json.loads(ports_raw)
 required_write = json.loads(required_write_raw)
-required_cache_exec = json.loads(required_cache_exec_raw)
 required_ports = json.loads(required_ports_raw)
 
 # Stier fra en eventuell tidligere versjon av dette scriptet som skal fjernes
@@ -392,19 +392,80 @@ def upsert_array(text, section_name, key, values):
     return text[:key_start] + replacement + text[array_end:]
 
 
+def upsert_scalar(text, section_name, key, value):
+    """Set a scalar key inside a TOML table, creating it if missing."""
+    span = find_toplevel_section_span(text, section_name)
+    replacement = f"{key} = {json.dumps(value)}"
+    if span is None:
+        addition = f"\n[{section_name}]\n{replacement}\n"
+        return text.rstrip("\n") + "\n" + addition
+
+    body_start, body_end = span
+    key_pattern = re.compile(
+        rf"(?m)^[ \t]*{re.escape(key)}[ \t]*=[^\n]*$"
+    )
+    match = key_pattern.search(text, body_start, body_end)
+    if match is None:
+        insertion_point = body_end
+        prefix = text[:insertion_point]
+        if not prefix.endswith("\n"):
+            replacement = "\n" + replacement
+        return text[:insertion_point] + replacement + "\n" + text[insertion_point:]
+
+    return text[:match.start()] + replacement + text[match.end():]
+
+
+def upsert_value(text, section_name, key, value):
+    if isinstance(value, list):
+        span = find_toplevel_section_span(text, section_name)
+        if span is None:
+            addition = f"\n[{section_name}]\n{key} = {serialize_array(value)}\n"
+            return text.rstrip("\n") + "\n" + addition
+
+        body_start, body_end = span
+        array_span = find_array_span(text, body_start, body_end, key)
+        replacement = f"{key} = {serialize_array(value)}"
+        if array_span is None:
+            insertion_point = body_end
+            prefix = text[:insertion_point]
+            if not prefix.endswith("\n"):
+                replacement = "\n" + replacement
+            return text[:insertion_point] + replacement + "\n" + text[insertion_point:]
+
+        key_start, array_end = array_span
+        return text[:key_start] + replacement + text[array_end:]
+
+    return upsert_scalar(text, section_name, key, value)
+
+
 if not config_file.exists():
     lines = [
         "[allow]",
         f"read = {serialize_array(fresh_read)}",
         f"write = {serialize_array(fresh_write)}",
         f"ports = {serialize_array(ports)}",
+        f"localhost = {serialize_array([5173, 5174, 8080, 8081])}",
         "",
         "[sandbox]",
+        'agent = "copilot"',
+        "validate = false",
+        "yes = true",
         "allow_gpg_signing = true",
         "allow_env_files = true",
         "allow_localhost_any = true",
+        'pass_env = ["BRUKERPROFIL"]',
+        "quiet = true",
+        "deny_clipboard = false",
+        "allow_jvm_attach = true",
+        "gradle_init = true",
+        "allow_docker = true",
         f"allow_cache_exec = {serialize_array(fresh_cache_exec)}",
-        "quiet = false",
+        "",
+        "[gh_guard]",
+        "enabled = false",
+        "",
+        "[git_guard]",
+        "enabled = false",
         "",
     ]
     config_file.parent.mkdir(parents=True, exist_ok=True)
@@ -425,15 +486,12 @@ sandbox = data.get("sandbox", {})
 existing_read = list(allow.get("read", []))
 existing_write = list(allow.get("write", []))
 existing_ports = list(allow.get("ports", []))
-existing_cache_exec = list(sandbox.get("allow_cache_exec", []))
-
 # Vi legger ikke lenger noe til i read automatisk (se begrunnelse ovenfor om
 # kubeconfig/cluster-admin-credentials), men fjerner fortsatt eventuelle
 # gamle, bredere read-tilganger fra tidligere versjoner av dette scriptet.
 new_read = [p for p in existing_read if p not in LEGACY_READ_REMOVE]
 new_write = [p for p in existing_write if p not in LEGACY_WRITE_REMOVE]
 new_ports = list(existing_ports)
-new_cache_exec = list(existing_cache_exec)
 
 for value in required_write:
     if value not in new_write:
@@ -441,15 +499,41 @@ for value in required_write:
 for value in required_ports:
     if value not in new_ports:
         new_ports.append(value)
-for value in required_cache_exec:
-    if value not in new_cache_exec:
-        new_cache_exec.append(value)
+
+desired_allow = {
+    "localhost": [5173, 5174, 8080, 8081],
+}
+desired_sandbox = {
+    "agent": "copilot",
+    "validate": False,
+    "allow_env_files": True,
+    "allow_localhost_any": True,
+    "pass_env": ["BRUKERPROFIL"],
+    "allow_gpg_signing": True,
+    "quiet": True,
+    "yes": True,
+    "deny_clipboard": False,
+    "allow_jvm_attach": True,
+    "gradle_init": True,
+    "allow_docker": True,
+    "allow_cache_exec": ["ms-playwright"],
+}
+desired_guards = {
+    "gh_guard": {"enabled": False},
+    "git_guard": {"enabled": False},
+}
 
 needs_update = (
     new_read != existing_read
     or new_write != existing_write
     or new_ports != existing_ports
-    or new_cache_exec != existing_cache_exec
+    or any(allow.get(key) != value for key, value in desired_allow.items())
+    or any(sandbox.get(key) != value for key, value in desired_sandbox.items())
+    or any(
+        data.get(section_name, {}).get(key) != value
+        for section_name, values in desired_guards.items()
+        for key, value in values.items()
+    )
 )
 
 if not needs_update:
@@ -463,8 +547,14 @@ if new_write != existing_write:
     updated_text = upsert_array(updated_text, "allow", "write", new_write)
 if new_ports != existing_ports:
     updated_text = upsert_array(updated_text, "allow", "ports", new_ports)
-if new_cache_exec != existing_cache_exec:
-    updated_text = upsert_array(updated_text, "sandbox", "allow_cache_exec", new_cache_exec)
+
+for key, value in desired_allow.items():
+    updated_text = upsert_value(updated_text, "allow", key, value)
+for key, value in desired_sandbox.items():
+    updated_text = upsert_value(updated_text, "sandbox", key, value)
+for section_name, values in desired_guards.items():
+    for key, value in values.items():
+        updated_text = upsert_value(updated_text, section_name, key, value)
 
 # Sikkerhetssjekk: den patchede teksten skal fortsatt være gyldig TOML med
 # nøyaktig de verdiene vi tilsiktet, før vi skriver den til disk.
@@ -477,11 +567,22 @@ except tomllib.TOMLDecodeError as exc:
 verify_read = verify_data.get("allow", {}).get("read", [])
 verify_write = verify_data.get("allow", {}).get("write", [])
 verify_ports = verify_data.get("allow", {}).get("ports", [])
-verify_cache_exec = verify_data.get("sandbox", {}).get("allow_cache_exec", [])
-if (verify_read != new_read or verify_write != new_write
-        or verify_ports != new_ports or verify_cache_exec != new_cache_exec):
-    print("PATCH_VERIFICATION_FAILED unexpected array contents after patch")
+if verify_read != new_read or verify_write != new_write or verify_ports != new_ports:
+    print("PATCH_VERIFICATION_FAILED unexpected allow contents after patch")
     sys.exit(6)
+for key, value in desired_allow.items():
+    if verify_data.get("allow", {}).get(key) != value:
+        print(f"PATCH_VERIFICATION_FAILED unexpected allow.{key} after patch")
+        sys.exit(6)
+for key, value in desired_sandbox.items():
+    if verify_data.get("sandbox", {}).get(key) != value:
+        print(f"PATCH_VERIFICATION_FAILED unexpected sandbox.{key} after patch")
+        sys.exit(6)
+for section_name, values in desired_guards.items():
+    for key, value in values.items():
+        if verify_data.get(section_name, {}).get(key) != value:
+            print(f"PATCH_VERIFICATION_FAILED unexpected {section_name}.{key} after patch")
+            sys.exit(6)
 
 timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 backup_file = config_file.with_name(f"{config_file.name}.bak.{timestamp}")
@@ -493,7 +594,7 @@ PY
 set +e
 MERGE_RESULT="$("$PYTHON_BIN" "$MERGE_SCRIPT_FILE" \
     "$CONFIG_FILE" "$READ_PATHS" "$FRESH_WRITE_PATHS" "$FRESH_CACHE_EXEC" "$PORTS_JSON" \
-    "$REQUIRED_WRITE" "$REQUIRED_CACHE_EXEC" "$REQUIRED_PORTS" "$LEGACY_KUBECONFIG_PATH")"
+    "$REQUIRED_WRITE" "$REQUIRED_PORTS" "$LEGACY_KUBECONFIG_PATH")"
 set -e
 rm -f "$MERGE_SCRIPT_FILE"
 trap - EXIT
