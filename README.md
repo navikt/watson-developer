@@ -13,10 +13,12 @@ Inngangsport og utviklermiljø for **Team Holmes** sin Watson-portefølje.
 
 | Repo                                                                 | Teknologi               | Beskrivelse                                            | Dokumentasjon                                                                         |
 | -------------------------------------------------------------------- | ----------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------- |
+| [holmes-brain](https://github.com/navikt/holmes-brain)               | TypeScript              | KI-drevet internwiki for Team Holmes                   |                                                                                       |
+| [nav-persondata-api](https://github.com/navikt/nav-persondata-api)   | Spring Boot + Kotlin    | Persondata, ytelser og arbeidsforhold                  | [Confluence](https://confluence.adeo.no/spaces/THLMS/pages/720908266/Watson+S%C3%B8k) |
 | [watson-admin-api](https://github.com/navikt/watson-admin-api)       | Spring Boot 4 + Kotlin  | Kjernebackend — kontrollsaker, tilgangskontroll, Kafka |                                                                                       |
+| [watson-pdfgen](https://github.com/navikt/watson-pdfgen)             | pdfgenrs + Docker       | PDF-renderer for Watson                                |                                                                                       |
 | [watson-sak-frontend](https://github.com/navikt/watson-sak-frontend) | React Router v7 + Aksel | Saksbehandler-UI for kontrollsaker                     | [Confluence](https://confluence.adeo.no/spaces/THLMS/pages/720913429/Watson+Sak)      |
 | [watson-sok](https://github.com/navikt/watson-sok)                   | React Router v7 + Aksel | Oppslag på brukere (fnr / d-nummer)                    | [Confluence](https://confluence.adeo.no/spaces/THLMS/pages/720908266/Watson+S%C3%B8k) |
-| [nav-persondata-api](https://github.com/navikt/nav-persondata-api)   | Spring Boot + Kotlin    | Persondata, ytelser og arbeidsforhold                  | [Confluence](https://confluence.adeo.no/spaces/THLMS/pages/720908266/Watson+S%C3%B8k) |
 
 ---
 
@@ -126,6 +128,7 @@ watson-developer/
 │   ├── domene/
 │   └── onboarding/
 └── repos/                      ← klonede sibling-repoer (git-ignorert)
+    ├── holmes-brain/
     ├── nav-persondata-api/
     ├── watson-admin-api/
     ├── watson-sak-frontend/

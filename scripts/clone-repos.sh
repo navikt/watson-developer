@@ -9,6 +9,7 @@ REPOS_DIR="$(cd "$REPOS_DIR" && pwd)"
 
 # Watson repos to clone
 REPOS=(
+  "https://github.com/navikt/holmes-brain.git"
   "https://github.com/navikt/nav-persondata-api.git"
   "https://github.com/navikt/watson-admin-api.git"
   "https://github.com/navikt/watson-sak-frontend.git"
