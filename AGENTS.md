@@ -7,10 +7,12 @@ Watson er Nav Kontrolls system for å avdekke og forebygge misbruk av Nav-ytelse
 
 | Repo                  | Rolle            | Teknologi                                   |
 | --------------------- | ---------------- | ------------------------------------------- |
+| `holmes-brain`        | Internwiki       | TypeScript                                  |
+| `nav-persondata-api`  | Persondata-API   | Spring Boot + Kotlin                        |
 | `watson-admin-api`    | Kjernebackend    | Spring Boot 4 + Kotlin + PostgreSQL + Kafka |
+| `watson-pdfgen`       | PDF-renderer     | pdfgenrs + Docker                           |
 | `watson-sak-frontend` | Saksbehandler-UI | React Router v7 + Aksel + TypeScript        |
 | `watson-sok`          | Brukeroppslag    | React Router v7 + Aksel + TypeScript        |
-| `nav-persondata-api`  | Persondata-API   | Spring Boot + Kotlin                        |
 
 Sibling-repoer klones til `repos/` med `./scripts/clone-repos.sh`.
 Alle repoer synkroniseres til nyeste standardbranch med `./sync.sh`.
