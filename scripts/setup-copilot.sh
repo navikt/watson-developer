@@ -628,6 +628,45 @@ case "$MERGE_RESULT" in
         ;;
 esac
 
+# ─── MCP-servere ─────────────────────────────────────────────────────────────
+
+echo ""
+echo -e "${BOLD}MCP-servere:${NC}"
+
+MCP_CHANGED=false
+
+ensure_mcp_server() {
+    local name="$1"
+    local url="$2"
+    local transport="$3"
+    local details
+
+    if ! command -v copilot &>/dev/null; then
+        info "Fant ikke 'copilot' — hopper over $name. Kjør setup-scriptet på nytt etter at Copilot CLI er installert."
+        return
+    fi
+
+    if details="$(copilot mcp get "$name" 2>/dev/null)" \
+        && grep -Fq "URL: $url" <<<"$details"; then
+        skip "$name er allerede konfigurert"
+        return
+    fi
+
+    if copilot mcp add --transport "$transport" "$name" "$url" >/dev/null; then
+        MCP_CHANGED=true
+        ok "Konfigurerte $name"
+    else
+        fail "Kunne ikke konfigurere MCP-serveren $name"
+    fi
+}
+
+ensure_mcp_server "com.figma/figma-mcp" "https://mcp.figma.com/mcp" "http"
+ensure_mcp_server "com.jetbrains/intellij" "http://127.0.0.1:64342/sse" "sse"
+
+if [[ "$MCP_CHANGED" == true ]]; then
+    info "Start Copilot CLI på nytt for at de nye MCP-serverne skal bli tilgjengelige."
+fi
+
 # ─── Restart-sjekk ────────────────────────────────────────────────────────────
 # cplt-sandboxen leser config ved oppstart av den sandboxede prosessen.
 # Hvis vi nettopp endret configen mens en agent/økt allerede kjører inne i

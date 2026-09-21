@@ -1,53 +1,49 @@
 {
   "collection": "fullstack",
-  "version": "2026.09.14-080624-cfeafb1",
+  "version": "2026.09.18-103546-54547e2",
   "scope": "repo",
-  "source_sha": "cfeafb197acbf241334329c01d8335884b679529",
+  "source_sha": "54547e2fcdc849c0969bf16b11896505a2e29490",
   "installed_at": "2026-05-27T13:26:26Z",
   "files": [
     {
       "path": ".github/agents/accessibility.agent.md",
-      "hash": "db12f2f3d0734ca4",
-      "revision": "60c4bc62956118e428967f7a19935e444cbb5a5f"
+      "hash": "4ad090f6791eb845",
+      "revision": "f3614e6130e286f4c95141aedf14a34c22a31ebb"
     },
     {
       "path": ".github/agents/aksel.agent.md",
-      "hash": "0740ec796a3f3273",
-      "revision": "cfeafb197acbf241334329c01d8335884b679529"
+      "hash": "eb6688100005e57f",
+      "revision": "f3614e6130e286f4c95141aedf14a34c22a31ebb"
     },
     {
       "path": ".github/agents/code-review.agent.md",
-      "hash": "afed6f66d303027c",
-      "revision": "cfeafb197acbf241334329c01d8335884b679529"
+      "hash": "10ce155690b4c835",
+      "revision": "f3614e6130e286f4c95141aedf14a34c22a31ebb"
     },
     {
       "path": ".github/agents/forfatter.agent.md",
-      "hash": "7df851588f045edd",
-      "revision": "cfeafb197acbf241334329c01d8335884b679529"
+      "hash": "7647c85972f59fa7",
+      "revision": "54547e2fcdc849c0969bf16b11896505a2e29490"
     },
     {
       "path": ".github/agents/nav-pilot.agent.md",
-      "hash": "3daddec881b7d2a8",
-      "revision": "cfeafb197acbf241334329c01d8335884b679529"
+      "hash": "edcfcf867dd98045",
+      "revision": "f3614e6130e286f4c95141aedf14a34c22a31ebb"
     },
     {
       "path": ".github/agents/research.agent.md",
-      "hash": "14d4e70d37331aa9",
-      "revision": "cfeafb197acbf241334329c01d8335884b679529"
+      "hash": "b68b9c9b82f12c02",
+      "revision": "f3614e6130e286f4c95141aedf14a34c22a31ebb"
     },
     {
       "path": ".github/agents/security-champion.agent.md",
-      "hash": "910ead105ad5bed3",
-      "revision": "cfeafb197acbf241334329c01d8335884b679529"
+      "hash": "2c3200cf23251a70",
+      "revision": "f3614e6130e286f4c95141aedf14a34c22a31ebb"
     },
     {
       "path": ".github/instructions/accessibility.instructions.md",
       "hash": "986ef7aa27d8a1d9",
       "revision": "60c4bc62956118e428967f7a19935e444cbb5a5f"
-    },
-    {
-      "path": ".github/instructions/code-review.instructions.md",
-      "hash": "76088d9c7d0e3909"
     },
     {
       "path": ".github/instructions/database.instructions.md",
@@ -74,23 +70,14 @@
       "revision": "60c4bc62956118e428967f7a19935e444cbb5a5f"
     },
     {
-      "path": ".github/instructions/kotlin-ktor.instructions.md",
-      "hash": "e6a054a0dc9bf870",
-      "revision": "60c4bc62956118e428967f7a19935e444cbb5a5f"
-    },
-    {
-      "path": ".github/instructions/kotlin-spring.instructions.md",
-      "hash": "db9355ee1afaeaef",
-      "revision": "60c4bc62956118e428967f7a19935e444cbb5a5f"
-    },
-    {
       "path": ".github/instructions/nextjs-aksel.instructions.md",
       "hash": "75e0932dfe465508",
       "revision": "60c4bc62956118e428967f7a19935e444cbb5a5f"
     },
     {
       "path": ".github/instructions/norwegian-text.instructions.md",
-      "hash": "8dc36629d466e9b9"
+      "hash": "ae153e646c932a28",
+      "revision": "54547e2fcdc849c0969bf16b11896505a2e29490"
     },
     {
       "path": ".github/instructions/performance.instructions.md",
@@ -167,8 +154,8 @@
     },
     {
       "path": ".github/skills/java-to-kotlin/",
-      "hash": "c312e45ae07d1e85",
-      "revision": "60c4bc62956118e428967f7a19935e444cbb5a5f"
+      "hash": "52cd8180b93a846b",
+      "revision": "f3614e6130e286f4c95141aedf14a34c22a31ebb"
     },
     {
       "path": ".github/skills/kafka/",
@@ -191,8 +178,8 @@
     },
     {
       "path": ".github/skills/nav-architecture-review/",
-      "hash": "4618dec566442509",
-      "revision": "60c4bc62956118e428967f7a19935e444cbb5a5f"
+      "hash": "0aa50579f690c3a1",
+      "revision": "f3614e6130e286f4c95141aedf14a34c22a31ebb"
     },
     {
       "path": ".github/skills/nav-auth/",
@@ -216,8 +203,8 @@
     },
     {
       "path": ".github/skills/observability-debugging/",
-      "hash": "107a99f70451c01b",
-      "revision": "60c4bc62956118e428967f7a19935e444cbb5a5f"
+      "hash": "d09dd467d7ce45a7",
+      "revision": "54547e2fcdc849c0969bf16b11896505a2e29490"
     },
     {
       "path": ".github/skills/observability-setup/",
@@ -231,18 +218,18 @@
     },
     {
       "path": ".github/skills/postgresql-review/",
-      "hash": "c0037201dbd465c0",
-      "revision": "60c4bc62956118e428967f7a19935e444cbb5a5f"
+      "hash": "f02cbccffe761446",
+      "revision": "f3614e6130e286f4c95141aedf14a34c22a31ebb"
     },
     {
       "path": ".github/skills/readme-review/",
-      "hash": "27b83a8872b33f4c",
-      "revision": "60c4bc62956118e428967f7a19935e444cbb5a5f"
+      "hash": "25d4486ea4843915",
+      "revision": "f3614e6130e286f4c95141aedf14a34c22a31ebb"
     },
     {
       "path": ".github/skills/security-review/",
-      "hash": "3c05f1012664e5c8",
-      "revision": "60c4bc62956118e428967f7a19935e444cbb5a5f"
+      "hash": "ad8fffb201f42a39",
+      "revision": "f3614e6130e286f4c95141aedf14a34c22a31ebb"
     },
     {
       "path": ".github/skills/spring-boot-scaffold/",
@@ -261,8 +248,8 @@
     },
     {
       "path": ".github/skills/web-design-reviewer/",
-      "hash": "07b2096b77bf5ae3",
-      "revision": "60c4bc62956118e428967f7a19935e444cbb5a5f"
+      "hash": "870a23c81c5528c2",
+      "revision": "f3614e6130e286f4c95141aedf14a34c22a31ebb"
     },
     {
       "path": ".github/skills/workstation-security/",
