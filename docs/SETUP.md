@@ -44,6 +44,9 @@ Installerer [cplt](https://github.com/navikt/cplt) (kernel-sandbox for AI-agente
 Genererer cplt-config tilpasset Watson-porteføljen. Idempotent — trygt å kjøre flere ganger.
 Scriptet krever python3.11+ (for `tomllib`) og installerer det selv automatisk
 med Homebrew hvis det mangler, siden dette steget kjøres før `doctor.sh`.
+Konfigurerer også MCP-serverne `com.figma/figma-mcp` og
+`com.jetbrains/intellij` i Copilot CLI. IntelliJ-MCP-en forutsetter at IntelliJ
+kjører lokalt med SSE-endepunktet på `http://127.0.0.1:64342/sse`.
 
 Sandboxen får bevisst ikke lesetilgang til `~/.kube/config` — den inneholder
 som regel cluster-admin-credentials, og det lokale kind-klusteret trenger
