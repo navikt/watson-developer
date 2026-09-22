@@ -15,14 +15,14 @@ Watson er Nav Kontrolls system for å avdekke og forebygge misbruk av Nav-ytelse
 | `watson-sok`          | Brukeroppslag    | React Router v7 + Aksel + TypeScript        |
 
 Sibling-repoer klones til `repos/` med `./scripts/clone-repos.sh`.
-Alle repoer synkroniseres til nyeste standardbranch med `./sync.sh`.
+`watson-developer` og alle repoene i `repos/` synkroniseres til nyeste standardbranch med `./sync.sh`.
 
 ## Dette repoet
 
 `watson-developer` inneholder:
 
 - `Tiltfile` — lokal utviklingsserver (Tilt + kind)
-- `sync.sh` — synkroniser alle repoer i `repos/` til nyeste standardbranch
+- `sync.sh` — synkroniser `watson-developer` og alle repoer i `repos/` til nyeste standardbranch
 - `kind/cluster.yaml` — lokal Kubernetes-kluster
 - `k8s/` — Kubernetes-manifester for lokal infrastruktur
 - `scripts/` — hjelpeskript (klon repoer, sett opp kluster, pre-flight sjekk)

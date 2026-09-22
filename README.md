@@ -45,7 +45,7 @@ Ny i teamet? Start med [onboarding-sjekklisten](docs/onboarding/sjekkliste.md).
 ./sync.sh
 ```
 
-Sjekker ut standardbranchen (det `origin/HEAD` peker på, med fallback til `main`/`master`) og henter nyeste endringer i alle git-repoer i `repos/`.
+Sjekker ut standardbranchen (det `origin/HEAD` peker på, med fallback til `main`/`master`) og henter nyeste endringer i `watson-developer` og alle git-repoer i `repos/`.
 Repoene synkroniseres parallelt. Repoer med ukommiterte endringer i sporede filer
 hoppes over, slik at ingenting går tapt.
 
