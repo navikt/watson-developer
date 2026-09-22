@@ -46,7 +46,8 @@ Ny i teamet? Start med [onboarding-sjekklisten](docs/onboarding/sjekkliste.md).
 ```
 
 Sjekker ut standardbranchen (det `origin/HEAD` peker på, med fallback til `main`/`master`) og henter nyeste endringer i alle git-repoer i `repos/`.
-Repoer med ukommiterte endringer i sporede filer hoppes over, slik at ingenting går tapt.
+Repoene synkroniseres parallelt. Repoer med ukommiterte endringer i sporede filer
+hoppes over, slik at ingenting går tapt.
 
 ---
 
@@ -59,6 +60,23 @@ Repoer med ukommiterte endringer i sporede filer hoppes over, slik at ingenting 
 Spør hvilken bruker du vil logge inn som i `watson-sak-frontend` (saksbehandler eller leder,
 se tabellen under), setter `BRUKERPROFIL` deretter, og kjører `tilt up` med output direkte i
 terminalen. Praktisk når du ikke trenger å huske hvilken profil-id som hører til hvem.
+
+`./start` støtter også direkte valg av profil. Et tall velger profilen fra menyen,
+mens tekstfiltre velger den første profilen som matcher:
+
+```bash
+./start 1
+./start leder
+./start saksbehandler
+./start utreder
+./start vanlig
+./start øst
+./start øst leder
+./start leder vest
+```
+
+`utreder` og `vanlig` er aliaser for `saksbehandler`, og flere tekstfiltre kan
+kombineres i valgfri rekkefølge. Ugyldige filtre avslutter med en feilmelding.
 
 ---
 

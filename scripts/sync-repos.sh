@@ -20,19 +20,23 @@ echo ""
 
 failed=0
 found=0
+temp_dir="$(mktemp -d)"
+trap 'rm -rf "$temp_dir"' EXIT
 
-for repo_path in "$REPOS_DIR"/*/; do
-  [ -d "$repo_path/.git" ] || continue
-  found=$((found + 1))
+sync_repo() {
+  local repo_path="$1"
+  local repo_name
+  local default_branch
+  local current_branch
+
   repo_name="$(basename "$repo_path")"
-
   echo "📦 $repo_name"
 
   # Usporede filer ignoreres bevisst — de blokkerer ikke checkout eller ff-only pull,
   # og lokale artefakter (build/, .env, .DS_Store) skal ikke hindre synkronisering.
   if [ -n "$(git -C "$repo_path" status --porcelain --untracked-files=no)" ]; then
     echo -e "  ${YELLOW}⟳${NC} Hopper over — ukommiterte endringer i sporede filer"
-    continue
+    return 0
   fi
 
   # Finn standardbranch (main, evt. master eller det remote peker på)
@@ -44,8 +48,7 @@ for repo_path in "$REPOS_DIR"/*/; do
       default_branch="master"
     else
       echo -e "  ${RED}✗${NC} Fant ingen standardbranch"
-      failed=$((failed + 1))
-      continue
+      return 1
     fi
   fi
 
@@ -55,8 +58,7 @@ for repo_path in "$REPOS_DIR"/*/; do
       echo -e "  ${GREEN}✓${NC} Byttet fra $current_branch til $default_branch"
     else
       echo -e "  ${RED}✗${NC} Kunne ikke bytte til $default_branch"
-      failed=$((failed + 1))
-      continue
+      return 1
     fi
   fi
 
@@ -64,8 +66,28 @@ for repo_path in "$REPOS_DIR"/*/; do
     echo -e "  ${GREEN}✓${NC} Oppdatert ($default_branch)"
   else
     echo -e "  ${RED}✗${NC} Kunne ikke hente nyeste"
+    return 1
+  fi
+}
+
+pids=()
+output_files=()
+
+for repo_path in "$REPOS_DIR"/*/; do
+  [ -d "$repo_path/.git" ] || continue
+  found=$((found + 1))
+  output_file="$temp_dir/$found"
+
+  sync_repo "$repo_path" >"$output_file" 2>&1 &
+  pids+=("$!")
+  output_files+=("$output_file")
+done
+
+for i in "${!pids[@]}"; do
+  if ! wait "${pids[$i]}"; then
     failed=$((failed + 1))
   fi
+  sed 's/^/  /' "${output_files[$i]}"
 done
 
 echo ""
