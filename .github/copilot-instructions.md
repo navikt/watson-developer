@@ -1,34 +1,34 @@
-# Watson Developer — Copilot-instruksjoner
+# Watson Developer: Copilot-instruksjoner
 
-Watson er Nav Kontrolls system for å avdekke trygdesvindel. `watson-developer` inneholder lokalmiljø (Tilt + kind), skript og dokumentasjon — ikke applikasjonskode.
+Watson er Nav Kontrolls system for å avdekke trygdesvindel. `watson-developer` inneholder lokalmiljø (Tilt + kind), skript og dokumentasjon, ikke applikasjonskode.
 
 ## Svarsstil
 
-- Konklusjonen først — si «si 'forklar' for detaljer» når begrunnelse hoppes over
+- Konklusjonen først. Skriv «si «forklar» for detaljer» når du hopper over begrunnelsen
 - Kode direkte uten innledningsprosa
 - Dropp: oppsummering av oppgaven, høflighetsfraser, avsnitt som bare gjentar hva som skal gjøres
 - Still bare spørsmål når svaret faktisk endrer implementeringen
-- Les filer direkte — ikke be brukeren lime inn innhold
+- Les filer direkte. Ikke be brukeren lime inn innhold
 - Kjør målrettede tester (`./gradlew test --tests '*Test'` / `pnpm test -- <args>`) før full pipeline
 
 ## Portefølje
 
 | Repo                  | Beskrivelse                                                                |
 | --------------------- | -------------------------------------------------------------------------- |
-| `holmes-brain`        | TypeScript — KI-drevet internwiki for Team Holmes                          |
-| `nav-persondata-api`  | Spring Boot + Kotlin — persondata, ytelser, arbeidsforhold                 |
-| `watson-admin-api`    | Spring Boot 4 + Kotlin — kontrollsaker, tilgangsstyring, Kafka, PostgreSQL |
-| `watson-pdfgen`       | pdfgenrs + Docker — PDF-renderer for Watson                                |
-| `watson-sak-frontend` | React Router v7 + Aksel — saksbehandler-UI                                 |
-| `watson-sok`          | React Router v7 + Aksel — brukeroppslag (fnr/d-nummer)                     |
+| `holmes-brain`        | TypeScript, KI-drevet internwiki for Team Holmes                          |
+| `nav-persondata-api`  | Spring Boot + Kotlin, persondata, ytelser, arbeidsforhold                 |
+| `watson-admin-api`    | Spring Boot 4 + Kotlin, kontrollsaker, tilgangsstyring, Kafka, PostgreSQL |
+| `watson-pdfgen`       | pdfgenrs + Docker, PDF-renderer for Watson                                |
+| `watson-sak-frontend` | React Router v7 + Aksel, saksbehandler-UI                                 |
+| `watson-sok`          | React Router v7 + Aksel, brukeroppslag (fnr/d-nummer)                     |
 
 Repoer klones til `repos/` med `./scripts/clone-repos.sh`.
 
-Synkroniser alle repoer med `./sync.sh` (sjekker ut standardbranch og gjør `pull --ff-only` i hvert git-repo i `repos/`, hopper over repoer med ukommiterte endringer i sporede filer).
+Synkroniser `watson-developer` og alle repoene i `repos/` med `./sync.sh`. Skriptet sjekker ut standardbranch og kjører `pull --ff-only`. Det hopper over repoer med ukommiterte endringer i sporede filer.
 
 ## Plattform og autentisering
 
-- **Plattform**: Nais (Kubernetes/GCP) — namespace `holmes`
+- **Plattform**: Nais (Kubernetes/GCP), namespace `holmes`
 - **Autentisering**: Azure AD med Wonderwall sidecar
 - **Tilgangsgrupper**: Basic (`0000-GA-kontroll-Oppslag-Bruker-Basic`) og Utvidet
 - **Lokal mock**: mock-oauth2-server på port 8090
@@ -38,9 +38,9 @@ Synkroniser alle repoer med `./sync.sh` (sjekker ut standardbranch og gjør `pul
 ### Shell-skript
 
 - Alltid `set -euo pipefail` øverst
-- Idempotente — trygge å kjøre flere ganger
+- Idempotente og trygge å kjøre flere ganger
 - Fargeutskrift: grønn (✓ OK), gul (⟳ hopper over), rød (✗ feil)
-- Legg skript i `scripts/` — ikke i rotkatalogen. Eneste unntak er `sync.sh`, en tynn wrapper som `exec`-er `scripts/sync-repos.sh`
+- Legg skript i `scripts/`, ikke i rotkatalogen. Eneste unntak er `sync.sh`, en tynn wrapper som `exec`-er `scripts/sync-repos.sh`
 
 ### Tiltfile
 
@@ -64,7 +64,7 @@ Ikke legg til Kotlin-, TypeScript- eller Java-filer her. Applikasjonene bor i si
 - Kind-kluster: postgres (5432) og mock-oauth2-server (8090)
 - Lokale prosesser: watson-admin-api (8080) via `./gradlew bootRun`
 - Start med: `./scripts/setup-kind.sh && ./start` (kjør `setup-kind.sh` i en
-  vanlig terminal utenfor cplt-sandboxen — den trenger tilgang til
+  vanlig terminal utenfor cplt-sandboxen, siden den trenger tilgang til
   `~/.kube/config`, som sandboxen bevisst ikke får)
 
 ## Arbeidsflyt for Copilot
@@ -76,22 +76,31 @@ Ikke legg til Kotlin-, TypeScript- eller Java-filer her. Applikasjonene bor i si
 - For detaljer om frontend, se `repos/watson-sak-frontend/.github/copilot-instructions.md`
 - For detaljer om backend, se `repos/watson-admin-api/.github/copilot-instructions.md`
 
+### Når sesjonen starter
+
+1. Kjør `brew update`.
+2. Sjekk om `nav-pilot` eller `cplt` har en tilgjengelig oppdatering med `brew outdated --greedy nav-pilot cplt`.
+3. Hvis en oppdatering finnes, be brukeren kjøre `brew update && brew upgrade -g` før arbeidet fortsetter.
+
 ### Før du begynner
 
-1. Spør om Aha!-ID dersom den ikke er nevnt i oppgaven
-2. Hent nyeste standardbranch i repoene som skal endres — kjør `./sync.sh` fra `watson-developer` for å synkronisere alle repoer på én gang
-3. Opprett ny branch: `<Aha!-ID>/<beskrivende-navn>` (f.eks. `SAK-50/legg-til-filter`) — samme navn i alle berørte repoer
-4. Etter pull av backend: restart Tilt
+1. Kjør `./sync.sh` fra `watson-developer` før hver oppgave.
+2. Sammenlign commit på `main` i `watson-developer` før og etter synkroniseringen. Hvis `main` endret seg, be brukeren starte nav-pilot på nytt slik at endringene blir lest inn. Ikke fortsett oppgaven i den gamle sesjonen.
+3. Spør om Aha!-ID hvis oppgaven hører til en Aha!-sak og ID-en ikke er nevnt.
+4. Opprett en ny branch fra oppdatert `main` i hvert repo som skal endres. Bruk samme branch-navn i alle berørte repoer.
+5. Bruk `<Aha!-ID>/<beskrivende-navn>` når oppgaven har en Aha!-ID, for eksempel `SAK-50/legg-til-filter`. Bruk ellers et beskrivende navn med prefiks som `chore/`, `fix/` eller `feature/`.
+6. Start Tilt på nytt etter at backend er oppdatert.
 
 ### Branching og commits
 
 - Aldri commit direkte til `main`
 - Opprett bare branch i repoer som faktisk endres
-- Commit underveis — ikke samle alt i én stor commit
+- Commit underveis. Ikke samle alt i én stor commit
 
 ### Pull requests
 
-- Legg til lenke til Aha!-saken i PR-beskrivelsen: `https://nav1.aha.io/features/<Aha!-ID>`
+- Opprett én pull request i hvert repo som er endret, etter at lokal verifisering er fullført.
+- Legg til `https://nav1.aha.io/features/<Aha!-ID>` i PR-beskrivelsen når oppgaven har en Aha!-ID.
 
 ### Verifisering før du er ferdig
 
@@ -100,5 +109,5 @@ Ikke legg til Kotlin-, TypeScript- eller Java-filer her. Applikasjonene bor i si
 
 ### Kjente begrensninger i sandbox
 
-- SSH mot GitHub (port 22) er blokkert — bruk HTTPS-remotes
+- SSH mot GitHub (port 22) er blokkert. Bruk HTTPS-remotes
 - Frontend bruker `pnpm`, ikke npm eller yarn
