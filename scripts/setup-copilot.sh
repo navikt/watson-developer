@@ -210,7 +210,8 @@ READ_PATHS="$READ_PATHS]"
 #
 # - Ved oppretting: fylles read/write/ports/sandbox med alle stiene scriptet
 #   har detektert (Xcode, gradle.properties, evt. node/JDK), og standardene
-#   under `[allow]`, `[sandbox]`, `[gh_guard]` og `[git_guard]` settes.
+#   under `[allow]`, `[sandbox]`, `[proxy]`, `[gh_guard]` og `[git_guard]`
+#   settes.
 # - Ved oppdatering av en eksisterende config: kun det som er strengt
 #   nødvendig legges til (standardverdiene under, watson-root i write og
 #   port 5174 i ports). En eventuell gammel
@@ -461,6 +462,9 @@ if not config_file.exists():
         "allow_docker = true",
         f"allow_cache_exec = {serialize_array(fresh_cache_exec)}",
         "",
+        "[proxy]",
+        "enabled = false",
+        "",
         "[gh_guard]",
         "enabled = false",
         "",
@@ -522,6 +526,9 @@ desired_guards = {
     "gh_guard": {"enabled": False},
     "git_guard": {"enabled": False},
 }
+desired_proxy = {
+    "enabled": False,
+}
 
 needs_update = (
     new_read != existing_read
@@ -529,6 +536,7 @@ needs_update = (
     or new_ports != existing_ports
     or any(allow.get(key) != value for key, value in desired_allow.items())
     or any(sandbox.get(key) != value for key, value in desired_sandbox.items())
+    or any(data.get("proxy", {}).get(key) != value for key, value in desired_proxy.items())
     or any(
         data.get(section_name, {}).get(key) != value
         for section_name, values in desired_guards.items()
@@ -552,6 +560,8 @@ for key, value in desired_allow.items():
     updated_text = upsert_value(updated_text, "allow", key, value)
 for key, value in desired_sandbox.items():
     updated_text = upsert_value(updated_text, "sandbox", key, value)
+for key, value in desired_proxy.items():
+    updated_text = upsert_value(updated_text, "proxy", key, value)
 for section_name, values in desired_guards.items():
     for key, value in values.items():
         updated_text = upsert_value(updated_text, section_name, key, value)
@@ -577,6 +587,10 @@ for key, value in desired_allow.items():
 for key, value in desired_sandbox.items():
     if verify_data.get("sandbox", {}).get(key) != value:
         print(f"PATCH_VERIFICATION_FAILED unexpected sandbox.{key} after patch")
+        sys.exit(6)
+for key, value in desired_proxy.items():
+    if verify_data.get("proxy", {}).get(key) != value:
+        print(f"PATCH_VERIFICATION_FAILED unexpected proxy.{key} after patch")
         sys.exit(6)
 for section_name, values in desired_guards.items():
     for key, value in values.items():
