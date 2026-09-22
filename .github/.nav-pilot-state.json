@@ -1,5 +1,5 @@
 {
-  "collection": "fullstack",
+  "collection": "nav-pilot",
   "version": "2026.09.18-103546-54547e2",
   "scope": "repo",
   "source_sha": "54547e2fcdc849c0969bf16b11896505a2e29490",
@@ -26,6 +26,18 @@
       "revision": "54547e2fcdc849c0969bf16b11896505a2e29490"
     },
     {
+      "path": ".github/agents/kafka.agent.md",
+      "hash": "f74565e00c5d0515"
+    },
+    {
+      "path": ".github/agents/local-worker.agent.md",
+      "hash": "59b5bcf453fefec6"
+    },
+    {
+      "path": ".github/agents/nav-pilot-opus.agent.md",
+      "hash": "9ce0afc59f0a1912"
+    },
+    {
       "path": ".github/agents/nav-pilot.agent.md",
       "hash": "edcfcf867dd98045",
       "revision": "f3614e6130e286f4c95141aedf14a34c22a31ebb"
@@ -36,9 +48,25 @@
       "revision": "f3614e6130e286f4c95141aedf14a34c22a31ebb"
     },
     {
+      "path": ".github/agents/rust.agent.md",
+      "hash": "8ee97a471ec8b560"
+    },
+    {
       "path": ".github/agents/security-champion.agent.md",
       "hash": "2c3200cf23251a70",
       "revision": "f3614e6130e286f4c95141aedf14a34c22a31ebb"
+    },
+    {
+      "path": ".github/hooks/ask-first-aria.py",
+      "hash": "95dccc70382812d5"
+    },
+    {
+      "path": ".github/hooks/gh-poll-gate.py",
+      "hash": "7b144af18aef7c2f"
+    },
+    {
+      "path": ".github/hooks/klarsprak-gate.py",
+      "hash": "d72e6fc1bb74f3f2"
     },
     {
       "path": ".github/instructions/accessibility.instructions.md",
@@ -70,6 +98,10 @@
       "revision": "60c4bc62956118e428967f7a19935e444cbb5a5f"
     },
     {
+      "path": ".github/instructions/kotlin.instructions.md",
+      "hash": "b5a426974a5e4ab6"
+    },
+    {
       "path": ".github/instructions/nextjs-aksel.instructions.md",
       "hash": "75e0932dfe465508",
       "revision": "60c4bc62956118e428967f7a19935e444cbb5a5f"
@@ -78,6 +110,10 @@
       "path": ".github/instructions/norwegian-text.instructions.md",
       "hash": "ae153e646c932a28",
       "revision": "54547e2fcdc849c0969bf16b11896505a2e29490"
+    },
+    {
+      "path": ".github/instructions/output-style.instructions.md",
+      "hash": "919ebcfd22f06b2e"
     },
     {
       "path": ".github/instructions/performance.instructions.md",
@@ -133,6 +169,14 @@
       "hash": "82404ec13b5fd880"
     },
     {
+      "path": ".github/skills/ai-news-research/",
+      "hash": "16f2d476983b8ba0"
+    },
+    {
+      "path": ".github/skills/aksel-builder/",
+      "hash": "3075f3a92c2eb6fc"
+    },
+    {
       "path": ".github/skills/aksel-spacing/",
       "hash": "177594fc5ae8d7e3",
       "revision": "60c4bc62956118e428967f7a19935e444cbb5a5f"
@@ -153,6 +197,10 @@
       "revision": "60c4bc62956118e428967f7a19935e444cbb5a5f"
     },
     {
+      "path": ".github/skills/jackson-3-migration/",
+      "hash": "9b4932b7b9d4a076"
+    },
+    {
       "path": ".github/skills/java-to-kotlin/",
       "hash": "52cd8180b93a846b",
       "revision": "f3614e6130e286f4c95141aedf14a34c22a31ebb"
@@ -160,6 +208,10 @@
     {
       "path": ".github/skills/kafka/",
       "hash": "312ab4de91a246fa"
+    },
+    {
+      "path": ".github/skills/klarsprak/",
+      "hash": "c54427bb60f1c6e1"
     },
     {
       "path": ".github/skills/kotlin-app-config/",
@@ -190,6 +242,10 @@
       "path": ".github/skills/nav-deep-interview/",
       "hash": "eeb3399ecd4e352c",
       "revision": "60c4bc62956118e428967f7a19935e444cbb5a5f"
+    },
+    {
+      "path": ".github/skills/nav-dekoratoren/",
+      "hash": "fd8cf68c2c9bfbc5"
     },
     {
       "path": ".github/skills/nav-plan/",
@@ -227,6 +283,14 @@
       "revision": "f3614e6130e286f4c95141aedf14a34c22a31ebb"
     },
     {
+      "path": ".github/skills/rust-development/",
+      "hash": "e809030f7e8253ea"
+    },
+    {
+      "path": ".github/skills/security-owasp/",
+      "hash": "b909907ae0e18174"
+    },
+    {
       "path": ".github/skills/security-review/",
       "hash": "ad8fffb201f42a39",
       "revision": "f3614e6130e286f4c95141aedf14a34c22a31ebb"
@@ -235,6 +299,10 @@
       "path": ".github/skills/spring-boot-scaffold/",
       "hash": "c789e103015478c7",
       "revision": "60c4bc62956118e428967f7a19935e444cbb5a5f"
+    },
+    {
+      "path": ".github/skills/terse-mode/",
+      "hash": "d28a057d860494bb"
     },
     {
       "path": ".github/skills/threat-model/",
