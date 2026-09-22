@@ -79,8 +79,6 @@ Ikke legg til Kotlin-, TypeScript- eller Java-filer her. Applikasjonene bor i si
 ### Når sesjonen starter
 
 1. Ikke kjør Homebrew-kommandoer i cplt-sandboxen. Homebrew skriver til mapper utenfor det sandboxen har tilgang til.
-2. Be brukeren kjøre `brew update && brew outdated --greedy nav-pilot cplt` i en vanlig terminal.
-3. Hvis kommandoen viser en oppdatering, be brukeren kjøre `brew upgrade --greedy nav-pilot cplt` og starte nav-pilot på nytt før arbeidet fortsetter.
 
 ### Før du begynner
 
