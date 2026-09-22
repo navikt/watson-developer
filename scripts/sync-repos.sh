@@ -2,11 +2,12 @@
 set -euo pipefail
 
 # Sjekker ut standardbranch (via origin/HEAD, fallback main/master) og henter
-# nyeste endringer i alle git-repoer i repos-mappen.
-# Idempotent — trygt å kjøre flere ganger.
+# nyeste endringer i watson-developer og alle git-repoer i repos-mappen.
+# Idempotent og trygt å kjøre flere ganger.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPOS_DIR="$SCRIPT_DIR/../repos"
+ROOT_REPO_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+REPOS_DIR="$ROOT_REPO_DIR/repos"
 mkdir -p "$REPOS_DIR"
 REPOS_DIR="$(cd "$REPOS_DIR" && pwd)"
 
@@ -15,7 +16,7 @@ YELLOW='\033[0;33m'
 RED='\033[0;31m'
 NC='\033[0m'
 
-echo "🔄 Synkroniserer repoer i: $REPOS_DIR"
+echo "🔄 Synkroniserer watson-developer og repoer i: $REPOS_DIR"
 echo ""
 
 failed=0
@@ -32,10 +33,10 @@ sync_repo() {
   repo_name="$(basename "$repo_path")"
   echo "📦 $repo_name"
 
-  # Usporede filer ignoreres bevisst — de blokkerer ikke checkout eller ff-only pull,
+  # Usporede filer ignoreres bevisst. De blokkerer ikke checkout eller ff-only pull,
   # og lokale artefakter (build/, .env, .DS_Store) skal ikke hindre synkronisering.
   if [ -n "$(git -C "$repo_path" status --porcelain --untracked-files=no)" ]; then
-    echo -e "  ${YELLOW}⟳${NC} Hopper over — ukommiterte endringer i sporede filer"
+    echo -e "  ${YELLOW}⟳${NC} Hopper over: ukommiterte endringer i sporede filer"
     return 0
   fi
 
@@ -72,9 +73,14 @@ sync_repo() {
 
 pids=()
 output_files=()
+repo_paths=("$ROOT_REPO_DIR")
 
 for repo_path in "$REPOS_DIR"/*/; do
   [ -d "$repo_path/.git" ] || continue
+  repo_paths+=("$repo_path")
+done
+
+for repo_path in "${repo_paths[@]}"; do
   found=$((found + 1))
   output_file="$temp_dir/$found"
 
@@ -92,7 +98,7 @@ done
 
 echo ""
 if [ "$found" -eq 0 ]; then
-  echo -e "${YELLOW}⟳${NC} Fant ingen git-repoer i $REPOS_DIR"
+  echo -e "${YELLOW}⟳${NC} Fant ingen git-repoer i $REPOS_DIR eller i $ROOT_REPO_DIR"
   exit 0
 fi
 
