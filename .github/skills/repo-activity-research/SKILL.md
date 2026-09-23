@@ -34,9 +34,18 @@ perioden øverst i rapporten.
 
 ## Finn repoene
 
-Rapporter `watson-developer` og alle klonede Git-repoer direkte under
-`repos/`. Bruk repoets katalognavn som navn. Hopp over kataloger som mangler
-`.git`.
+Bruk repo-lista i `scripts/clone-repos.sh` som fasit for sibling-repoene.
+Rapporter `watson-developer` og hvert repo i lista. Bruk repoets katalognavn
+som navn. For hvert forventet repo:
+
+1. Finn katalogen direkte under `repos/`.
+2. Rapporter katalogen som manglende hvis den ikke finnes.
+3. Rapporter katalogen som ugyldig hvis den finnes, men mangler `.git`.
+4. Hopp over repoet i aktivitetsinnhentingen når katalogen mangler eller er
+   ugyldig.
+
+Ta også med andre Git-repoer som faktisk finnes direkte under `repos/`, men
+marker dem som uventede.
 
 Kjør først:
 
@@ -82,7 +91,8 @@ gh pr list --repo OWNER/REPO --state all \
 
 Hvis søket med `OR` ikke fungerer i den installerte `gh`-versjonen, kjør to
 separate søk, ett for `created:` og ett for `merged:`, og dedupliser på
-PR-nummer. Ikke dikt opp PR-data når kommandoen feiler.
+PR-nummer. Hvis et søk returnerer 100 treff, marker PR-resultatet som mulig
+avkortet i rapporten. Ikke dikt opp PR-data når kommandoen feiler.
 
 ## Skriv rapporten
 
@@ -128,7 +138,9 @@ Regler for innholdet:
 
 ## Feilhåndtering
 
-- Mangler et repo eller `.git`: noter det under «Oppfølging».
+- Mangler et forventet repo eller `.git`: noter repoet under «Oppfølging».
+- Finnes det et uventet repo direkte under `repos/`, noter det under
+  «Oppfølging» og ta det med i rapporten.
 - Git-kommando feiler i ett repo: fortsett med de andre repoene og noter
   feilen med repo-navn og kommandoens relevante feilmelding.
 - GitHub API eller `gh` feiler: bruk lokal Git-data, og noter at PR-data kan
