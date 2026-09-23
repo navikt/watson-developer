@@ -4,8 +4,25 @@
 set -euo pipefail
 
 GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
 BOLD='\033[1m'
 NC='\033[0m'
+
+if ! command -v kubectl &>/dev/null; then
+    echo "FEIL: kubectl ikke funnet. Installer kubectl før du starter utviklingsmiljøet." >&2
+    exit 1
+fi
+
+current_context="$(kubectl config view -o jsonpath='{.current-context}')"
+if [[ "$current_context" != "kind-watson" ]]; then
+    if [[ -n "$current_context" ]]; then
+        context_message="Kubernetes-konteksten er «${current_context}»."
+    else
+        context_message="Kubernetes-konteksten er ikke satt."
+    fi
+    echo -e "${YELLOW}ADVARSEL:${NC} ${context_message} Bytter til «kind-watson»." >&2
+    kubectl config use-context kind-watson
+fi
 
 if ! command -v tilt &>/dev/null; then
     echo "FEIL: tilt ikke funnet. Se README.md for installasjonsinstruksjoner."
