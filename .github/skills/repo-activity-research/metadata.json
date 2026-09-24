@@ -1,0 +1,15 @@
+{
+  "description": "Oppsummer commits og pull requests i Watson-repoene for siste arbeidsdag eller en valgt periode",
+  "domain": "development",
+  "tags": ["repo", "aktivitet", "commits", "pull-requests", "oppsummering"],
+  "examples": [
+    {
+      "scenario": "Siste arbeidsdag",
+      "prompt": "Hva skjedde i alle repoene siste arbeidsdag?"
+    },
+    {
+      "scenario": "Valgt periode",
+      "prompt": "Oppsummer repoaktiviteten fra 2026-09-01 til 2026-09-15"
+    }
+  ]
+}
