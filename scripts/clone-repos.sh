@@ -15,6 +15,7 @@ REPOS=(
   "https://github.com/navikt/watson-sak-frontend.git"
   "https://github.com/navikt/watson-sok.git"
   "https://github.com/navikt/watson-pdfgen.git"
+  "https://github.com/navikt/watson-agentpakke.git"
 )
 
 # Colors
@@ -26,7 +27,11 @@ NC='\033[0m'
 echo "📁 Kloner watson-repoer til: $REPOS_DIR"
 echo ""
 
-for repo_url in "${REPOS[@]}"; do
+clone_repo() {
+  local repo_url="$1"
+  local repo_name
+  local repo_path
+
   repo_name=$(basename "$repo_url" .git)
   repo_path="$REPOS_DIR/$repo_name"
 
@@ -43,7 +48,7 @@ for repo_url in "${REPOS[@]}"; do
       echo -e "  ${GREEN}✓${NC} Klonet"
     else
       echo -e "  ${RED}✗${NC} Kloning feilet"
-      continue
+      return 1
     fi
   fi
 
@@ -57,7 +62,34 @@ for repo_url in "${REPOS[@]}"; do
     echo -e "  ${YELLOW}📦${NC} Installerer frontend-avhengigheter..."
     (cd "$repo_path" && pnpm install --frozen-lockfile)
   fi
+}
+
+temp_dir="$(mktemp -d)"
+trap 'rm -rf "$temp_dir"' EXIT
+pids=()
+output_files=()
+
+for repo_url in "${REPOS[@]}"; do
+  repo_name=$(basename "$repo_url" .git)
+  output_file="$temp_dir/$repo_name"
+
+  clone_repo "$repo_url" >"$output_file" 2>&1 &
+  pids+=("$!")
+  output_files+=("$output_file")
+done
+
+failed=0
+for i in "${!pids[@]}"; do
+  if ! wait "${pids[$i]}"; then
+    failed=$((failed + 1))
+  fi
+  cat "${output_files[$i]}"
 done
 
 echo ""
+if [ "$failed" -gt 0 ]; then
+  echo -e "${RED}✗${NC} Ferdig med $failed feil"
+  exit 1
+fi
+
 echo "✅ Ferdig!"
