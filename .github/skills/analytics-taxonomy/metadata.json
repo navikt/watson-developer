@@ -1,0 +1,10 @@
+{
+  "description": "Nav analytics-taksonomi med Umami-eventnavn, attributter og personvernregler for frontend-applikasjoner",
+  "domain": "frontend",
+  "tags": ["analytics", "umami", "sporing", "taksonomi", "events", "personvern"],
+  "examples": [
+    "Legg til sporing av skjemainnsending i watson-sak-frontend",
+    "Hvilke events skal jeg bruke for navigasjon?",
+    "Hvordan sporer jeg at en bruker åpnet en accordion?"
+  ]
+}
