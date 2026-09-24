@@ -26,6 +26,21 @@ Repoer klones til `repos/` med `./scripts/clone-repos.sh`.
 
 Synkroniser `watson-developer` og alle repoene i `repos/` med `./sync.sh`. Skriptet sjekker ut standardbranch og kjører `pull --ff-only`. Det hopper over repoer med ukommiterte endringer i sporede filer.
 
+## Agentpakke
+
+`.github/agents`, `skills`, `instructions`, `prompts`, `hooks` og `extensions`
+materialiseres av `nav-pilot` fra kilden i `.nav-pilot/agentpakke.lock.json`:
+`navikt/watson-agentpakke`. Den pakka bygger videre på `navikt/copilot` sin
+`nav-pilot`-pakke (egen `.nav-pilot/agentpakke.lock.json` der) og legger til
+Watson-spesifikt innhold: agenten `vaktmester`, skillene
+`analytics-taxonomy`, `explain-diff-html`, `repo-activity-research`,
+`unleash-feature-toggle`, `watson-setup`, og extensionen `auto-format`.
+
+Endre Watson-spesifikt innhold i `navikt/watson-agentpakke`, ikke her. Kjør
+`nav-pilot sync --apply --force` i en vanlig terminal utenfor cplt-sandboxen
+for å hente oppdateringer (hooks og extensions kan ikke skrives inne i
+sandboxen).
+
 ## Plattform og autentisering
 
 - **Plattform**: Nais (Kubernetes/GCP), namespace `holmes`
