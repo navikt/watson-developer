@@ -18,6 +18,7 @@ Watson er Nav Kontrolls system for å avdekke trygdesvindel. `watson-developer` 
 | `holmes-brain`        | TypeScript, KI-drevet internwiki for Team Holmes                          |
 | `nav-persondata-api`  | Spring Boot + Kotlin, persondata, ytelser, arbeidsforhold                 |
 | `watson-admin-api`    | Spring Boot 4 + Kotlin, kontrollsaker, tilgangsstyring, Kafka, PostgreSQL |
+| `watson-guide`        | TypeScript, brukerrettede veiledninger for Watson-porteføljen            |
 | `watson-pdfgen`       | pdfgenrs + Docker, PDF-renderer for Watson                                |
 | `watson-sak-frontend` | React Router v7 + Aksel, saksbehandler-UI                                 |
 | `watson-sok`          | React Router v7 + Aksel, brukeroppslag (fnr/d-nummer)                     |

@@ -12,6 +12,7 @@ REPOS=(
   "https://github.com/navikt/holmes-brain.git"
   "https://github.com/navikt/nav-persondata-api.git"
   "https://github.com/navikt/watson-admin-api.git"
+  "https://github.com/navikt/watson-guide.git"
   "https://github.com/navikt/watson-sak-frontend.git"
   "https://github.com/navikt/watson-sok.git"
   "https://github.com/navikt/watson-pdfgen.git"

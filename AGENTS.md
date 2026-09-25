@@ -10,6 +10,7 @@ Watson er Nav Kontrolls system for å avdekke og forebygge misbruk av Nav-ytelse
 | `holmes-brain`        | Internwiki       | TypeScript                                  |
 | `nav-persondata-api`  | Persondata-API   | Spring Boot + Kotlin                        |
 | `watson-admin-api`    | Kjernebackend    | Spring Boot 4 + Kotlin + PostgreSQL + Kafka |
+| `watson-guide`        | Brukerveiledning | TypeScript                                  |
 | `watson-pdfgen`       | PDF-renderer     | pdfgenrs + Docker                           |
 | `watson-sak-frontend` | Saksbehandler-UI | React Router v7 + Aksel + TypeScript        |
 | `watson-sok`          | Brukeroppslag    | React Router v7 + Aksel + TypeScript        |
