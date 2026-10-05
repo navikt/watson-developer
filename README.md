@@ -50,6 +50,19 @@ Sjekker ut standardbranchen (det `origin/HEAD` peker på, med fallback til `main
 Repoene synkroniseres parallelt. Repoer med ukommiterte endringer i sporede filer
 hoppes over, slik at ingenting går tapt.
 
+Hvis repoene bruker SSH, kan du bytte alle remotes til HTTPS fra en vanlig
+terminal utenfor sandboksen:
+
+```bash
+./scripts/https-remotes.sh
+```
+
+Skriptet endrer hente-URL-er og eksplisitte push-URL-er i alle repoene direkte
+under `repos/`. Det beholder remote-navnene og lar HTTPS-URL-er være uendret.
+SSH-URL-er med eksplisitt port og lokale filstier støttes ikke. Skriptet lar
+disse være uendret, skriver en feilmelding og avslutter med feilkode.
+Det endrer ikke brancher, arbeidsfiler eller globale Git-innstillinger.
+
 ---
 
 ## Starte lokalmiljøet interaktivt
