@@ -43,6 +43,8 @@ PROFILE_IDS=(
     "saksbehandler-øst-2"
     "saksbehandler-vest-1"
     "saksbehandler-vest-2"
+    "saksbehandler-tipsmottak"
+    "leder-tipsmottak"
 )
 PROFILE_LABELS=(
     "Bjarte Byråkratsen — saksbehandler, Analyse (default)"
@@ -53,6 +55,8 @@ PROFILE_LABELS=(
     "Trine Trygdesen — saksbehandler, Øst"
     "Kjell Kontrollsen — saksbehandler, Vest"
     "Gunnar Granskeren — saksbehandler, Vest"
+    "Tina Tipsmottaker — saksbehandler, Tipsmottak"
+    "Tor Tipssjef — leder, Tipsmottak"
 )
 
 print_usage() {
@@ -96,7 +100,7 @@ select_profile_from_arguments() {
             saksbehandler|utreder|vanlig)
                 role_filter="saksbehandler"
                 ;;
-            analyse|øst|vest)
+            analyse|øst|vest|tipsmottak)
                 unit_filter="$argument"
                 ;;
             *)
