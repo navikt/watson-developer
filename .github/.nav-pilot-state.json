@@ -1,68 +1,65 @@
 {
   "collection": "watson-agentpakke",
-  "version": "2026.09.23-100538-5b8d5a0",
+  "version": "2026.10.11-201029-b998fab",
   "scope": "repo",
   "source_repo": "navikt/watson-agentpakke",
-  "source_sha": "1a816550ad5514653fd79b5a24f1af6453a39fdc",
-  "installed_at": "2026-09-24T10:08:58Z",
+  "source_sha": "32fd468ebf6069742bf3e011c0a9e19df187822e",
+  "installed_at": "2026-10-12T09:16:43Z",
   "files": [
     {
-      "path": ".github/agents/accessibility.agent.md",
-      "hash": "4ad090f6791eb845"
-    },
-    {
       "path": ".github/agents/aksel.agent.md",
-      "hash": "eb6688100005e57f"
+      "hash": "700721ce34d631f5"
     },
     {
       "path": ".github/agents/code-review.agent.md",
-      "hash": "10ce155690b4c835"
+      "hash": "811b2a6765ff86de"
     },
     {
       "path": ".github/agents/forfatter.agent.md",
-      "hash": "7647c85972f59fa7"
+      "hash": "81d4560449214a21"
     },
     {
       "path": ".github/agents/kafka.agent.md",
-      "hash": "f74565e00c5d0515"
-    },
-    {
-      "path": ".github/agents/local-worker.agent.md",
-      "hash": "59b5bcf453fefec6"
+      "hash": "743153095326cb24"
     },
     {
       "path": ".github/agents/nav-pilot-opus.agent.md",
-      "hash": "9ce0afc59f0a1912"
+      "hash": "9589574e7c94010a"
     },
     {
       "path": ".github/agents/nav-pilot.agent.md",
-      "hash": "edcfcf867dd98045"
+      "hash": "ce0bd9a2850357d0",
+      "revision": "32fd468ebf6069742bf3e011c0a9e19df187822e"
     },
     {
       "path": ".github/agents/research.agent.md",
-      "hash": "b68b9c9b82f12c02"
+      "hash": "22005ea46dec85a0"
     },
     {
       "path": ".github/agents/rust.agent.md",
-      "hash": "8ee97a471ec8b560"
+      "hash": "e1cb55806cd87d8c"
     },
     {
       "path": ".github/agents/security-champion.agent.md",
-      "hash": "2c3200cf23251a70"
+      "hash": "65fed295fcdd5bd1"
     },
     {
       "path": ".github/agents/vaktmester.agent.md",
       "hash": "0177ddfbe6c2a623",
-      "revision": "1a816550ad5514653fd79b5a24f1af6453a39fdc"
+      "revision": "32fd468ebf6069742bf3e011c0a9e19df187822e"
+    },
+    {
+      "path": ".github/agents/worker.agent.md",
+      "hash": "43c860f99cd1337e"
     },
     {
       "path": ".github/extensions/auto-format/",
       "hash": "2b5b0255700021c8",
-      "revision": "1a816550ad5514653fd79b5a24f1af6453a39fdc"
+      "revision": "32fd468ebf6069742bf3e011c0a9e19df187822e"
     },
     {
       "path": ".github/hooks/ask-first-aria.py",
-      "hash": "95dccc70382812d5"
+      "hash": "41be8eec026b7bb1"
     },
     {
       "path": ".github/hooks/gh-poll-gate.py",
@@ -70,31 +67,27 @@
     },
     {
       "path": ".github/hooks/klarsprak-gate.py",
-      "hash": "d72e6fc1bb74f3f2"
+      "hash": "ecc2bc6b2d637131"
     },
     {
       "path": ".github/instructions/accessibility.instructions.md",
-      "hash": "986ef7aa27d8a1d9"
+      "hash": "c3715d3fc2782a5b"
     },
     {
       "path": ".github/instructions/database.instructions.md",
       "hash": "9fc5267c1dc9dd01"
     },
     {
-      "path": ".github/instructions/deliberate-ai-use.instructions.md",
-      "hash": "68b3ca596e278482"
-    },
-    {
       "path": ".github/instructions/docker.instructions.md",
-      "hash": "32db7a2f8aaab2ac"
+      "hash": "d29c19982baad0d4"
     },
     {
       "path": ".github/instructions/github-actions.instructions.md",
-      "hash": "bbef6f3e56b8b3b3"
+      "hash": "553b61e739b1430d"
     },
     {
       "path": ".github/instructions/golang.instructions.md",
-      "hash": "b7bdff62f6964099"
+      "hash": "49ac99c6740220c6"
     },
     {
       "path": ".github/instructions/kotlin.instructions.md",
@@ -102,23 +95,28 @@
     },
     {
       "path": ".github/instructions/nextjs-aksel.instructions.md",
-      "hash": "75e0932dfe465508"
+      "hash": "342cce96431f6ca5"
     },
     {
       "path": ".github/instructions/norwegian-text.instructions.md",
-      "hash": "ae153e646c932a28"
+      "hash": "25ee167a83661c64"
     },
     {
       "path": ".github/instructions/output-style.instructions.md",
-      "hash": "919ebcfd22f06b2e"
+      "hash": "6295418a93dbca33",
+      "revision": "32fd468ebf6069742bf3e011c0a9e19df187822e"
     },
     {
       "path": ".github/instructions/performance.instructions.md",
-      "hash": "74be7b9e34c1681e"
+      "hash": "cde5b75a73890cbc"
+    },
+    {
+      "path": ".github/instructions/security-core.instructions.md",
+      "hash": "5f9b18a450d64fe7"
     },
     {
       "path": ".github/instructions/security-owasp.instructions.md",
-      "hash": "3388700634dd315d"
+      "hash": "3829d8b32cac8b70"
     },
     {
       "path": ".github/instructions/testing-kotlin.instructions.md",
@@ -134,35 +132,35 @@
     },
     {
       "path": ".github/prompts/aksel-component.prompt.md",
-      "hash": "721f879cfd8e89da"
+      "hash": "fa646ea49f00e34e"
     },
     {
       "path": ".github/prompts/golang-service.prompt.md",
-      "hash": "dc21d1c2ee4c1685"
+      "hash": "7fde0ad3e0920750"
     },
     {
       "path": ".github/prompts/kafka-topic.prompt.md",
-      "hash": "d485c12c7b6d44d6"
+      "hash": "4dedc8bfb89c321c"
     },
     {
       "path": ".github/prompts/ktor-endpoint.prompt.md",
-      "hash": "78a11bb6d225b664"
+      "hash": "19f9709a094b034e"
     },
     {
       "path": ".github/prompts/nais-manifest.prompt.md",
-      "hash": "f90a562ca7f8233c"
+      "hash": "df650deedb8cf0f0"
     },
     {
       "path": ".github/prompts/nextjs-api-route.prompt.md",
-      "hash": "5f65db6b410ea3e6"
+      "hash": "f5344c834c5fb492"
     },
     {
       "path": ".github/prompts/spring-boot-endpoint.prompt.md",
-      "hash": "82404ec13b5fd880"
+      "hash": "e2e2a7c6af3729b3"
     },
     {
       "path": ".github/skills/ai-news-research/",
-      "hash": "16f2d476983b8ba0"
+      "hash": "3cd92cbaef53b201"
     },
     {
       "path": ".github/skills/aksel-builder/",
@@ -175,7 +173,7 @@
     {
       "path": ".github/skills/analytics-taxonomy/",
       "hash": "71640d4f0d05f691",
-      "revision": "1a816550ad5514653fd79b5a24f1af6453a39fdc"
+      "revision": "32fd468ebf6069742bf3e011c0a9e19df187822e"
     },
     {
       "path": ".github/skills/api-design/",
@@ -188,11 +186,7 @@
     {
       "path": ".github/skills/explain-diff-html/",
       "hash": "c81e2c49268d79c1",
-      "revision": "1a816550ad5514653fd79b5a24f1af6453a39fdc"
-    },
-    {
-      "path": ".github/skills/flyway-migration/",
-      "hash": "ebb952121b180fac"
+      "revision": "32fd468ebf6069742bf3e011c0a9e19df187822e"
     },
     {
       "path": ".github/skills/jackson-3-migration/",
@@ -203,12 +197,8 @@
       "hash": "52cd8180b93a846b"
     },
     {
-      "path": ".github/skills/kafka/",
-      "hash": "312ab4de91a246fa"
-    },
-    {
       "path": ".github/skills/klarsprak/",
-      "hash": "c54427bb60f1c6e1"
+      "hash": "d7e22a0fab7b9388"
     },
     {
       "path": ".github/skills/kotlin-app-config/",
@@ -236,7 +226,7 @@
     },
     {
       "path": ".github/skills/nav-dekoratoren/",
-      "hash": "fd8cf68c2c9bfbc5"
+      "hash": "4b5d432477529d66"
     },
     {
       "path": ".github/skills/nav-plan/",
@@ -269,15 +259,11 @@
     {
       "path": ".github/skills/repo-activity-research/",
       "hash": "7cd3b016b738707d",
-      "revision": "1a816550ad5514653fd79b5a24f1af6453a39fdc"
+      "revision": "32fd468ebf6069742bf3e011c0a9e19df187822e"
     },
     {
       "path": ".github/skills/rust-development/",
       "hash": "e809030f7e8253ea"
-    },
-    {
-      "path": ".github/skills/security-owasp/",
-      "hash": "b909907ae0e18174"
     },
     {
       "path": ".github/skills/security-review/",
@@ -302,12 +288,12 @@
     {
       "path": ".github/skills/unleash-feature-toggle/",
       "hash": "03b3cf6288a4e0be",
-      "revision": "1a816550ad5514653fd79b5a24f1af6453a39fdc"
+      "revision": "32fd468ebf6069742bf3e011c0a9e19df187822e"
     },
     {
       "path": ".github/skills/watson-setup/",
       "hash": "72d2b0705d40261e",
-      "revision": "1a816550ad5514653fd79b5a24f1af6453a39fdc"
+      "revision": "32fd468ebf6069742bf3e011c0a9e19df187822e"
     },
     {
       "path": ".github/skills/web-design-reviewer/",

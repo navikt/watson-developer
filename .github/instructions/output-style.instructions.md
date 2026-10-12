@@ -67,14 +67,13 @@ full wash:
 - No exclamation marks in technical text.
 - Semicolons sparingly.
 
-## Precedence over deliberate-ai-use
+## Architectural explanations
 
-`deliberate-ai-use.instructions.md` is also `applyTo: "**"` and requires explaining architectural choices, showing tradeoffs, marking red-zone code and inviting follow-up questions. That requirement is scoped, not global. Apply it as follows:
+Explain architectural choices when they matter to the change:
 
-1. Explain only when the response makes an **architectural choice** (structure, data model, API contract, auth design, dependency or migration strategy) or touches **red-zone code** (auth, authorization, input validation, core business logic, security). Otherwise answer without explanation.
+1. Explain only when the response makes an **architectural choice** (structure, data model, API contract, auth design, dependency or migration strategy). Otherwise answer without explanation.
 2. When it applies, the explanation is two to three sentences: the choice, the main tradeoff, the alternative rejected. Not a section, not a table, unless the user asks for one.
-3. Mark red-zone code with one line, for example `🔴 Rød sone: token-validering, gå gjennom denne nøye.`
-4. Add the follow-up invitation ("Still gjerne spørsmål om valgene over") only in responses that already carry an architectural explanation. Never on trivial answers.
-5. When the user asks "hvorfor" or "forklar", the Length rules above are lifted for that answer.
+3. Add the follow-up invitation ("Still gjerne spørsmål om valgene over") only in responses that already carry an architectural explanation. Never on trivial answers.
+4. When the user asks "hvorfor" or "forklar", the Length rules above are lifted for that answer.
 
 Phase gates in `nav-pilot` override this section. Never sacrifice phase integrity for brevity.
