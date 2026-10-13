@@ -127,10 +127,13 @@ backenden logger deg inn som:
 | `saksbehandler-øst-2`             | Trine Trygdesen    | `L900003` | Nav Kontroll Øst Seksjon 2     | Nei    |
 | `saksbehandler-vest-1`            | Kjell Kontrollsen  | `L900004` | Nav Kontroll Vest Seksjon 1    | Nei    |
 | `saksbehandler-vest-2`            | Gunnar Granskeren  | `L900005` | Nav Kontroll Vest Seksjon 2    | Nei    |
+| `saksbehandler-tipsmottak`        | Tina Tipsmottaker  | `L900007` | Tipsmottak                     | Nei    |
+| `leder-tipsmottak`                | Tor Tipssjef       | `L900008` | Øst Seksjon 2 og Tipsmottak    | Ja     |
 
-De tre lederprofilene og deres saksbehandlere under seg (én leder per enhet) gjør det mulig å
-teste overføring av saker mellom saksbehandlere i samme enhet og på tvers av enheter
-(Analyse/Øst/Vest). Uten `BRUKERPROFIL` beholder Tilt dagens standard og logger deg inn som
+De fire lederprofilene og saksbehandlerne under dem gjør det mulig å teste overføring av saker
+mellom saksbehandlere i samme enhet og på tvers av enheter (Analyse/Øst/Vest/Tipsmottak). Tipsmottak finnes bare i Watson. Tina tilhører Øst i NOM, men backenden gir
+henne enheten Tipsmottak fordi hun står på listen i `application-local.yml`. Tor leder Øst Seksjon 2
+i NOM og står på lederlisten, så han leder både Øst og Tipsmottak og velger enhet på forsiden. Uten `BRUKERPROFIL` beholder Tilt dagens standard og logger deg inn som
 `saksbehandler-analyse`.
 
 Starter du Tilt fra en allerede kjørende sesjon, stopp frontend-ressursen først og start den
