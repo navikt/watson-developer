@@ -56,7 +56,7 @@ PROFILE_LABELS=(
     "Kjell Kontrollsen — saksbehandler, Vest"
     "Gunnar Granskeren — saksbehandler, Vest"
     "Tina Tipsmottaker — saksbehandler, Tipsmottak"
-    "Tor Tipssjef — leder, Tipsmottak"
+    "Tor Tipssjef — leder, Øst og Tipsmottak"
 )
 
 print_usage() {
