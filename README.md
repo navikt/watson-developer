@@ -157,7 +157,10 @@ watson-developer/
 │   ├── sync-repos.sh
 │   ├── start.sh
 │   ├── start-sak-frontend.sh
+│   ├── lasttest.sh
+│   ├── lasttest-tokens.sh
 │   └── doctor.sh
+├── loadtest/                   ← k6-lasttest av watson-admin-api
 ├── docs/
 │   ├── arkitektur/
 │   ├── domene/
@@ -183,6 +186,7 @@ watson-developer/
 | [docs/arkitektur/](docs/arkitektur/README.md)                  | Systemkart, autentisering og dataflyt            |
 | [docs/domene/ordbok.md](docs/domene/ordbok.md)                 | Domenebegreper og forkortelser                   |
 | [docs/onboarding/sjekkliste.md](docs/onboarding/sjekkliste.md) | Sjekkliste for nye utviklere                     |
+| [loadtest/README.md](loadtest/README.md)                       | Lasttest av Watson Sak i dev med k6              |
 
 ---
 

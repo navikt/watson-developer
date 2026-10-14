@@ -28,6 +28,7 @@ Sibling-repoer klones til `repos/` med `./scripts/clone-repos.sh`.
 - `k8s/` — Kubernetes-manifester for lokal infrastruktur
 - `scripts/` — hjelpeskript (klon repoer, sett opp kluster, pre-flight sjekk)
 - `docs/` — arkitektur, domene og onboarding-dokumentasjon
+- `loadtest/` — k6-lasttest av watson-admin-api i dev (JavaScript, eneste unntak fra regelen om ingen applikasjonskode)
 - `repos/` — klonede sibling-repoer (git-ignorert)
 
 ## Domene

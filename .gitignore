@@ -3,3 +3,5 @@
 .DS_Store
 /.pnpm-store/
 /repos/
+/loadtest/.tokens/
+/loadtest/resultater/

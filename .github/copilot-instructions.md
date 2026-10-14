@@ -74,6 +74,7 @@ sandboxen).
 ### Hva dette repoet IKKE er
 
 Ikke legg til Kotlin-, TypeScript- eller Java-filer her. Applikasjonene bor i sine egne repoer.
+Eneste unntak er k6-skriptene i `loadtest/` (JavaScript), som lasttester porteføljen.
 
 ## Lokalt utviklingsmiljø
 
