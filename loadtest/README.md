@@ -31,6 +31,7 @@ Skriptene er JavaScript. Det er et bevisst unntak fra regelen om at watson-devel
 
 ## Forutsetninger
 
+- **Prodlikt oppsett i dev**: navikt/watson-admin-api#332 må være deployet. Uten den måler vi `db-f1-micro` og én replika, ikke det prod skal kjøre på.
 - **Testidenter** i `trygdeetaten.no` med Watson-grupper. Bruk 10–20 identer. Søkegrensen gjelder per ident, og med få identer treffer flere VU-er den samme kvoten. Skriveflyten trenger utvidet tilgang, og lederflyten trenger ledergruppe.
 - **Testpersoner** (syntetiske fra Dolly) som testidentene har tilgang til i tilgangsmaskin. De settes i `TESTPERSONER` og brukes når skriveflyten oppretter saker. Uten dem hopper testen over skriveflyten.
 - **Saker i dev** som testidentene ser. `setup()` henter opptil 500 sak-ID-er fra saklista og avbryter hvis den ikke finner noen. Seed dev med en realistisk datamengde: lister og statistikk oppfører seg annerledes med 50 saker enn med 50 000.
@@ -94,7 +95,7 @@ Følg med i Grafana mens testen går:
 - `hikaricp_connections_active`, `_pending` og `_timeout`: om tilkoblingspoolen tar slutt
 - `http_client_requests_seconds` per ekstern tjeneste
 - JVM-heap, GC-pauser, CPU-throttling og minne i poden
-- Cloud SQL: CPU, antall tilkoblinger og Query Insights. `db-f1-micro` tillater omtrent 25 tilkoblinger.
+- Cloud SQL: CPU, antall tilkoblinger og Query Insights. `db-custom-1-3840` tillater 100 tilkoblinger, og 4 pods med standard Hikari-pool bruker opptil 40.
 - Tempo for de tregeste kallene og Loki for feil
 
 Hvis `K6_PROMETHEUS_RW_SERVER_URL` er satt, sender `scripts/lasttest.sh` k6-metrikkene til Prometheus. Hver kjøring merkes med `testid`.
