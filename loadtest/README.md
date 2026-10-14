@@ -15,7 +15,9 @@ Skriptene er JavaScript. Det er et bevisst unntak fra regelen om at watson-devel
    ./scripts/lasttest-tokens.sh
    ```
 
-   Skriptet går gjennom identene i fila og ber bare om token for dem som mangler et token, eller har et som utløper innen 30 minutter. For hver ident logger du inn som identen i et privat nettleservindu, åpner lenken skriptet viser, og kopierer tokenet. Trykk Enter for å bruke utklippstavla, eller lim inn tokenet. Skriv `h` for å hoppe over en ident. Skriptet avviser tokenet hvis det tilhører en annen ident.
+   Først sammenligner skriptet `testidenter` med testbrukerne som har `enhetId: lasttest` i `application-dev.yml` på `origin/main` i `repos/watson-admin-api`. Testbrukere som mangler i `testidenter`, kan du legge til, og skriptet spør om rollen. Saksbehandlere som mangler i watson-admin-api, gir en advarsel, fordi sakene de får tildelt, ikke havner under Lasttest. `WATSON_ADMIN_API_DIR` overstyrer hvor klonen ligger.
+
+   Deretter går skriptet gjennom identene i fila og ber bare om token for dem som mangler et token, eller har et som utløper innen 30 minutter. For hver ident logger du inn som identen i et privat nettleservindu, åpner lenken skriptet viser, og kopierer tokenet. Trykk Enter for å bruke utklippstavla, eller lim inn tokenet. Skriv `h` for å hoppe over en ident. Skriptet avviser tokenet hvis det tilhører en annen ident.
 
    Tokenet vises ikke på skjermen. Det lagres i `loadtest/.tokens/tokens.json`, som er git-ignorert og bare lesbar for deg. Når du fjerner en ident fra `testidenter`, sletter skriptet tokenet. `--alle` henter nye tokens for alle identene.
 
@@ -147,3 +149,4 @@ Skriv funn og tiltak i holmes-brain. Typiske tiltak er større Cloud SQL-tier, s
 | `TENKETID_MIN` / `TENKETID_MAKS` | `3` / `10` | Pause mellom sidevisninger, i sekunder |
 | `K6_PROMETHEUS_RW_SERVER_URL` | (tom) | Sender metrikker til Prometheus |
 | `MIN_GYLDIG` | `30` | `lasttest-tokens.sh` ber om nytt token når det gjenstår færre minutter enn dette |
+| `WATSON_ADMIN_API_DIR` | `repos/watson-admin-api` | Klonen `lasttest-tokens.sh` leser testbrukerne for Lasttest fra |
