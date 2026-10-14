@@ -62,7 +62,8 @@ fi
 
 mkdir -p "$RESULTAT_DIR"
 TIDSSTEMPEL="$(date +%Y%m%d-%H%M%S)"
-RESULTAT_FIL="$RESULTAT_DIR/$TIDSSTEMPEL-$SCENARIO-$PROFIL.json"
+RAPPORT="$RESULTAT_DIR/$TIDSSTEMPEL-$SCENARIO-$PROFIL"
+RESULTAT_FIL="$RAPPORT.json"
 
 OUTPUT_ARGS=()
 if [ -n "${K6_PROMETHEUS_RW_SERVER_URL:-}" ]; then
@@ -71,13 +72,20 @@ fi
 
 echo ""
 ok "Kjører $SCENARIO ($PROFIL) mot ${BASE_URL:-https://watson-admin-api.intern.dev.nav.no}"
+ok "Følg kjøringen live på http://127.0.0.1:5665"
 
 set +e
+K6_WEB_DASHBOARD=true \
+K6_WEB_DASHBOARD_OPEN=false \
+K6_WEB_DASHBOARD_HOST=127.0.0.1 \
+K6_WEB_DASHBOARD_EXPORT="$RAPPORT.html" \
 k6 run \
   --summary-export "$RESULTAT_FIL" \
   --tag "testid=$TIDSSTEMPEL-$SCENARIO-$PROFIL" \
   -e TOKEN_FIL="$TOKEN_FIL" \
   -e PROFIL="$PROFIL" \
+  -e SCENARIO="$SCENARIO" \
+  -e RAPPORT="$RAPPORT" \
   ${OUTPUT_ARGS[@]+"${OUTPUT_ARGS[@]}"} \
   "$SKRIPT"
 STATUS=$?
@@ -85,8 +93,15 @@ set -e
 
 echo ""
 if [ "$STATUS" -eq 0 ]; then
-  ok "Alle terskler holdt. Oppsummering: $RESULTAT_FIL"
+  ok "Alle terskler holdt."
 else
-  fail "k6 avsluttet med kode $STATUS (terskler brutt eller feil). Oppsummering: $RESULTAT_FIL"
+  fail "k6 avsluttet med kode $STATUS (terskler brutt eller feil)."
 fi
+echo "  Rapport:    $RAPPORT.md"
+if [ -f "$RAPPORT.html" ]; then
+  echo "  Grafer:     $RAPPORT.html"
+else
+  warn "Ingen grafer. k6 lager dem bare når kjøringen varer lenge nok, så smoke får dem ikke."
+fi
+echo "  Rådata:     $RESULTAT_FIL"
 exit "$STATUS"

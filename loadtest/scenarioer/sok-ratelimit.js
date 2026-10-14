@@ -1,6 +1,7 @@
 import { sleep } from "k6";
 import { brukere, testpersoner } from "../lib/config.js";
 import { sok } from "../lib/klient.js";
+import { handleSummary, kallTerskler } from "../lib/rapport.js";
 
 /**
  * Bekrefter at SokRateLimitFilter slår inn (30 burst, 120 per time per Nav-ident) og at appen
@@ -19,8 +20,11 @@ export const options = {
     // 429 regnes som forventet svar. Alt annet enn 2xx og 429, for eksempel 401 eller 5xx, feiler.
     http_req_failed: ["rate==0"],
     checks: ["rate==1"],
+    ...kallTerskler(),
   },
 };
+
+export { handleSummary };
 
 export default function () {
   let bruker = null;

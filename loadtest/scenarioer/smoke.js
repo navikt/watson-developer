@@ -9,6 +9,7 @@ import {
   registrerOgBehandleSak,
   sakDetalj,
 } from "../lib/flyter.js";
+import { handleSummary, kallTerskler } from "../lib/rapport.js";
 
 // Én bruker, én runde gjennom alle flytene. Verifiserer tokens, tilganger og skript før lasttest.
 // Holder med én saksbehandler. Uten leder-token eller TESTPERSONER hoppes de flytene over.
@@ -17,8 +18,11 @@ export const options = {
   iterations: 1,
   thresholds: {
     checks: ["rate==1"],
+    ...kallTerskler(),
   },
 };
+
+export { handleSummary };
 
 // Setup henter saker med samme saksbehandler som åpner dem, så tilgangen er lik.
 export function setup() {

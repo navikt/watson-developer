@@ -3,6 +3,51 @@ import { check } from "k6";
 import { Counter } from "k6/metrics";
 import { BASE_URL } from "./config.js";
 
+/**
+ * Alle kallnavn. k6 lager bare tidsserier per kall for navn med en terskel, så rapporten
+ * (lib/rapport.js) trenger lista. Nye kall må legges inn her, ellers advarer testen.
+ */
+export const KALLNAVN = [
+  "setup sakliste",
+  "innlogget-bruker",
+  "mine oppsummering",
+  "varsler uleste",
+  "sakliste mine",
+  "sakliste tilknyttet",
+  "sakliste alle",
+  "sakliste filtrert",
+  "kodeverk",
+  "merker",
+  "sak",
+  "sak hendelser",
+  "sak journalposter",
+  "sak filer",
+  "sak tillatte-handlinger",
+  "sak mapper",
+  "saksbehandlere",
+  "sok person",
+  "dokument",
+  "dokument kommentarer",
+  "dokument historikk",
+  "opprett sak",
+  "tildel sak",
+  "opprett dokument",
+  "dokument laas",
+  "lagre dokument",
+  "dokument frigjor laas",
+  "opprett mappe",
+  "opprett hendelse",
+  "rediger hendelse",
+  "slett hendelse",
+  "rediger sak",
+  "leder statistikk",
+  "statistikk nav-kontroll",
+  "statistikk hovedavdeling",
+  "sakliste fordeling",
+];
+const kjenteNavn = new Set(KALLNAVN);
+const ukjenteNavn = new Set();
+
 /** 429 fra SokRateLimitFilter (per Nav-ident). */
 export const avvistAvApp = new Counter("avvist_rate_limit_app");
 /** 503 fra ingress-nginx (limit-rps per klient-IP). */
@@ -52,6 +97,10 @@ function parametere(bruker, navn, type, tillatt) {
  * for eksempel 403 når saksbehandleren ikke er knyttet til saken.
  */
 function registrer(res, navn, tillatt = []) {
+  if (!kjenteNavn.has(navn) && !ukjenteNavn.has(navn)) {
+    ukjenteNavn.add(navn);
+    console.warn(`Kallet "${navn}" mangler i KALLNAVN i lib/klient.js og kommer ikke med i rapporten.`);
+  }
   if (res.status === 429) avvistAvApp.add(1, { name: navn });
   if (res.status === 503) avvistAvIngress.add(1, { name: navn });
   const ok = (res.status >= 200 && res.status < 300) || tillatt.includes(res.status);

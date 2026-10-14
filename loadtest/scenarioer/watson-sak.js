@@ -10,6 +10,7 @@ import {
   sakDetalj,
 } from "../lib/flyter.js";
 import { stages, terskler } from "../lib/profiler.js";
+import { handleSummary, kallTerskler } from "../lib/rapport.js";
 
 const PROFIL = __ENV.PROFIL || "baseline";
 
@@ -30,10 +31,12 @@ export const options = {
     saksbehandler_skriv: scenario("skriv", "saksbehandlerSkriv"),
     leder: scenario("leder", "leder"),
   },
-  thresholds: terskler,
+  thresholds: { ...terskler, ...kallTerskler() },
   // Unngå at hver unike URL blir en egen tidsserie.
   systemTags: ["status", "method", "name", "group", "scenario", "check", "error_code", "expected_response"],
 };
+
+export { handleSummary };
 
 export function setup() {
   const sakIder = hentSakIder(brukerMedRolle("saksbehandler"));

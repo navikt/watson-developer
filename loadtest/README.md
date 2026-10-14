@@ -72,7 +72,7 @@ k6 avslutter med feilkode når en terskel brytes. Tersklene ligger i `lib/profil
 
 ### Feilede kall
 
-Oppsummeringen i `resultater/` viser bare hvilke sjekker som feilet, ikke statuskode eller feilmelding. Derfor skriver k6 en advarsel i terminalen første gang hver VU får en uventet status på et kall:
+Rapporten viser hvilke kall og sjekker som feilet, men ikke statuskode eller feilmelding. Derfor skriver k6 en advarsel i terminalen første gang hver VU får en uventet status på et kall:
 
 ```
 level=warning msg="opprett mappe: HTTP 403 POST https://.../mapper (Ingen tilgang til sak 123)"
@@ -101,7 +101,9 @@ Grensene står på under testen.
 
 ## Overvåking under kjøring
 
-Følg med i Grafana mens testen går:
+`scripts/lasttest.sh` starter k6 sitt web-dashboard på <http://127.0.0.1:5665>. Der ser du responstid, antall kall og feil fra testens side mens den går.
+
+Følg med i Grafana for å se hva som skjer i backend:
 
 - `http_server_requests_seconds` per URI: p95, p99 og feilrate
 - `hikaricp_connections_active`, `_pending` og `_timeout`: om tilkoblingspoolen tar slutt
@@ -114,7 +116,19 @@ Hvis `K6_PROMETHEUS_RW_SERVER_URL` er satt, sender `scripts/lasttest.sh` k6-metr
 
 ## Resultater
 
-`scripts/lasttest.sh` lagrer oppsummeringen fra k6 i `loadtest/resultater/` (git-ignorert). Skriv funn og tiltak i holmes-brain. Typiske tiltak er større Cloud SQL-tier, større Hikari-pool, høyere CPU-request, flere replikaer, nye indekser, færre N+1-spørringer og caching av NOM og kodeverk.
+`scripts/lasttest.sh` lagrer tre filer per kjøring i `loadtest/resultater/` (git-ignorert):
+
+| Fil | Innhold | For hvem |
+|---|---|---|
+| `<tid>-<scenario>-<profil>.md` | Konklusjon i klartekst, krav med ✅/❌, responstid per kall og en ordliste | Alle. Kan limes inn i en PR, i Slack eller i holmes-brain |
+| `<tid>-<scenario>-<profil>.html` | Grafer over responstid, kall per sekund, feil og antall brukere gjennom kjøringen | Utviklere. Åpnes i nettleseren |
+| `<tid>-<scenario>-<profil>.json` | Rådata fra k6 | Sammenligning mellom kjøringer |
+
+k6 lager bare grafer når kjøringen varer lenge nok, så smoke får ingen HTML-fil. Rapporten lages av `lib/rapport.js`. Den henter terminaloppsummeringen fra `jslib.k6.io`, så maskinen må ha internettilgang.
+
+Responstid per kall krever at kallnavnet står i `KALLNAVN` i `lib/klient.js`. Testen advarer i terminalen om navn som mangler.
+
+Skriv funn og tiltak i holmes-brain. Typiske tiltak er større Cloud SQL-tier, større Hikari-pool, høyere CPU-request, flere replikaer, nye indekser, færre N+1-spørringer og caching av NOM og kodeverk.
 
 ## Miljøvariabler
 
