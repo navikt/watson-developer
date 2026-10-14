@@ -2,21 +2,26 @@
 set -euo pipefail
 
 # Henter og lagrer tokens for testidentene som brukes i lasttesten av watson-admin-api.
+# Identene og rollene står i loadtest/testidenter (git-ignorert, se loadtest/testidenter.eksempel).
+# Skriptet ber bare om token for identer som mangler et gyldig token.
 # Tokenene hentes manuelt fra azure-token-generator (innlogging som testident i nettleseren)
-# og limes inn skjult. Fila er git-ignorert og lesbar bare for eieren.
+# og limes inn skjult. Tokenfila er git-ignorert og lesbar bare for eieren.
 #
 # Bruk:
-#   ./scripts/lasttest-tokens.sh            # legg til eller erstatt identer
-#   ./scripts/lasttest-tokens.sh --nullstill # start med tom tokenfil
-#   ./scripts/lasttest-tokens.sh --status    # vis identer og utløpstid, uten tokens.
-#                                            # Avslutter med kode 1 hvis et token er utløpt eller ugyldig.
+#   ./scripts/lasttest-tokens.sh            # hent tokens som mangler eller snart utløper
+#   ./scripts/lasttest-tokens.sh --alle     # hent nye tokens for alle identene
+#   ./scripts/lasttest-tokens.sh --status   # vis identer og utløpstid, uten tokens.
+#                                           # Avslutter med kode 1 hvis et token er utløpt eller ugyldig.
 #
-# Idempotent: samme navIdent erstattes, ikke dupliseres.
+# Idempotent: identer med token som varer minst MIN_GYLDIG minutter (standard 30), hoppes over.
+# Tokens for identer som ikke lenger står i identfila, slettes.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 TOKEN_DIR="$ROOT_DIR/loadtest/.tokens"
 TOKEN_FIL="$TOKEN_DIR/tokens.json"
+IDENT_FIL="$ROOT_DIR/loadtest/testidenter"
+MIN_GYLDIG="${MIN_GYLDIG:-30}"
 AUD="${LASTTEST_AUD:-dev-gcp:holmes:watson-admin-api}"
 GENERATOR_URL="https://azure-token-generator.intern.dev.nav.no/api/obo?aud=$AUD"
 
@@ -45,15 +50,15 @@ trap gjenopprett_terminal EXIT
 # Tom linje henter tokenet fra utklippstavla (pbpaste).
 les_token() {
   token=""
-  printf "Token (lim inn og trykk Enter, eller bare Enter for å bruke utklippstavla): "
+  printf "Token (lim inn og trykk Enter, Enter alene for utklippstavla, h for å hoppe over): "
   if [ -t 0 ]; then
     STTY_FOR="$(stty -g)"
     stty -icanon -echo
-    IFS= read -r token || true
+    IFS= read -r token || { echo ""; fail "Ingen input. Avbryter."; exit 1; }
     gjenopprett_terminal
     STTY_FOR=""
   else
-    IFS= read -r token || true
+    IFS= read -r token || { echo ""; fail "Ingen input. Avbryter."; exit 1; }
   fi
   echo ""
   if [ -z "$token" ] && command -v pbpaste >/dev/null; then
@@ -98,15 +103,51 @@ vis_status() {
   [ "$ugyldige" -eq 0 ]
 }
 
+# Minutter til tokenet for identen utløper. 0 hvis det mangler eller er ugyldig.
+minutter_igjen() {
+  local token exp
+  token="$(jq -r --arg ident "$1" '.[] | select(.navIdent == $ident) | .token' "$TOKEN_FIL")"
+  [ -n "$token" ] || { echo 0; return; }
+  exp="$(jwt_payload "$token" | jq -r '.exp // 0' 2>/dev/null || true)"
+  [[ "$exp" =~ ^[0-9]+$ ]] || exp=0
+  local min=$(( (exp - $(date +%s)) / 60 ))
+  [ "$min" -gt 0 ] && echo "$min" || echo 0
+}
+
+# Lager identfila fra tokens som allerede er lagret, så eksisterende oppsett ikke går tapt.
+lag_identfil_fra_tokens() {
+  {
+    echo "# navIdent rolle (saksbehandler eller leder). Laget fra loadtest/.tokens/tokens.json."
+    jq -r '.[] | "\(.navIdent) \(.rolle)"' "$TOKEN_FIL"
+  } > "$IDENT_FIL"
+  ok "Laget loadtest/testidenter fra tokenene du har lagret"
+}
+
+# Leser identfila. Tomme linjer og alt etter # ignoreres. Skriver «ident rolle» per linje.
+les_identer() {
+  local linjenr=0 linje ident rolle rest feil=0
+  while IFS= read -r linje || [ -n "$linje" ]; do
+    linjenr=$((linjenr + 1))
+    linje="${linje%%#*}"
+    read -r ident rolle rest <<< "$linje" || true
+    [ -z "${ident:-}" ] && continue
+    if [ "$rolle" != "saksbehandler" ] && [ "$rolle" != "leder" ] || [ -n "$rest" ]; then
+      fail "loadtest/testidenter linje $linjenr: forventet «navIdent saksbehandler|leder»" >&2
+      feil=1
+      continue
+    fi
+    echo "$ident $rolle"
+  done < "$IDENT_FIL"
+  return "$feil"
+}
+
+ALLE=false
 case "${1:-}" in
   --status)
     vis_status
     exit $?
     ;;
-  --nullstill)
-    echo "[]" > "$TOKEN_FIL"
-    ok "Tokenfila er tømt"
-    ;;
+  --alle) ALLE=true ;;
   "") ;;
   *)
     fail "Ukjent argument: $1"
@@ -114,46 +155,90 @@ case "${1:-}" in
     ;;
 esac
 
-echo "Logg inn som testident i et privat nettleservindu og åpne:"
-echo "  $GENERATOR_URL"
-echo "Kopier tokenet og lim det inn når du blir bedt om det, eller trykk bare Enter for å bruke"
-echo "utklippstavla. Tokenet vises ikke på skjermen."
+if [ ! -f "$IDENT_FIL" ]; then
+  if [ "$(jq length "$TOKEN_FIL")" -gt 0 ]; then
+    lag_identfil_fra_tokens
+  else
+    fail "Fant ikke loadtest/testidenter. Lag den med identene dine:"
+    echo "  cp loadtest/testidenter.eksempel loadtest/testidenter" >&2
+    exit 1
+  fi
+fi
+
+IDENTER="$(les_identer)" || exit 1
+if [ -z "$IDENTER" ]; then
+  fail "loadtest/testidenter har ingen identer"
+  exit 1
+fi
+if [ "$(sort <<< "$(cut -d' ' -f1 <<< "$IDENTER")" | uniq -d)" != "" ]; then
+  fail "loadtest/testidenter har samme navIdent flere ganger"
+  exit 1
+fi
+
+# Fjern tokens for identer som ikke lenger står i fila, og oppdater rollen fra fila.
+tmp="$(mktemp "$TOKEN_DIR/tokens.XXXXXX")"
+jq -R -s 'split("\n") | map(select(length > 0) | split(" ") | {key: .[0], value: .[1]}) | from_entries' <<< "$IDENTER" \
+  | jq --slurpfile fil "$TOKEN_FIL" '. as $roller | $fil[0] | map(select($roller[.navIdent]) | .rolle = $roller[.navIdent])' > "$tmp"
+mv "$tmp" "$TOKEN_FIL"
+
+TRENGER=()
+while read -r ident rolle; do
+  min="$(minutter_igjen "$ident")"
+  if [ "$ALLE" = false ] && [ "$min" -ge "$MIN_GYLDIG" ]; then
+    skip "$ident ($rolle): gyldig i $min min, hopper over"
+  else
+    TRENGER+=("$ident $rolle")
+  fi
+done <<< "$IDENTER"
+
+if [ "${#TRENGER[@]}" -eq 0 ]; then
+  echo ""
+  ok "Alle tokens er gyldige i minst $MIN_GYLDIG min. Bruk --alle for å hente nye likevel."
+  exit 0
+fi
+
 echo ""
+echo "Trenger token for ${#TRENGER[@]} av $(wc -l <<< "$IDENTER" | tr -d ' ') identer. For hver ident:"
+echo "  1. Logg inn som identen i et privat nettleservindu og åpne"
+echo "     $GENERATOR_URL"
+echo "  2. Kopier tokenet og trykk Enter her for å bruke utklippstavla, eller lim det inn."
+echo "     Skriv h og trykk Enter for å hoppe over identen. Tokenet vises ikke på skjermen."
 
-while true; do
-  read -r -p "navIdent (tom linje for å avslutte): " ident
-  [ -z "$ident" ] && break
-  read -r -p "Rolle [saksbehandler/leder] (saksbehandler): " rolle
-  rolle="${rolle:-saksbehandler}"
-  if [ "$rolle" != "saksbehandler" ] && [ "$rolle" != "leder" ]; then
-    fail "Ugyldig rolle: $rolle"
-    continue
-  fi
-  les_token
-  if [ -z "$token" ]; then
-    fail "Fant ikke noe token. Prøv igjen."
-    continue
-  fi
+for linje in "${TRENGER[@]}"; do
+  read -r ident rolle <<< "$linje"
+  echo ""
+  echo "── $ident ($rolle)"
+  while true; do
+    les_token
+    if [ "$token" = "h" ]; then
+      skip "Hoppet over $ident"
+      break
+    fi
+    if [ -z "$token" ]; then
+      fail "Fant ikke noe token. Prøv igjen, eller skriv h for å hoppe over."
+      continue
+    fi
+    payload="$(jwt_payload "$token" || true)"
+    if ! jq -e . >/dev/null 2>&1 <<< "$payload"; then
+      fail "Kunne ikke lese tokenet. Prøv igjen, eller skriv h for å hoppe over."
+      continue
+    fi
+    token_ident="$(jq -r '.NAVident // empty' <<< "$payload")"
+    if [ -n "$token_ident" ] && [ "$token_ident" != "$ident" ]; then
+      fail "Tokenet tilhører $token_ident, ikke $ident. Er du logget inn som riktig ident?"
+      continue
+    fi
 
-  payload="$(jwt_payload "$token" || true)"
-  if ! jq -e . >/dev/null 2>&1 <<< "$payload"; then
-    fail "Kunne ikke lese tokenet. Prøv igjen."
-    continue
-  fi
-  token_ident="$(jq -r '.NAVident // empty' <<< "$payload")"
-  if [ -n "$token_ident" ] && [ "$token_ident" != "$ident" ]; then
-    fail "Tokenet tilhører $token_ident, ikke $ident"
-    continue
-  fi
-
-  tmp="$(mktemp "$TOKEN_DIR/tokens.XXXXXX")"
-  # Tokenet går inn på stdin, ikke som argument, så det ikke synes i prosesslista.
-  printf '%s' "$token" | jq -R --arg ident "$ident" --arg rolle "$rolle" --slurpfile fil "$TOKEN_FIL" \
-    '. as $token | $fil[0] | map(select(.navIdent != $ident)) + [{navIdent: $ident, rolle: $rolle, token: $token}]' \
-    > "$tmp"
-  mv "$tmp" "$TOKEN_FIL"
-  unset token
-  ok "Lagret token for $ident ($rolle)"
+    tmp="$(mktemp "$TOKEN_DIR/tokens.XXXXXX")"
+    # Tokenet går inn på stdin, ikke som argument, så det ikke synes i prosesslista.
+    printf '%s' "$token" | jq -R --arg ident "$ident" --arg rolle "$rolle" --slurpfile fil "$TOKEN_FIL" \
+      '. as $token | $fil[0] | map(select(.navIdent != $ident)) + [{navIdent: $ident, rolle: $rolle, token: $token}]' \
+      > "$tmp"
+    mv "$tmp" "$TOKEN_FIL"
+    unset token
+    ok "Lagret token for $ident"
+    break
+  done
 done
 
 echo ""

@@ -7,15 +7,25 @@ Skriptene er JavaScript. Det er et bevisst unntak fra regelen om at watson-devel
 ## Kom i gang
 
 1. Installer k6 i en vanlig terminal (ikke i cplt-sandboxen): `brew install k6`.
-2. Hent tokens for testidentene:
+2. Skriv testidentene og rollene deres i `loadtest/testidenter` (git-ignorert):
+
+   ```bash
+   cp loadtest/testidenter.eksempel loadtest/testidenter
+   ```
+
+   Én ident per linje, for eksempel `Z990001 saksbehandler` eller `Z990003 leder`. Smoke holder med én saksbehandler. `watson-sak` trenger minst én saksbehandler og én leder, og stopper hvis en rolle mangler. Fila ligger ikke i git, fordi repoet er offentlig.
+
+3. Hent tokens:
 
    ```bash
    ./scripts/lasttest-tokens.sh
    ```
 
-   Skriptet viser lenken til azure-token-generator. Logg inn som testident i et privat nettleservindu, og lim inn tokenet. Smoke holder med én saksbehandler. `watson-sak` trenger minst én saksbehandler og én leder, og stopper hvis en rolle mangler. Tokenet vises ikke på skjermen. Det lagres i `loadtest/.tokens/tokens.json`, som er git-ignorert og bare lesbar for deg.
+   Skriptet går gjennom identene i fila og ber bare om token for dem som mangler et token, eller har et som utløper innen 30 minutter. For hver ident logger du inn som identen i et privat nettleservindu, åpner lenken skriptet viser, og kopierer tokenet. Trykk Enter for å bruke utklippstavla, eller lim inn tokenet. Skriv `h` for å hoppe over en ident. Skriptet avviser tokenet hvis det tilhører en annen ident.
 
-3. Kjør smoke-testen. Den holder med én saksbehandler, og uten `TESTPERSONER` er den bare lesing:
+   Tokenet vises ikke på skjermen. Det lagres i `loadtest/.tokens/tokens.json`, som er git-ignorert og bare lesbar for deg. Når du fjerner en ident fra `testidenter`, sletter skriptet tokenet. `--alle` henter nye tokens for alle identene.
+
+4. Kjør smoke-testen. Den holder med én saksbehandler, og uten `TESTPERSONER` er den bare lesing:
 
    ```bash
    ./scripts/lasttest.sh smoke
@@ -23,13 +33,13 @@ Skriptene er JavaScript. Det er et bevisst unntak fra regelen om at watson-devel
 
    Med `TESTPERSONER` oppretter den også én sak merket `LASTTEST`. Med en leder i tokenfila tar den også med lederflyten.
 
-4. Kjør lasttesten:
+5. Kjør lasttesten:
 
    ```bash
    TESTPERSONER=<fnr1>,<fnr2> ./scripts/lasttest.sh watson-sak baseline
    ```
 
-`./scripts/lasttest-tokens.sh --status` viser hvor lenge tokenene er gyldige. Tokenene varer omtrent én time, så hent nye før hver kjøring. `lasttest.sh` stopper før k6 starter hvis et token er utløpt eller ugyldig.
+`./scripts/lasttest-tokens.sh --status` viser hvor lenge tokenene er gyldige. Tokenene varer omtrent én time. Kjør `./scripts/lasttest-tokens.sh` før hver kjøring, så fornyer den bare tokenene som trengs. `lasttest.sh` stopper før k6 starter hvis et token er utløpt eller ugyldig.
 
 ## Forutsetninger
 
@@ -141,3 +151,4 @@ Skriv funn og tiltak i holmes-brain. Typiske tiltak er større Cloud SQL-tier, s
 | `SOK_IDENT` | (tom) | Identen til `sok-ratelimit` |
 | `TENKETID_MIN` / `TENKETID_MAKS` | `3` / `10` | Pause mellom sidevisninger, i sekunder |
 | `K6_PROMETHEUS_RW_SERVER_URL` | (tom) | Sender metrikker til Prometheus |
+| `MIN_GYLDIG` | `30` | `lasttest-tokens.sh` ber om nytt token når det gjenstår færre minutter enn dette |
