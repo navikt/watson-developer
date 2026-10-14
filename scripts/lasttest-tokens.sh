@@ -111,9 +111,10 @@ while true; do
   fi
 
   tmp="$(mktemp "$TOKEN_DIR/tokens.XXXXXX")"
-  jq --arg ident "$ident" --arg rolle "$rolle" --arg token "$token" \
-    'map(select(.navIdent != $ident)) + [{navIdent: $ident, rolle: $rolle, token: $token}]' \
-    "$TOKEN_FIL" > "$tmp"
+  # Tokenet går inn på stdin, ikke som argument, så det ikke synes i prosesslista.
+  printf '%s' "$token" | jq -R --arg ident "$ident" --arg rolle "$rolle" --slurpfile fil "$TOKEN_FIL" \
+    '. as $token | $fil[0] | map(select(.navIdent != $ident)) + [{navIdent: $ident, rolle: $rolle, token: $token}]' \
+    > "$tmp"
   mv "$tmp" "$TOKEN_FIL"
   unset token
   ok "Lagret token for $ident ($rolle)"
