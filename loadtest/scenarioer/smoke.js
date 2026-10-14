@@ -1,4 +1,4 @@
-import { brukerMedRolle, tilfeldig } from "../lib/config.js";
+import { brukerMedRolle, harRolle, testpersoner, tilfeldig } from "../lib/config.js";
 import {
   alleSaker,
   dokumentVisning,
@@ -11,6 +11,7 @@ import {
 } from "../lib/flyter.js";
 
 // Én bruker, én runde gjennom alle flytene. Verifiserer tokens, tilganger og skript før lasttest.
+// Holder med én saksbehandler. Uten leder-token eller TESTPERSONER hoppes de flytene over.
 export const options = {
   vus: 1,
   iterations: 1,
@@ -33,6 +34,14 @@ export default function (data) {
     const sak = sakDetalj(saksbehandler, tilfeldig(data.sakIder));
     dokumentVisning(saksbehandler, sak);
   }
-  registrerOgBehandleSak(saksbehandler);
-  lederVisning(brukerMedRolle("leder"));
+  if (testpersoner.length > 0) {
+    registrerOgBehandleSak(saksbehandler);
+  } else {
+    console.warn("TESTPERSONER er ikke satt. Hopper over skriveflyten.");
+  }
+  if (harRolle("leder")) {
+    lederVisning(brukerMedRolle("leder"));
+  } else {
+    console.warn("Ingen leder i tokenfila. Hopper over lederflyten.");
+  }
 }

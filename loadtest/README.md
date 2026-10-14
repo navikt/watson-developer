@@ -13,13 +13,15 @@ Skriptene er JavaScript. Det er et bevisst unntak fra regelen om at watson-devel
    ./scripts/lasttest-tokens.sh
    ```
 
-   Skriptet viser lenken til azure-token-generator. Logg inn som testident i et privat nettleservindu, og lim inn tokenet. Legg inn minst én saksbehandler og én leder. Testen stopper hvis en rolle mangler. Tokenet vises ikke på skjermen. Det lagres i `loadtest/.tokens/tokens.json`, som er git-ignorert og bare lesbar for deg.
+   Skriptet viser lenken til azure-token-generator. Logg inn som testident i et privat nettleservindu, og lim inn tokenet. Smoke holder med én saksbehandler. `watson-sak` trenger minst én saksbehandler og én leder, og stopper hvis en rolle mangler. Tokenet vises ikke på skjermen. Det lagres i `loadtest/.tokens/tokens.json`, som er git-ignorert og bare lesbar for deg.
 
-3. Kjør smoke-testen:
+3. Kjør smoke-testen. Den holder med én saksbehandler, og uten `TESTPERSONER` er den bare lesing:
 
    ```bash
-   TESTPERSONER=<fnr1>,<fnr2> ./scripts/lasttest.sh smoke
+   ./scripts/lasttest.sh smoke
    ```
+
+   Med `TESTPERSONER` oppretter den også én sak merket `LASTTEST`. Med en leder i tokenfila tar den også med lederflyten.
 
 4. Kjør lasttesten:
 
@@ -41,7 +43,7 @@ Skriptene er JavaScript. Det er et bevisst unntak fra regelen om at watson-devel
 
 | Scenario | Kommando | Innhold |
 |---|---|---|
-| `smoke` | `./scripts/lasttest.sh smoke` | Én bruker går gjennom alle flytene én gang |
+| `smoke` | `./scripts/lasttest.sh smoke` | Én saksbehandler går gjennom flytene én gang. Skriving og leder hoppes over hvis `TESTPERSONER` eller leder-token mangler |
 | `watson-sak` | `./scripts/lasttest.sh watson-sak <profil>` | 80 % lesing, 15 % skriving og 5 % leder |
 | `sok-ratelimit` | `SOK_IDENT=<navIdent> TESTPERSONER=<fnr> ./scripts/lasttest.sh sok-ratelimit` | Sjekker at søkegrensen gir 429 |
 

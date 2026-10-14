@@ -35,6 +35,13 @@ export const testpersoner = (__ENV.TESTPERSONER || "")
   .map((s) => s.trim())
   .filter((s) => /^[0-9]{11}$/.test(s));
 
+export function harRolle(rolle) {
+  for (const b of brukere) {
+    if (b.rolle === rolle) return true;
+  }
+  return false;
+}
+
 /**
  * Velger bruker nummer `indeks` blant identene med riktig rolle. Feiler hvis rollen mangler,
  * slik at testen ikke måler med feil tilgangsnivå.
