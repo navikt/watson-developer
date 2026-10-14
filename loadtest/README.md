@@ -101,7 +101,7 @@ Saker fra testen får enheten Lasttest og merkingen `LASTTEST`. API-et har ikke 
 
 Grensene står på under testen.
 
-- **Ingress**: `limit-rps: "20"` per klient-IP. Når grensen er nådd, svarer ingress-nginx med 503, som telles i `avvist_rate_limit_ingress`. 100 brukere med 3–10 sekunders tenketid gir omtrent 15–30 req/s fra én maskin, mens ekte brukere har hver sin IP. Hvis vi ser 503 i `last` eller `stress`, kjører vi k6 fra flere maskiner eller ber om en midlertidig høyere grense i dev.
+- **Ingress**: `limit-rps: "20"` per klient-IP. Når grensen er nådd, svarer ingress-nginx med 503, som telles i `avvist_rate_limit_ingress`. Med 3–10 sekunders tenketid sender én leser omtrent 0,7 req/s og én skriver omtrent 0,6 req/s. Profilen `last` gir derfor rundt 70 req/s fra én maskin, mens ekte brukere har hver sin IP. Fra én maskin treffer altså `last` og `stress` grensen, og `baseline` (rundt 7 req/s) gjør det ikke. Før `last` kjører vi k6 fra minst fire maskiner eller ber om en midlertidig høyere grense i dev.
 - **Søk**: `SokRateLimitFilter` tillater 30 kall i burst og 120 per time per Nav-ident. Svar med 429 telles i `avvist_rate_limit_app`. På sakdetaljsida regnes ikke 429 som feil, fordi søket der skyldes at flere VU-er deler én ident.
 
 ## Overvåking under kjøring
