@@ -103,7 +103,7 @@ function dokumentInnhold(avsnitt) {
 /**
  * Skriveflyt mot egen database og GCS. Utelater journalføring (dokarkiv),
  * oppgaveopprettelse (Oppgave) og filopplasting (ClamAV).
- * Krever utvidet tilgang (hendelser) og minst én testperson i TESTPERSONER.
+ * Krever minst én testperson i TESTPERSONER. Utvidet tilgang trengs bare hvis testpersonen er skjermet.
  */
 export function registrerOgBehandleSak(bruker) {
   if (testpersoner.length === 0) return;
