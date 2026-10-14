@@ -55,14 +55,28 @@ trap gjenopprett_terminal EXIT
 
 # Leser tokenet uten ekko. macOS-terminalen godtar høyst 1024 tegn per linje i vanlig modus,
 # og Azure-tokens er lengre. Vi slår derfor av linjebufferen mens tokenet leses.
-# Tom linje henter tokenet fra utklippstavla (pbpaste).
+# Tom linje henter tokenet fra utklippstavla (pbpaste). I terminalen hopper h over identen
+# uten Enter, siden tegnene ikke vises og brukeren ellers ikke ser at noe skjer.
 les_token() {
+  local forste="" rest=""
   token=""
-  printf "Token (lim inn og trykk Enter, Enter alene for utklippstavla, h for å hoppe over): "
+  printf "Token (lim inn og trykk Enter, Enter alene for utklippstavla, trykk h for å hoppe over): "
   if [ -t 0 ]; then
     STTY_FOR="$(stty -g)"
     stty -icanon -echo
-    IFS= read -r token || { echo ""; fail "Ingen input. Avbryter."; exit 1; }
+    IFS= read -r -n 1 forste || { echo ""; fail "Ingen input. Avbryter."; exit 1; }
+    case "$forste" in
+      h|H)
+        token="h"
+        # Kast en Enter som følger rett etter h, så den ikke havner i neste ident.
+        while IFS= read -r -t 0.3 -n 1 rest 2>/dev/null; do :; done
+        ;;
+      "") token="" ;;
+      *)
+        IFS= read -r rest || true
+        token="$forste$rest"
+        ;;
+    esac
     gjenopprett_terminal
     STTY_FOR=""
   else
@@ -220,7 +234,7 @@ echo "Trenger token for ${#TRENGER[@]} av $(wc -l <<< "$IDENTER" | tr -d ' ') id
 echo "  1. Logg inn som identen i et privat nettleservindu og åpne"
 echo "     $GENERATOR_URL"
 echo "  2. Kopier tokenet og trykk Enter her for å bruke utklippstavla, eller lim det inn."
-echo "     Skriv h og trykk Enter for å hoppe over identen. Tokenet vises ikke på skjermen."
+echo "     Trykk h for å hoppe over identen. Tokenet vises ikke på skjermen."
 
 for linje in "${TRENGER[@]}"; do
   read -r ident rolle <<< "$linje"

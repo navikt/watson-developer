@@ -15,7 +15,7 @@ Skriptene er JavaScript. Det er et bevisst unntak fra regelen om at watson-devel
    ./scripts/lasttest-tokens.sh
    ```
 
-   Skriptet går gjennom saksbehandlerne og lederne og ber bare om token for dem som mangler et token, eller har et som utløper innen 30 minutter. For hver ident logger du inn som identen i et privat nettleservindu, åpner lenken skriptet viser, og kopierer tokenet. Trykk Enter for å bruke utklippstavla, eller lim inn tokenet. Skriv `h` for å hoppe over en ident. Skriptet avviser tokenet hvis det tilhører en annen ident.
+   Skriptet går gjennom saksbehandlerne og lederne og ber bare om token for dem som mangler et token, eller har et som utløper innen 30 minutter. For hver ident logger du inn som identen i et privat nettleservindu, åpner lenken skriptet viser, og kopierer tokenet. Trykk Enter for å bruke utklippstavla, eller lim inn tokenet. Trykk `h` for å hoppe over en ident. Du trenger ikke Enter. Skriptet avviser tokenet hvis det tilhører en annen ident.
 
    Tokenet vises ikke på skjermen. Det lagres i `loadtest/.tokens/tokens.json`, som er git-ignorert og bare lesbar for deg. Når en ident forsvinner fra `application-dev.yml` eller `loadtest/ledere`, sletter skriptet tokenet. `--alle` henter nye tokens for alle identene.
 
