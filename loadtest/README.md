@@ -47,9 +47,9 @@ Skriptene er JavaScript. Det er et bevisst unntak fra regelen om at watson-devel
 | `watson-sak` | `./scripts/lasttest.sh watson-sak <profil>` | 80 % lesing, 15 % skriving og 5 % leder |
 | `sok-ratelimit` | `SOK_IDENT=<navIdent> TESTPERSONER=<fnr> ./scripts/lasttest.sh sok-ratelimit` | Sjekker at søkegrensen gir 429 |
 
-Lesing speiler loaderne i watson-sak-frontend. Sakdetaljsida henter saken og gjør så sju kall parallelt, slik `SakDetaljSide.loader.server.ts` gjør. Deretter søker den etter andre saker på personen.
+Lesing speiler loaderne i watson-sak-frontend. Sakdetaljsida henter saken og gjør så sju kall parallelt, slik `SakDetaljSide.loader.server.ts` gjør. Deretter søker den etter andre saker på personen. Som i frontend regnes 403 på hendelser, journalposter, filer, mapper, tillatte handlinger og søk som gyldig svar, fordi testbrukeren sjelden er knyttet til en tilfeldig sak.
 
-Skriveflyten oppretter en sak og et dokument med låsing og tre autolagringer. Den lager også en mappe og en manuell hendelse som redigeres og slettes, og til slutt endres saken.
+Skriveflyten oppretter en sak og tildeler den til testbrukeren. Dokumenter og mapper krever at brukeren er ansvarlig eller har fått saken delt. Deretter lager den et dokument med låsing og tre autolagringer, en mappe og en manuell hendelse som redigeres og slettes. Til slutt endres merkingen på saken.
 
 `sok-ratelimit` bruker opp søkekvoten til identen i inntil en time. Bruk en ident som ikke er med i de andre kjøringene.
 
@@ -69,6 +69,16 @@ Skriveflyten oppretter en sak og et dokument med låsing og tre autolagringer. D
 - over 99 % godkjente sjekker
 
 k6 avslutter med feilkode når en terskel brytes. Tersklene ligger i `lib/profiler.js`.
+
+### Feilede kall
+
+Oppsummeringen i `resultater/` viser bare hvilke sjekker som feilet, ikke statuskode eller feilmelding. Derfor skriver k6 en advarsel i terminalen første gang hver VU får en uventet status på et kall:
+
+```
+level=warning msg="opprett mappe: HTTP 403 POST https://.../mapper (Ingen tilgang til sak 123)"
+```
+
+Tall med 11 siffer maskeres, og meldingen kuttes etter 200 tegn. Bruk tidspunktet og URL-en til å finne samme feil i Loki.
 
 ## Hva testen ikke gjør
 

@@ -52,25 +52,27 @@ export function alleSaker(bruker) {
 
 /**
  * Speiler SakDetaljSide.loader.server.ts i watson-sak-frontend: én sak, så sju parallelle kall,
- * så personsøk etter andre saker. Personsøket teller mot søkegrensen per ident, så 429 er tillatt her.
+ * så personsøk etter andre saker. Frontend godtar 403 på kallene som krever at saksbehandleren
+ * er knyttet til saken, så det gjør vi også. Personsøket teller mot søkegrensen per ident,
+ * så 429 er tillatt der.
  */
 export function sakDetalj(bruker, sakId) {
   let sak = null;
   group("sakdetalj", () => {
     sak = json(les(bruker, `${SAK}/${sakId}`, "sak"));
     lesParallelt(bruker, [
-      [`${SAK}/${sakId}/hendelser`, "sak hendelser"],
-      [`${SAK}/${sakId}/journalposter`, "sak journalposter"],
+      [`${SAK}/${sakId}/hendelser`, "sak hendelser", [403]],
+      [`${SAK}/${sakId}/journalposter`, "sak journalposter", [403]],
       ["/api/v1/saksbehandlere", "saksbehandlere"],
-      [`${SAK}/${sakId}/filer`, "sak filer"],
-      [`${SAK}/${sakId}/tillatte-handlinger`, "sak tillatte-handlinger"],
+      [`${SAK}/${sakId}/filer`, "sak filer", [403]],
+      [`${SAK}/${sakId}/tillatte-handlinger`, "sak tillatte-handlinger", [403]],
       ["/api/innlogget-bruker", "innlogget-bruker"],
-      [`${SAK}/${sakId}/mapper`, "sak mapper"],
+      [`${SAK}/${sakId}/mapper`, "sak mapper", [403]],
     ]);
     if (sak && sak.tilgang && sak.tilgang.kanSeRelaterteSaker) {
       sok(bruker, `${SAK}/sok?page=1&size=100`, "sok person", {
         personIdent: sak.kontrollobjekt.personIdent,
-      });
+      }, { tillatt: [403] });
     }
   });
   sleep(tenketid());
@@ -118,6 +120,12 @@ export function registrerOgBehandleSak(bruker) {
     if (!sak) return;
     sleep(tenketid());
 
+    // Dokumenter og mapper krever at saksbehandleren er ansvarlig, så hun tar saken først.
+    skriv(bruker, "POST", `${SAK}/${sak.id}/saksbehandler`, "tildel sak", {
+      navIdent: bruker.navIdent,
+      aksjon: "TILDEL",
+    });
+
     const dok = json(skriv(bruker, "POST", `${SAK}/${sak.id}/dokumenter`, "opprett dokument"));
     if (dok) {
       const dokSti = `${SAK}/${sak.id}/dokumenter/${dok.id}`;
@@ -143,14 +151,15 @@ export function registrerOgBehandleSak(bruker) {
       }),
     );
     if (hendelse) {
-      skriv(bruker, "PUT", `${SAK}/${sak.id}/hendelser/${hendelse.id}`, "rediger hendelse", {
+      const hendelseSti = `${SAK}/${sak.id}/hendelser/${hendelse.hendelseId}`;
+      skriv(bruker, "PUT", hendelseSti, "rediger hendelse", {
         tittel: "Lasttest redigert",
         beskrivelse: null,
       });
-      skriv(bruker, "DELETE", `${SAK}/${sak.id}/hendelser/${hendelse.id}`, "slett hendelse");
+      skriv(bruker, "DELETE", hendelseSti, "slett hendelse");
     }
 
-    skriv(bruker, "PATCH", `${SAK}/${sak.id}`, "rediger sak", { prioritet: "HOY" });
+    skriv(bruker, "PATCH", `${SAK}/${sak.id}`, "rediger sak", { merking: [MERKING] });
   });
   sleep(tenketid());
 }
