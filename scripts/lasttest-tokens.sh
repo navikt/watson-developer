@@ -247,12 +247,12 @@ for linje in "${TRENGER[@]}"; do
       break
     fi
     if [ -z "$token" ]; then
-      fail "Fant ikke noe token. Prøv igjen, eller skriv h for å hoppe over."
+      fail "Fant ikke noe token. Prøv igjen, eller trykk h for å hoppe over."
       continue
     fi
     payload="$(jwt_payload "$token" || true)"
     if ! jq -e . >/dev/null 2>&1 <<< "$payload"; then
-      fail "Kunne ikke lese tokenet. Prøv igjen, eller skriv h for å hoppe over."
+      fail "Kunne ikke lese tokenet. Prøv igjen, eller trykk h for å hoppe over."
       continue
     fi
     token_ident="$(jq -r '.NAVident // empty' <<< "$payload")"
