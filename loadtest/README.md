@@ -7,7 +7,7 @@ Skriptene er JavaScript. Det er et bevisst unntak fra regelen om at watson-devel
 ## Kom i gang
 
 1. Installer k6 i en vanlig terminal (ikke i cplt-sandboxen): `brew install k6`.
-2. Sjekk at testidentene og rollene i `loadtest/testidenter` stemmer. Fila ligger i git og skal bare ha fiktive testidenter. Én ident per linje, for eksempel `Z993376 saksbehandler`. Smoke holder med én saksbehandler. `watson-sak` trenger minst én saksbehandler og én leder, og stopper hvis en rolle mangler.
+2. Sjekk testidentene. Saksbehandlerne er testbrukerne med `enhetId: lasttest` i `nom.ekstra-saksbehandlere` i `application-dev.yml` i watson-admin-api. Skriptet leser fila på `origin/main` i `repos/watson-admin-api`, siden det er den som er deployet. Nye saksbehandlere legger du altså inn i watson-admin-api, ikke her. Ledere står i `loadtest/ledere`, én navIdent per linje. Fila kan være tom, og da hopper testen over lederflyten. Begge stedene skal bare ha fiktive testidenter.
 
 3. Hent tokens:
 
@@ -15,11 +15,9 @@ Skriptene er JavaScript. Det er et bevisst unntak fra regelen om at watson-devel
    ./scripts/lasttest-tokens.sh
    ```
 
-   Først sammenligner skriptet `testidenter` med testbrukerne som har `enhetId: lasttest` i `application-dev.yml` på `origin/main` i `repos/watson-admin-api`. Testbrukere som mangler i `testidenter`, kan du legge til, og skriptet spør om rollen. Saksbehandlere som mangler i watson-admin-api, gir en advarsel, fordi sakene de får tildelt, ikke havner under Lasttest. `WATSON_ADMIN_API_DIR` overstyrer hvor klonen ligger.
+   Skriptet går gjennom saksbehandlerne og lederne og ber bare om token for dem som mangler et token, eller har et som utløper innen 30 minutter. For hver ident logger du inn som identen i et privat nettleservindu, åpner lenken skriptet viser, og kopierer tokenet. Trykk Enter for å bruke utklippstavla, eller lim inn tokenet. Skriv `h` for å hoppe over en ident. Skriptet avviser tokenet hvis det tilhører en annen ident.
 
-   Deretter går skriptet gjennom identene i fila og ber bare om token for dem som mangler et token, eller har et som utløper innen 30 minutter. For hver ident logger du inn som identen i et privat nettleservindu, åpner lenken skriptet viser, og kopierer tokenet. Trykk Enter for å bruke utklippstavla, eller lim inn tokenet. Skriv `h` for å hoppe over en ident. Skriptet avviser tokenet hvis det tilhører en annen ident.
-
-   Tokenet vises ikke på skjermen. Det lagres i `loadtest/.tokens/tokens.json`, som er git-ignorert og bare lesbar for deg. Når du fjerner en ident fra `testidenter`, sletter skriptet tokenet. `--alle` henter nye tokens for alle identene.
+   Tokenet vises ikke på skjermen. Det lagres i `loadtest/.tokens/tokens.json`, som er git-ignorert og bare lesbar for deg. Når en ident forsvinner fra `application-dev.yml` eller `loadtest/ledere`, sletter skriptet tokenet. `--alle` henter nye tokens for alle identene.
 
 4. Kjør smoke-testen. Den holder med én saksbehandler, og uten `TESTPERSONER` er den bare lesing:
 
@@ -41,7 +39,7 @@ Skriptene er JavaScript. Det er et bevisst unntak fra regelen om at watson-devel
 
 - **Prodlikt oppsett i dev**: navikt/watson-admin-api#332 må være deployet. Uten den måler vi `db-f1-micro` og én replika, ikke det prod skal kjøre på.
 - **Testidenter** i `trygdeetaten.no` med Watson-grupper. Bruk 10–20 identer. Søkegrensen gjelder per ident, og med få identer treffer flere VU-er den samme kvoten. Skriveflyten trenger utvidet tilgang, og lederflyten trenger ledergruppe.
-- **Enheten Lasttest**: Saksbehandlerne i `testidenter` skal ikke finnes i NOM. De må stå i `nom.ekstra-saksbehandlere` i `application-dev.yml` i watson-admin-api med `enhetId: lasttest` (navikt/watson-admin-api#335). Da får sakene fra testen enheten Lasttest når de tildeles, og ingen ledervarsler går til ekte ledere. En saksbehandler som finnes i NOM, flytter saken til sin egen enhet. Lederen kan finnes i NOM, siden lederflyten bare leser.
+- **Enheten Lasttest**: Saksbehandlerne skal ikke finnes i NOM. De må stå i `nom.ekstra-saksbehandlere` i `application-dev.yml` i watson-admin-api med `enhetId: lasttest` (navikt/watson-admin-api#335). Uten dem stopper `lasttest-tokens.sh`. Da får sakene fra testen enheten Lasttest når de tildeles, og ingen ledervarsler går til ekte ledere. En saksbehandler som finnes i NOM, flytter saken til sin egen enhet. Lederen kan finnes i NOM, siden lederflyten bare leser.
 - **Testpersoner** (syntetiske fra Dolly) som testidentene har tilgang til i tilgangsmaskin. De settes i `TESTPERSONER` og brukes når skriveflyten oppretter saker. Uten dem hopper testen over skriveflyten.
 - **Saker i dev** som testidentene ser. `setup()` henter opptil 500 sak-ID-er fra saklista og avbryter hvis den ikke finner noen. Seed dev med en realistisk datamengde: lister og statistikk oppfører seg annerledes med 50 saker enn med 50 000.
 - **Varsling**: Gi beskjed til teamene bak tilgangsmaskin, NOM og nav-persondata-api før lasttest og stresstest. Lesekallene går mot deres dev-tjenester.
@@ -51,7 +49,7 @@ Skriptene er JavaScript. Det er et bevisst unntak fra regelen om at watson-devel
 | Scenario | Kommando | Innhold |
 |---|---|---|
 | `smoke` | `./scripts/lasttest.sh smoke` | Én saksbehandler går gjennom flytene én gang. Skriving og leder hoppes over hvis `TESTPERSONER` eller leder-token mangler |
-| `watson-sak` | `./scripts/lasttest.sh watson-sak <profil>` | 80 % lesing, 15 % skriving og 5 % leder |
+| `watson-sak` | `./scripts/lasttest.sh watson-sak <profil>` | 80 % lesing, 15 % skriving og 5 % leder. Uten leder går lederandelen til lesing |
 | `sok-ratelimit` | `SOK_IDENT=<navIdent> TESTPERSONER=<fnr> ./scripts/lasttest.sh sok-ratelimit` | Sjekker at søkegrensen gir 429 |
 
 Lesing speiler loaderne i watson-sak-frontend. Sakdetaljsida henter saken og gjør så sju kall parallelt, slik `SakDetaljSide.loader.server.ts` gjør. Deretter søker den etter andre saker på personen. Som i frontend regnes 403 på hendelser, journalposter, filer, mapper, tillatte handlinger og søk som gyldig svar, fordi testbrukeren sjelden er knyttet til en tilfeldig sak.
@@ -149,4 +147,4 @@ Skriv funn og tiltak i holmes-brain. Typiske tiltak er større Cloud SQL-tier, s
 | `TENKETID_MIN` / `TENKETID_MAKS` | `3` / `10` | Pause mellom sidevisninger, i sekunder |
 | `K6_PROMETHEUS_RW_SERVER_URL` | (tom) | Sender metrikker til Prometheus |
 | `MIN_GYLDIG` | `30` | `lasttest-tokens.sh` ber om nytt token når det gjenstår færre minutter enn dette |
-| `WATSON_ADMIN_API_DIR` | `repos/watson-admin-api` | Klonen `lasttest-tokens.sh` leser testbrukerne for Lasttest fra |
+| `WATSON_ADMIN_API_DIR` | `repos/watson-admin-api` | Klonen `lasttest-tokens.sh` leser saksbehandlerne fra |

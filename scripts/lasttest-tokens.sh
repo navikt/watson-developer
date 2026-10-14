@@ -2,7 +2,8 @@
 set -euo pipefail
 
 # Henter og lagrer tokens for testidentene som brukes i lasttesten av watson-admin-api.
-# Identene og rollene står i loadtest/testidenter.
+# Saksbehandlerne er testbrukerne med enhetId lasttest i nom.ekstra-saksbehandlere i
+# application-dev.yml i watson-admin-api. Lederne står i loadtest/ledere.
 # Skriptet ber bare om token for identer som mangler et gyldig token.
 # Tokenene hentes manuelt fra azure-token-generator (innlogging som testident i nettleseren)
 # og limes inn skjult. Tokenfila er git-ignorert og lesbar bare for eieren.
@@ -14,14 +15,13 @@ set -euo pipefail
 #                                           # Avslutter med kode 1 hvis et token er utløpt eller ugyldig.
 #
 # Idempotent: identer med token som varer minst MIN_GYLDIG minutter (standard 30), hoppes over.
-# Tokens for identer som ikke lenger står i identfila, slettes.
-# Sjekker også testidentene mot testbrukerne for enheten Lasttest i watson-admin-api (application-dev.yml).
+# Tokens for identer som ikke lenger står i application-dev.yml eller loadtest/ledere, slettes.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 TOKEN_DIR="$ROOT_DIR/loadtest/.tokens"
 TOKEN_FIL="$TOKEN_DIR/tokens.json"
-IDENT_FIL="$ROOT_DIR/loadtest/testidenter"
+LEDER_FIL="$ROOT_DIR/loadtest/ledere"
 MIN_GYLDIG="${MIN_GYLDIG:-30}"
 LASTTEST_ENHET="lasttest"
 # Klonen av watson-admin-api. I en git worktree ligger repos/ ved siden av hovedkopien.
@@ -122,21 +122,22 @@ minutter_igjen() {
   [ "$min" -gt 0 ] && echo "$min" || echo 0
 }
 
-# Leser identfila. Tomme linjer og alt etter # ignoreres. Skriver «ident rolle» per linje.
-les_identer() {
-  local linjenr=0 linje ident rolle rest feil=0
+# Leser lederfila. Tomme linjer og alt etter # ignoreres. Skriver én navIdent per linje.
+les_ledere() {
+  local linjenr=0 linje ident rest feil=0
+  [ -f "$LEDER_FIL" ] || return 0
   while IFS= read -r linje || [ -n "$linje" ]; do
     linjenr=$((linjenr + 1))
     linje="${linje%%#*}"
-    read -r ident rolle rest <<< "$linje" || true
+    read -r ident rest <<< "$linje" || true
     [ -z "${ident:-}" ] && continue
-    if [ "$rolle" != "saksbehandler" ] && [ "$rolle" != "leder" ] || [ -n "$rest" ]; then
-      fail "loadtest/testidenter linje $linjenr: forventet «navIdent saksbehandler|leder»" >&2
+    if [ -n "$rest" ]; then
+      fail "loadtest/ledere linje $linjenr: forventet én navIdent" >&2
       feil=1
       continue
     fi
-    echo "$ident $rolle"
-  done < "$IDENT_FIL"
+    echo "$ident"
+  done < "$LEDER_FIL"
   return "$feil"
 }
 
@@ -154,81 +155,45 @@ case "${1:-}" in
     ;;
 esac
 
-if [ ! -f "$IDENT_FIL" ]; then
-  fail "Fant ikke loadtest/testidenter"
-  exit 1
-fi
-
 # Skriver navIdent for hver ekstra-saksbehandler med enhetId lasttest i application-dev.yml.
 # Leser origin/main, som er det som deployes, og faller tilbake på fila i klonen.
-lasttest_identer_i_backend() {
+saksbehandlere_fra_backend() {
   local yml
   git -C "$ADMIN_API_DIR" fetch -q origin main 2>/dev/null || true
   yml="$(git -C "$ADMIN_API_DIR" show "origin/main:$DEV_YML" 2>/dev/null || cat "$ADMIN_API_DIR/$DEV_YML" 2>/dev/null)" || return 1
   [ -n "$yml" ] || return 1
   awk -v enhet="$LASTTEST_ENHET" -v q="'" '
     function avslutt() { if (ident != "" && lasttest) print ident; ident = ""; lasttest = 0 }
+    function verdi(v) { sub(/^[^:]*:/, "", v); gsub(/[[:space:]"]/, "", v); gsub(q, "", v); return v }
     /^[[:space:]]*#/ { next }
     /^[^[:space:]]/ { avslutt(); i_nom = ($0 ~ /^nom:/); next }
     !i_nom { next }
     /^[[:space:]]*-[[:space:]]/ { avslutt() }
-    function verdi(v) { sub(/^[^:]*:/, "", v); gsub(/[[:space:]"]/, "", v); gsub(q, "", v); return v }
     /navident:/ { ident = verdi($0) }
     /enhetId:/ { lasttest = (verdi($0) == enhet) }
     END { avslutt() }
   ' <<< "$yml"
 }
 
-# Sammenligner saksbehandlerne i testidenter med testbrukerne for enheten Lasttest i watson-admin-api.
-# Testbrukere som mangler i testidenter, kan legges til. Saksbehandlere som mangler i backend,
-# gir advarsel, fordi sakene deres havner under en annen enhet.
-synk_med_backend() {
-  local backend ident rolle svar lagt_til=0
-  if ! backend="$(lasttest_identer_i_backend)"; then
-    skip "Fant ikke $DEV_YML i $ADMIN_API_DIR. Hopper over sjekken mot watson-admin-api."
-    return 0
-  fi
-
-  for ident in $backend; do
-    grep -q "^$ident " <<< "$IDENTER" && continue
-    if [ ! -t 0 ]; then
-      skip "$ident har enheten Lasttest i watson-admin-api, men står ikke i loadtest/testidenter"
-      continue
-    fi
-    read -r -p "$ident har enheten Lasttest i watson-admin-api. Legg til som [s]aksbehandler, [l]eder eller [h]opp over? (s): " svar || svar="h"
-    case "${svar:-s}" in
-      s|S) rolle="saksbehandler" ;;
-      l|L) rolle="leder" ;;
-      *) skip "Hoppet over $ident"; continue ;;
-    esac
-    [ -s "$IDENT_FIL" ] && [ -n "$(tail -c1 "$IDENT_FIL")" ] && echo "" >> "$IDENT_FIL"
-    echo "$ident $rolle" >> "$IDENT_FIL"
-    ok "La til $ident ($rolle) i loadtest/testidenter"
-    lagt_til=1
-  done
-
-  while read -r ident rolle; do
-    [ "$rolle" = "saksbehandler" ] || continue
-    if ! grep -qx "$ident" <<< "$backend"; then
-      skip "$ident mangler enhetId: $LASTTEST_ENHET i watson-admin-api. Sakene den får tildelt, havner ikke under Lasttest."
-    fi
-  done <<< "$IDENTER"
-
-  [ "$lagt_til" -eq 0 ] || IDENTER="$(les_identer)"
-}
-
-IDENTER="$(les_identer)" || exit 1
-synk_med_backend
-if [ -z "$IDENTER" ]; then
-  fail "loadtest/testidenter har ingen identer"
+if ! SAKSBEHANDLERE="$(saksbehandlere_fra_backend)"; then
+  fail "Fant ikke $DEV_YML i $ADMIN_API_DIR. Klon repoene med ./scripts/clone-repos.sh eller sett WATSON_ADMIN_API_DIR."
   exit 1
 fi
-if [ "$(sort <<< "$(cut -d' ' -f1 <<< "$IDENTER")" | uniq -d)" != "" ]; then
-  fail "loadtest/testidenter har samme navIdent flere ganger"
+if [ -z "$SAKSBEHANDLERE" ]; then
+  fail "Ingen testbrukere med enhetId: $LASTTEST_ENHET i nom.ekstra-saksbehandlere i $DEV_YML på origin/main i watson-admin-api."
   exit 1
 fi
+LEDERE="$(les_ledere)" || exit 1
 
-# Fjern tokens for identer som ikke lenger står i fila, og oppdater rollen fra fila.
+IDENTER="$(sed 's/$/ saksbehandler/' <<< "$SAKSBEHANDLERE")"
+[ -z "$LEDERE" ] || IDENTER="$IDENTER"$'\n'"$(sed 's/$/ leder/' <<< "$LEDERE")"
+if [ "$(cut -d' ' -f1 <<< "$IDENTER" | sort | uniq -d)" != "" ]; then
+  fail "Samme navIdent står flere ganger i application-dev.yml eller loadtest/ledere: $(cut -d' ' -f1 <<< "$IDENTER" | sort | uniq -d | tr '\n' ' ')"
+  exit 1
+fi
+ok "Saksbehandlere fra watson-admin-api: $(wc -l <<< "$SAKSBEHANDLERE" | tr -d ' '). Ledere fra loadtest/ledere: $( [ -z "$LEDERE" ] && echo 0 || wc -l <<< "$LEDERE" | tr -d ' ')."
+
+# Fjern tokens for identer som ikke lenger er med, og oppdater rollen.
 tmp="$(mktemp "$TOKEN_DIR/tokens.XXXXXX")"
 jq -R -s 'split("\n") | map(select(length > 0) | split(" ") | {key: .[0], value: .[1]}) | from_entries' <<< "$IDENTER" \
   | jq --slurpfile fil "$TOKEN_FIL" '. as $roller | $fil[0] | map(select($roller[.navIdent]) | .rolle = $roller[.navIdent])' > "$tmp"

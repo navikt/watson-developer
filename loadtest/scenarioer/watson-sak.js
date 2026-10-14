@@ -1,4 +1,4 @@
-import { brukerForVu, brukerMedRolle, tilfeldig } from "../lib/config.js";
+import { brukerForVu, brukerMedRolle, harRolle, tilfeldig } from "../lib/config.js";
 import {
   alleSaker,
   dokumentVisning,
@@ -13,12 +13,13 @@ import { stages, terskler } from "../lib/profiler.js";
 import { handleSummary, kallTerskler } from "../lib/rapport.js";
 
 const PROFIL = __ENV.PROFIL || "baseline";
+const MED_LEDER = harRolle("leder");
 
 function scenario(rolle, exec) {
   return {
     executor: "ramping-vus",
     startVUs: 0,
-    stages: stages(PROFIL, rolle),
+    stages: stages(PROFIL, rolle, MED_LEDER),
     gracefulRampDown: "30s",
     exec,
     tags: { rolle },
@@ -29,7 +30,7 @@ export const options = {
   scenarios: {
     saksbehandler_les: scenario("les", "saksbehandlerLes"),
     saksbehandler_skriv: scenario("skriv", "saksbehandlerSkriv"),
-    leder: scenario("leder", "leder"),
+    ...(MED_LEDER ? { leder: scenario("leder", "leder") } : {}),
   },
   thresholds: { ...terskler, ...kallTerskler() },
   // Unngå at hver unike URL blir en egen tidsserie.
@@ -39,6 +40,7 @@ export const options = {
 export { handleSummary };
 
 export function setup() {
+  if (!MED_LEDER) console.warn("Ingen leder i tokenfila. Hopper over lederflyten, og lederandelen går til lesing.");
   const sakIder = hentSakIder(brukerMedRolle("saksbehandler"));
   if (sakIder.length === 0) {
     throw new Error("Fant ingen saker. Seed dev med saker testidentene har tilgang til før kjøring.");
