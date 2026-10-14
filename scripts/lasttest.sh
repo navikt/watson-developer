@@ -9,7 +9,8 @@ set -euo pipefail
 #   SOK_IDENT=Z123456 TESTPERSONER=<fnr>[,<fnr>] ./scripts/lasttest.sh sok-ratelimit
 #
 # Miljøvariabler som sendes videre til k6: BASE_URL, ENHET, TESTPERSONER, SOK_IDENT,
-# TENKETID_MIN, TENKETID_MAKS. Sett K6_PROMETHEUS_RW_SERVER_URL for å sende metrikker til Prometheus.
+# TENKETID_MIN, TENKETID_MAKS, TILLAT_BASE_URL. Sett K6_PROMETHEUS_RW_SERVER_URL for å sende metrikker
+# til Prometheus. BASE_URL må være *.dev.nav.no, med mindre TILLAT_BASE_URL=true (for eksempel lokal stub).
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"

@@ -108,7 +108,8 @@ Hvis `K6_PROMETHEUS_RW_SERVER_URL` er satt, sender `scripts/lasttest.sh` k6-metr
 
 | Variabel | Standard | Brukes til |
 |---|---|---|
-| `BASE_URL` | `https://watson-admin-api.intern.dev.nav.no` | Backend-adressen |
+| `BASE_URL` | `https://watson-admin-api.intern.dev.nav.no` | Backend-adressen. Testen stopper hvis hosten ikke slutter på `.dev.nav.no` |
+| `TILLAT_BASE_URL` | (tom) | Sett til `true` for å kjøre mot en annen godkjent `BASE_URL`, for eksempel en lokal stub |
 | `TESTPERSONER` | (tom) | Kommaseparerte fødselsnumre for syntetiske testpersoner |
 | `ENHET` | `ka864v` | NOM-enhet for nye saker og filtre |
 | `SOK_IDENT` | (tom) | Identen til `sok-ratelimit` |

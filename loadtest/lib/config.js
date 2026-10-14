@@ -1,6 +1,15 @@
 import { SharedArray } from "k6/data";
 
 export const BASE_URL = (__ENV.BASE_URL || "https://watson-admin-api.intern.dev.nav.no").replace(/\/$/, "");
+
+// Testen lager saker som blir liggende. Stopp før første kall hvis BASE_URL peker utenfor dev,
+// for eksempel etter en gammel miljøvariabel. TILLAT_BASE_URL=true åpner for lokale stubber.
+const HOST = (BASE_URL.match(/^https?:\/\/([^/:?#]+)/i) || [])[1] || "";
+if (!/\.dev\.nav\.no$/i.test(HOST) && __ENV.TILLAT_BASE_URL !== "true") {
+  throw new Error(
+    `BASE_URL ${BASE_URL} er ikke i dev (*.dev.nav.no). Sett TILLAT_BASE_URL=true hvis målet er godkjent.`,
+  );
+}
 export const ENHET = __ENV.ENHET || "ka864v";
 export const MERKING = "LASTTEST";
 
