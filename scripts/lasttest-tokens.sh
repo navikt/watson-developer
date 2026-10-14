@@ -36,6 +36,38 @@ mkdir -p "$TOKEN_DIR"
 [ -f "$TOKEN_FIL" ] || echo "[]" > "$TOKEN_FIL"
 chmod 600 "$TOKEN_FIL"
 
+STTY_FOR=""
+gjenopprett_terminal() { if [ -n "$STTY_FOR" ]; then stty "$STTY_FOR" 2>/dev/null || true; fi; }
+trap gjenopprett_terminal EXIT
+
+# Leser tokenet uten ekko. macOS-terminalen godtar høyst 1024 tegn per linje i vanlig modus,
+# og Azure-tokens er lengre. Vi slår derfor av linjebufferen mens tokenet leses.
+# Tom linje henter tokenet fra utklippstavla (pbpaste).
+les_token() {
+  token=""
+  printf "Token (lim inn og trykk Enter, eller bare Enter for å bruke utklippstavla): "
+  if [ -t 0 ]; then
+    STTY_FOR="$(stty -g)"
+    stty -icanon -echo
+    IFS= read -r token || true
+    gjenopprett_terminal
+    STTY_FOR=""
+  else
+    IFS= read -r token || true
+  fi
+  echo ""
+  if [ -z "$token" ] && command -v pbpaste >/dev/null; then
+    token="$(pbpaste)"
+  fi
+  # Fjern mellomrom, linjeskift og et eventuelt «Bearer»-prefiks.
+  token="$(printf '%s' "$token" | tr -d '[:space:]')"
+  token="${token#Bearer}"
+  # Godta også JSON-svar med access_token.
+  if [ "${token:0:1}" = "{" ]; then
+    token="$(printf '%s' "$token" | jq -r '.access_token // empty' 2>/dev/null || true)"
+  fi
+}
+
 # Leser JWT-payload (base64url) uten å skrive tokenet noe sted.
 jwt_payload() {
   local del
@@ -84,7 +116,8 @@ esac
 
 echo "Logg inn som testident i et privat nettleservindu og åpne:"
 echo "  $GENERATOR_URL"
-echo "Lim inn tokenet når du blir bedt om det. Det vises ikke på skjermen."
+echo "Kopier tokenet og lim det inn når du blir bedt om det, eller trykk bare Enter for å bruke"
+echo "utklippstavla. Tokenet vises ikke på skjermen."
 echo ""
 
 while true; do
@@ -96,8 +129,11 @@ while true; do
     fail "Ugyldig rolle: $rolle"
     continue
   fi
-  read -r -s -p "Token: " token
-  echo ""
+  les_token
+  if [ -z "$token" ]; then
+    fail "Fant ikke noe token. Prøv igjen."
+    continue
+  fi
 
   payload="$(jwt_payload "$token" || true)"
   if ! jq -e . >/dev/null 2>&1 <<< "$payload"; then
