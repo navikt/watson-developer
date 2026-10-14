@@ -7,13 +7,7 @@ Skriptene er JavaScript. Det er et bevisst unntak fra regelen om at watson-devel
 ## Kom i gang
 
 1. Installer k6 i en vanlig terminal (ikke i cplt-sandboxen): `brew install k6`.
-2. Skriv testidentene og rollene deres i `loadtest/testidenter` (git-ignorert):
-
-   ```bash
-   cp loadtest/testidenter.eksempel loadtest/testidenter
-   ```
-
-   Én ident per linje, for eksempel `Z990001 saksbehandler` eller `Z990003 leder`. Smoke holder med én saksbehandler. `watson-sak` trenger minst én saksbehandler og én leder, og stopper hvis en rolle mangler. Fila ligger ikke i git, fordi repoet er offentlig.
+2. Sjekk at testidentene og rollene i `loadtest/testidenter` stemmer. Fila ligger i git og skal bare ha fiktive testidenter. Én ident per linje, for eksempel `Z993376 saksbehandler`. Smoke holder med én saksbehandler. `watson-sak` trenger minst én saksbehandler og én leder, og stopper hvis en rolle mangler.
 
 3. Hent tokens:
 

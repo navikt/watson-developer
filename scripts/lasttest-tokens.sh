@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Henter og lagrer tokens for testidentene som brukes i lasttesten av watson-admin-api.
-# Identene og rollene står i loadtest/testidenter (git-ignorert, se loadtest/testidenter.eksempel).
+# Identene og rollene står i loadtest/testidenter.
 # Skriptet ber bare om token for identer som mangler et gyldig token.
 # Tokenene hentes manuelt fra azure-token-generator (innlogging som testident i nettleseren)
 # og limes inn skjult. Tokenfila er git-ignorert og lesbar bare for eieren.
@@ -114,15 +114,6 @@ minutter_igjen() {
   [ "$min" -gt 0 ] && echo "$min" || echo 0
 }
 
-# Lager identfila fra tokens som allerede er lagret, så eksisterende oppsett ikke går tapt.
-lag_identfil_fra_tokens() {
-  {
-    echo "# navIdent rolle (saksbehandler eller leder). Laget fra loadtest/.tokens/tokens.json."
-    jq -r '.[] | "\(.navIdent) \(.rolle)"' "$TOKEN_FIL"
-  } > "$IDENT_FIL"
-  ok "Laget loadtest/testidenter fra tokenene du har lagret"
-}
-
 # Leser identfila. Tomme linjer og alt etter # ignoreres. Skriver «ident rolle» per linje.
 les_identer() {
   local linjenr=0 linje ident rolle rest feil=0
@@ -156,13 +147,8 @@ case "${1:-}" in
 esac
 
 if [ ! -f "$IDENT_FIL" ]; then
-  if [ "$(jq length "$TOKEN_FIL")" -gt 0 ]; then
-    lag_identfil_fra_tokens
-  else
-    fail "Fant ikke loadtest/testidenter. Lag den med identene dine:"
-    echo "  cp loadtest/testidenter.eksempel loadtest/testidenter" >&2
-    exit 1
-  fi
+  fail "Fant ikke loadtest/testidenter"
+  exit 1
 fi
 
 IDENTER="$(les_identer)" || exit 1

@@ -1,9 +1,9 @@
-# Testidenter for lasttesten. Kopier til loadtest/testidenter (git-ignorert) og fyll inn.
+# Testidenter for lasttesten. Bare fiktive testidenter fra trygdeetaten.no, aldri ekte ansatte.
 # Én ident per linje: navIdent og rolle (saksbehandler eller leder). Alt etter # ignoreres.
 #
 # Skriveflyten trenger saksbehandlere med Utvidet tilgang, og lederflyten trenger ledergruppa.
 # Søkegrensen gjelder per ident, så bruk gjerne 10–20 identer til watson-sak.
 
-Z990001 saksbehandler
-Z990002 saksbehandler
-Z990003 leder
+Z993376 saksbehandler
+# Legg til en leder for å ta med lederflyten, for eksempel:
+# Z99xxxx leder
