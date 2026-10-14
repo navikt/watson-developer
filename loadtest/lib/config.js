@@ -11,7 +11,8 @@ if (!/\.dev\.nav\.no$/i.test(HOST) && __ENV.TILLAT_BASE_URL !== "true") {
     `BASE_URL ${BASE_URL} er ikke HTTPS mot dev (https://*.dev.nav.no). Sett TILLAT_BASE_URL=true for en godkjent lokal stub.`,
   );
 }
-export const ENHET = __ENV.ENHET || "ka864v";
+// Virtuell enhet i dev (watson-admin-api, application-dev.yml) som samler saker fra lasttesten.
+export const ENHET = __ENV.ENHET || "lasttest";
 export const MERKING = "LASTTEST";
 
 // Settes absolutt av scripts/lasttest.sh. open() må kalles i init-konteksten.

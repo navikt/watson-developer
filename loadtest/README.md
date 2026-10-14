@@ -39,6 +39,7 @@ Skriptene er JavaScript. Det er et bevisst unntak fra regelen om at watson-devel
 
 - **Prodlikt oppsett i dev**: navikt/watson-admin-api#332 må være deployet. Uten den måler vi `db-f1-micro` og én replika, ikke det prod skal kjøre på.
 - **Testidenter** i `trygdeetaten.no` med Watson-grupper. Bruk 10–20 identer. Søkegrensen gjelder per ident, og med få identer treffer flere VU-er den samme kvoten. Skriveflyten trenger utvidet tilgang, og lederflyten trenger ledergruppe.
+- **Enheten Lasttest**: Saksbehandlerne i `testidenter` skal ikke finnes i NOM. De må stå i `nom.ekstra-saksbehandlere` i `application-dev.yml` i watson-admin-api med `enhetId: lasttest` (navikt/watson-admin-api#335). Da får sakene fra testen enheten Lasttest når de tildeles, og ingen ledervarsler går til ekte ledere. En saksbehandler som finnes i NOM, flytter saken til sin egen enhet. Lederen kan finnes i NOM, siden lederflyten bare leser.
 - **Testpersoner** (syntetiske fra Dolly) som testidentene har tilgang til i tilgangsmaskin. De settes i `TESTPERSONER` og brukes når skriveflyten oppretter saker. Uten dem hopper testen over skriveflyten.
 - **Saker i dev** som testidentene ser. `setup()` henter opptil 500 sak-ID-er fra saklista og avbryter hvis den ikke finner noen. Seed dev med en realistisk datamengde: lister og statistikk oppfører seg annerledes med 50 saker enn med 50 000.
 - **Varsling**: Gi beskjed til teamene bak tilgangsmaskin, NOM og nav-persondata-api før lasttest og stresstest. Lesekallene går mot deres dev-tjenester.
@@ -94,7 +95,7 @@ Testen skriver ikke til andre teams systemer i delte testmiljøer:
 
 Hvis vi trenger tall for disse, avtaler vi en egen kjøring med lav frekvens med eierteamene.
 
-Saker fra testen får merkingen `LASTTEST`. API-et har ikke noe endepunkt for å slette saker. Sakene blir derfor liggende i dev og kommer med i statistikken i BigQuery.
+Saker fra testen får enheten Lasttest og merkingen `LASTTEST`. API-et har ikke noe endepunkt for å slette saker. Sakene blir derfor liggende i dev og kommer med i statistikken i BigQuery.
 
 ## Rate limits
 
@@ -141,7 +142,7 @@ Skriv funn og tiltak i holmes-brain. Typiske tiltak er større Cloud SQL-tier, s
 | `BASE_URL` | `https://watson-admin-api.intern.dev.nav.no` | Backend-adressen. Testen stopper hvis adressen ikke er HTTPS mot en host som slutter på `.dev.nav.no` |
 | `TILLAT_BASE_URL` | (tom) | Sett til `true` for å kjøre mot en godkjent lokal stub |
 | `TESTPERSONER` | (tom) | Kommaseparerte fødselsnumre for syntetiske testpersoner |
-| `ENHET` | `ka864v` | NOM-enhet for nye saker og filtre |
+| `ENHET` | `lasttest` | Enhet for nye saker og filtre |
 | `SOK_IDENT` | (tom) | Identen til `sok-ratelimit` |
 | `TENKETID_MIN` / `TENKETID_MAKS` | `3` / `10` | Pause mellom sidevisninger, i sekunder |
 | `K6_PROMETHEUS_RW_SERVER_URL` | (tom) | Sender metrikker til Prometheus |

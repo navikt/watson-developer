@@ -2,6 +2,8 @@
 # Én ident per linje: navIdent og rolle (saksbehandler eller leder). Alt etter # ignoreres.
 #
 # Skriveflyten trenger saksbehandlere med Utvidet tilgang, og lederflyten trenger ledergruppa.
+# Saksbehandlerne skal ikke finnes i NOM, men stå i nom.ekstra-saksbehandlere i application-dev.yml
+# i watson-admin-api med enhetId: lasttest. Da havner sakene fra testen under enheten Lasttest.
 # Søkegrensen gjelder per ident, så bruk gjerne 10–20 identer til watson-sak.
 
 Z993376 saksbehandler
