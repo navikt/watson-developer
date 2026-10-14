@@ -6,7 +6,7 @@ set -euo pipefail
 # Bruk:
 #   ./scripts/lasttest.sh smoke
 #   ./scripts/lasttest.sh watson-sak baseline|last|stress|utholdenhet
-#   SOK_IDENT=Z123456 ./scripts/lasttest.sh sok-ratelimit
+#   SOK_IDENT=Z123456 TESTPERSONER=<fnr>[,<fnr>] ./scripts/lasttest.sh sok-ratelimit
 #
 # Miljøvariabler som sendes videre til k6: BASE_URL, ENHET, TESTPERSONER, SOK_IDENT,
 # TENKETID_MIN, TENKETID_MAKS. Sett K6_PROMETHEUS_RW_SERVER_URL for å sende metrikker til Prometheus.
@@ -45,9 +45,17 @@ if [ ! -s "$TOKEN_FIL" ] || [ "$(jq length "$TOKEN_FIL")" -eq 0 ]; then
   fail "Ingen tokens. Kjør ./scripts/lasttest-tokens.sh først."
   exit 1
 fi
-"$SCRIPT_DIR/lasttest-tokens.sh" --status
+if ! "$SCRIPT_DIR/lasttest-tokens.sh" --status; then
+  fail "Minst ett token er utløpt eller ugyldig. Hent nye med ./scripts/lasttest-tokens.sh."
+  exit 1
+fi
 
-if [ -z "${TESTPERSONER:-}" ] && [ "$SCENARIO" != "sok-ratelimit" ]; then
+if [ "$SCENARIO" = "sok-ratelimit" ]; then
+  if [ -z "${SOK_IDENT:-}" ] || [ -z "${TESTPERSONER:-}" ]; then
+    fail "sok-ratelimit krever både SOK_IDENT og TESTPERSONER."
+    exit 1
+  fi
+elif [ -z "${TESTPERSONER:-}" ]; then
   warn "TESTPERSONER er ikke satt. Skriveflyten (opprett sak) hoppes over."
 fi
 

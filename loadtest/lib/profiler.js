@@ -30,15 +30,22 @@ const PROFILER = {
   ],
 };
 
+/** Fordeler totalen på rollene. Lesing får resten, så summen alltid blir lik totalen. */
+function fordel(total, rolle) {
+  if (total === 0) return 0;
+  const skriv = Math.max(1, Math.round(total * ANDEL.skriv));
+  const leder = Math.max(1, Math.round(total * ANDEL.leder));
+  if (rolle === "skriv") return skriv;
+  if (rolle === "leder") return leder;
+  return total - skriv - leder;
+}
+
 export function stages(profil, rolle) {
   const trinn = PROFILER[profil];
   if (!trinn) {
     throw new Error(`Ukjent PROFIL "${profil}". Gyldige: ${Object.keys(PROFILER).join(", ")}`);
   }
-  return trinn.map((t) => ({
-    duration: t.duration,
-    target: t.target === 0 ? 0 : Math.max(1, Math.round(t.target * ANDEL[rolle])),
-  }));
+  return trinn.map((t) => ({ duration: t.duration, target: fordel(t.target, rolle) }));
 }
 
 export const terskler = {

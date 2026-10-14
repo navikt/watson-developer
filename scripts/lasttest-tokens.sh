@@ -8,7 +8,8 @@ set -euo pipefail
 # Bruk:
 #   ./scripts/lasttest-tokens.sh            # legg til eller erstatt identer
 #   ./scripts/lasttest-tokens.sh --nullstill # start med tom tokenfil
-#   ./scripts/lasttest-tokens.sh --status    # vis identer og utløpstid, uten tokens
+#   ./scripts/lasttest-tokens.sh --status    # vis identer og utløpstid, uten tokens.
+#                                            # Avslutter med kode 1 hvis et token er utløpt eller ugyldig.
 #
 # Idempotent: samme navIdent erstattes, ikke dupliseres.
 
@@ -43,29 +44,32 @@ jwt_payload() {
   base64 -d <<< "$del" 2>/dev/null
 }
 
+# Returnerer 1 hvis minst ett token er utløpt eller ikke kan leses.
 vis_status() {
-  local naa
+  local naa ugyldige=0 ident rolle token exp min
   naa="$(date +%s)"
   if [ "$(jq length "$TOKEN_FIL")" -eq 0 ]; then
     skip "Ingen tokens lagret"
-    return
+    return 0
   fi
-  jq -r '.[] | "\(.navIdent) \(.rolle) \(.token)"' "$TOKEN_FIL" | while read -r ident rolle token; do
-    local exp
-    exp="$(jwt_payload "$token" | jq -r '.exp // 0' 2>/dev/null || echo 0)"
-    local min=$(( (exp - naa) / 60 ))
+  while read -r ident rolle token; do
+    exp="$(jwt_payload "$token" | jq -r '.exp // 0' 2>/dev/null || true)"
+    [[ "$exp" =~ ^[0-9]+$ ]] || exp=0
+    min=$(( (exp - naa) / 60 ))
     if [ "$min" -gt 0 ]; then
       ok "$ident ($rolle): gyldig i $min min"
     else
-      fail "$ident ($rolle): utløpt"
+      fail "$ident ($rolle): utløpt eller ugyldig"
+      ugyldige=$((ugyldige + 1))
     fi
-  done
+  done < <(jq -r '.[] | "\(.navIdent) \(.rolle) \(.token)"' "$TOKEN_FIL")
+  [ "$ugyldige" -eq 0 ]
 }
 
 case "${1:-}" in
   --status)
     vis_status
-    exit 0
+    exit $?
     ;;
   --nullstill)
     echo "[]" > "$TOKEN_FIL"

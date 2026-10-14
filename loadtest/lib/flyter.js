@@ -1,6 +1,6 @@
 import { group, sleep } from "k6";
 import { ENHET, MERKING, testpersoner, tenketid, tilfeldig } from "./config.js";
-import { json, les, lesParallelt, skriv } from "./klient.js";
+import { json, les, lesParallelt, skriv, sok } from "./klient.js";
 
 const SAK = "/api/v1/kontrollsaker";
 
@@ -68,9 +68,9 @@ export function sakDetalj(bruker, sakId) {
       [`${SAK}/${sakId}/mapper`, "sak mapper"],
     ]);
     if (sak && sak.tilgang && sak.tilgang.kanSeRelaterteSaker) {
-      skriv(bruker, "POST", `${SAK}/sok?page=1&size=100`, "sok person", {
+      sok(bruker, `${SAK}/sok?page=1&size=100`, "sok person", {
         personIdent: sak.kontrollobjekt.personIdent,
-      }, { tillat429: true });
+      });
     }
   });
   sleep(tenketid());

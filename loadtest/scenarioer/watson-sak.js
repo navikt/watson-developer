@@ -1,4 +1,4 @@
-import { brukere, brukerForVu, tilfeldig } from "../lib/config.js";
+import { brukerForVu, brukerMedRolle, tilfeldig } from "../lib/config.js";
 import {
   alleSaker,
   dokumentVisning,
@@ -36,14 +36,7 @@ export const options = {
 };
 
 export function setup() {
-  let saksbehandler = brukere[0];
-  for (const b of brukere) {
-    if (b.rolle === "saksbehandler") {
-      saksbehandler = b;
-      break;
-    }
-  }
-  const sakIder = hentSakIder(saksbehandler);
+  const sakIder = hentSakIder(brukerMedRolle("saksbehandler"));
   if (sakIder.length === 0) {
     throw new Error("Fant ingen saker. Seed dev med saker testidentene har tilgang til før kjøring.");
   }

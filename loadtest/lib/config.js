@@ -25,15 +25,25 @@ export const testpersoner = (__ENV.TESTPERSONER || "")
   .map((s) => s.trim())
   .filter((s) => /^[0-9]{11}$/.test(s));
 
-/** Velger bruker for gjeldende VU, fordelt jevnt over identene med riktig rolle. */
-export function brukerForVu(rolle) {
+/**
+ * Velger bruker nummer `indeks` blant identene med riktig rolle. Feiler hvis rollen mangler,
+ * slik at testen ikke måler med feil tilgangsnivå.
+ */
+export function brukerMedRolle(rolle, indeks = 0) {
   // SharedArray støtter bare length, indeks og for-of, ikke filter().
   const aktuelle = [];
   for (const b of brukere) {
     if (b.rolle === rolle) aktuelle.push(b);
   }
-  if (aktuelle.length > 0) return aktuelle[(__VU - 1) % aktuelle.length];
-  return brukere[(__VU - 1) % brukere.length];
+  if (aktuelle.length === 0) {
+    throw new Error(`Tokenfila mangler identer med rollen "${rolle}". Kjør scripts/lasttest-tokens.sh.`);
+  }
+  return aktuelle[indeks % aktuelle.length];
+}
+
+/** Velger bruker for gjeldende VU, fordelt jevnt over identene med riktig rolle. */
+export function brukerForVu(rolle) {
+  return brukerMedRolle(rolle, __VU - 1);
 }
 
 export function tilfeldig(liste) {

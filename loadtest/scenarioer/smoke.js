@@ -1,4 +1,4 @@
-import { brukere, brukerForVu, tilfeldig } from "../lib/config.js";
+import { brukerMedRolle, tilfeldig } from "../lib/config.js";
 import {
   alleSaker,
   dokumentVisning,
@@ -19,12 +19,13 @@ export const options = {
   },
 };
 
+// Setup henter saker med samme saksbehandler som åpner dem, så tilgangen er lik.
 export function setup() {
-  return { sakIder: hentSakIder(brukere[0], 1) };
+  return { sakIder: hentSakIder(brukerMedRolle("saksbehandler"), 1) };
 }
 
 export default function (data) {
-  const saksbehandler = brukerForVu("saksbehandler");
+  const saksbehandler = brukerMedRolle("saksbehandler");
   forside(saksbehandler);
   mineSaker(saksbehandler);
   alleSaker(saksbehandler);
@@ -33,5 +34,5 @@ export default function (data) {
     dokumentVisning(saksbehandler, sak);
   }
   registrerOgBehandleSak(saksbehandler);
-  lederVisning(brukerForVu("leder"));
+  lederVisning(brukerMedRolle("leder"));
 }

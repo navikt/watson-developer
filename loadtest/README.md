@@ -13,7 +13,7 @@ Skriptene er JavaScript. Det er et bevisst unntak fra regelen om at watson-devel
    ./scripts/lasttest-tokens.sh
    ```
 
-   Skriptet viser lenken til azure-token-generator. Logg inn som testident i et privat nettleservindu, og lim inn tokenet. Tokenet vises ikke på skjermen. Det lagres i `loadtest/.tokens/tokens.json`, som er git-ignorert og bare lesbar for deg.
+   Skriptet viser lenken til azure-token-generator. Logg inn som testident i et privat nettleservindu, og lim inn tokenet. Legg inn minst én saksbehandler og én leder. Testen stopper hvis en rolle mangler. Tokenet vises ikke på skjermen. Det lagres i `loadtest/.tokens/tokens.json`, som er git-ignorert og bare lesbar for deg.
 
 3. Kjør smoke-testen:
 
@@ -27,7 +27,7 @@ Skriptene er JavaScript. Det er et bevisst unntak fra regelen om at watson-devel
    TESTPERSONER=<fnr1>,<fnr2> ./scripts/lasttest.sh watson-sak baseline
    ```
 
-`./scripts/lasttest-tokens.sh --status` viser hvor lenge tokenene er gyldige. Tokenene varer omtrent én time, så hent nye før hver kjøring.
+`./scripts/lasttest-tokens.sh --status` viser hvor lenge tokenene er gyldige. Tokenene varer omtrent én time, så hent nye før hver kjøring. `lasttest.sh` stopper før k6 starter hvis et token er utløpt eller ugyldig.
 
 ## Forutsetninger
 
@@ -43,7 +43,7 @@ Skriptene er JavaScript. Det er et bevisst unntak fra regelen om at watson-devel
 |---|---|---|
 | `smoke` | `./scripts/lasttest.sh smoke` | Én bruker går gjennom alle flytene én gang |
 | `watson-sak` | `./scripts/lasttest.sh watson-sak <profil>` | 80 % lesing, 15 % skriving og 5 % leder |
-| `sok-ratelimit` | `SOK_IDENT=<navIdent> ./scripts/lasttest.sh sok-ratelimit` | Sjekker at søkegrensen gir 429 |
+| `sok-ratelimit` | `SOK_IDENT=<navIdent> TESTPERSONER=<fnr> ./scripts/lasttest.sh sok-ratelimit` | Sjekker at søkegrensen gir 429 |
 
 Lesing speiler loaderne i watson-sak-frontend. Sakdetaljsida henter saken og gjør så sju kall parallelt, slik `SakDetaljSide.loader.server.ts` gjør. Deretter søker den etter andre saker på personen.
 
@@ -85,7 +85,7 @@ Saker fra testen får merkingen `LASTTEST`. API-et har ikke noe endepunkt for å
 Grensene står på under testen.
 
 - **Ingress**: `limit-rps: "20"` per klient-IP. Når grensen er nådd, svarer ingress-nginx med 503, som telles i `avvist_rate_limit_ingress`. 100 brukere med 3–10 sekunders tenketid gir omtrent 15–30 req/s fra én maskin, mens ekte brukere har hver sin IP. Hvis vi ser 503 i `last` eller `stress`, kjører vi k6 fra flere maskiner eller ber om en midlertidig høyere grense i dev.
-- **Søk**: `SokRateLimitFilter` tillater 30 kall i burst og 120 per time per NAV-ident. Svar med 429 telles i `avvist_rate_limit_app`. På sakdetaljsida regnes ikke 429 som feil, fordi søket der skyldes at flere VU-er deler én ident.
+- **Søk**: `SokRateLimitFilter` tillater 30 kall i burst og 120 per time per Nav-ident. Svar med 429 telles i `avvist_rate_limit_app`. På sakdetaljsida regnes ikke 429 som feil, fordi søket der skyldes at flere VU-er deler én ident.
 
 ## Overvåking under kjøring
 
