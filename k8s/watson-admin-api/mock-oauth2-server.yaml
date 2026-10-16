@@ -3,10 +3,9 @@ kind: ConfigMap
 metadata:
   name: mock-oauth2-config
 data:
-  # Merk: "groups"-verdiene "local-basic-id", "local-utvidet-id" og "local-leder-id"
-  # er bevisst ikke ekte Azure AD-objekt-IDer (UUID). De er interne konfignøkler
-  # som matches mot GRUPPER-miljøvariabelen i watson-admin-api sin
-  # application-local.yml (se Grupper.kt), ikke ekte NOM/Azure AD-grupper.
+  # "groups" bruker dev-objekt-ID-ene til 0000-CA-kontroll-Watson (31c87a57-…) og
+  # 0000-CA-kontroll-Watson-Leder (994520b2-…). De må stemme med GRUPPER i
+  # watson-admin-api sin application-local.yml (se Grupper.kt).
   JSON_CONFIG: |
     {
       "interactiveLogin": true,
@@ -25,7 +24,7 @@ data:
                 "name": "Bjarte Byråkratsen",
                 "preferred_username": "bjarte.byrakratsen@nav.no",
                 "oid": "00000000-0000-0000-0000-000000000001",
-                "groups": ["222dedb1-a80d-48c9-b8d3-1e8149be9063", "b734a20d-63e3-4b44-bb77-87f7f0b7f48a"],
+                "groups": ["31c87a57-a338-4e12-87d7-8be2c39e8c53"],
                 "exp": 2147483647
               }
             },
@@ -39,7 +38,7 @@ data:
                 "name": "Bjarte Byråkratsen",
                 "preferred_username": "bjarte.byrakratsen@nav.no",
                 "oid": "00000000-0000-0000-0000-000000000001",
-                "groups": ["222dedb1-a80d-48c9-b8d3-1e8149be9063", "b734a20d-63e3-4b44-bb77-87f7f0b7f48a"],
+                "groups": ["31c87a57-a338-4e12-87d7-8be2c39e8c53"],
                 "exp": 2147483647
               }
             },
@@ -53,7 +52,7 @@ data:
                 "name": "Stian Sjeferud",
                 "preferred_username": "stian.sjeferud@nav.no",
                 "oid": "00000000-0000-0000-0000-000000000008",
-                "groups": ["222dedb1-a80d-48c9-b8d3-1e8149be9063", "b734a20d-63e3-4b44-bb77-87f7f0b7f48a", "local-leder-id"],
+                "groups": ["994520b2-1925-4142-87ca-447e70df0e1c"],
                 "exp": 2147483647
               }
             },
@@ -67,7 +66,7 @@ data:
                 "name": "Ove Overordnerud",
                 "preferred_username": "ove.overordnerud@nav.no",
                 "oid": "00000000-0000-0000-0000-000000000002",
-                "groups": ["222dedb1-a80d-48c9-b8d3-1e8149be9063", "b734a20d-63e3-4b44-bb77-87f7f0b7f48a", "local-leder-id"],
+                "groups": ["994520b2-1925-4142-87ca-447e70df0e1c"],
                 "exp": 2147483647
               }
             },
@@ -81,7 +80,7 @@ data:
                 "name": "Kari Kommandørsen",
                 "preferred_username": "kari.kommandorsen@nav.no",
                 "oid": "00000000-0000-0000-0000-000000000003",
-                "groups": ["222dedb1-a80d-48c9-b8d3-1e8149be9063", "b734a20d-63e3-4b44-bb77-87f7f0b7f48a", "local-leder-id"],
+                "groups": ["994520b2-1925-4142-87ca-447e70df0e1c"],
                 "exp": 2147483647
               }
             },
@@ -95,7 +94,7 @@ data:
                 "name": "Ulrikke Utrederson",
                 "preferred_username": "ulrikke.utrederson@nav.no",
                 "oid": "00000000-0000-0000-0000-000000000004",
-                "groups": ["222dedb1-a80d-48c9-b8d3-1e8149be9063", "b734a20d-63e3-4b44-bb77-87f7f0b7f48a"],
+                "groups": ["31c87a57-a338-4e12-87d7-8be2c39e8c53"],
                 "exp": 2147483647
               }
             },
@@ -109,7 +108,7 @@ data:
                 "name": "Trine Trygdesen",
                 "preferred_username": "trine.trygdesen@nav.no",
                 "oid": "00000000-0000-0000-0000-000000000005",
-                "groups": ["222dedb1-a80d-48c9-b8d3-1e8149be9063", "b734a20d-63e3-4b44-bb77-87f7f0b7f48a"],
+                "groups": ["31c87a57-a338-4e12-87d7-8be2c39e8c53"],
                 "exp": 2147483647
               }
             },
@@ -123,7 +122,7 @@ data:
                 "name": "Kjell Kontrollsen",
                 "preferred_username": "kjell.kontrollsen@nav.no",
                 "oid": "00000000-0000-0000-0000-000000000006",
-                "groups": ["222dedb1-a80d-48c9-b8d3-1e8149be9063", "b734a20d-63e3-4b44-bb77-87f7f0b7f48a"],
+                "groups": ["31c87a57-a338-4e12-87d7-8be2c39e8c53"],
                 "exp": 2147483647
               }
             },
@@ -137,7 +136,7 @@ data:
                 "name": "Gunnar Granskeren",
                 "preferred_username": "gunnar.granskeren@nav.no",
                 "oid": "00000000-0000-0000-0000-000000000007",
-                "groups": ["222dedb1-a80d-48c9-b8d3-1e8149be9063", "b734a20d-63e3-4b44-bb77-87f7f0b7f48a"],
+                "groups": ["31c87a57-a338-4e12-87d7-8be2c39e8c53"],
                 "exp": 2147483647
               }
             },
@@ -151,7 +150,7 @@ data:
                 "name": "Tina Tipsmottaker",
                 "preferred_username": "tina.tipsmottaker@nav.no",
                 "oid": "00000000-0000-0000-0000-000000000009",
-                "groups": ["222dedb1-a80d-48c9-b8d3-1e8149be9063", "b734a20d-63e3-4b44-bb77-87f7f0b7f48a"],
+                "groups": ["31c87a57-a338-4e12-87d7-8be2c39e8c53"],
                 "exp": 2147483647
               }
             },
@@ -165,7 +164,7 @@ data:
                 "name": "Tor Tipssjef",
                 "preferred_username": "tor.tipssjef@nav.no",
                 "oid": "00000000-0000-0000-0000-000000000010",
-                "groups": ["222dedb1-a80d-48c9-b8d3-1e8149be9063", "b734a20d-63e3-4b44-bb77-87f7f0b7f48a", "local-leder-id"],
+                "groups": ["994520b2-1925-4142-87ca-447e70df0e1c"],
                 "exp": 2147483647
               }
             },
@@ -179,7 +178,7 @@ data:
                 "name": "Bjarte Byråkratsen",
                 "preferred_username": "bjarte.byrakratsen@nav.no",
                 "oid": "00000000-0000-0000-0000-000000000001",
-                "groups": ["222dedb1-a80d-48c9-b8d3-1e8149be9063", "b734a20d-63e3-4b44-bb77-87f7f0b7f48a"],
+                "groups": ["31c87a57-a338-4e12-87d7-8be2c39e8c53"],
                 "exp": 2147483647
               }
             }
@@ -203,7 +202,7 @@ spec:
         app: mock-oauth2-server
       annotations:
         # Bump config-version når JSON_CONFIG endres for å tvinge pod-restart
-        config-version: "11"
+        config-version: "12"
     spec:
       containers:
         - name: mock-oauth2-server
