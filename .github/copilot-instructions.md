@@ -46,7 +46,7 @@ sandboxen).
 
 - **Plattform**: Nais (Kubernetes/GCP), namespace `holmes`
 - **Autentisering**: Azure AD med Wonderwall sidecar
-- **Tilgangsgrupper**: Basic (`0000-GA-kontroll-Oppslag-Bruker-Basic`) og Utvidet
+- **Tilgangsgrupper i Watson Sak**: `0000-CA-kontroll-Watson` og `0000-CA-kontroll-Watson-Leder`. Tilgangsmaskinen avgjør innsyn i kontrollobjektet
 - **Lokal mock**: mock-oauth2-server på port 8090
 
 ## Regler for dette repoet

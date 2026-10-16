@@ -34,7 +34,7 @@ Sibling-repoer klones til `repos/` med `./scripts/clone-repos.sh`.
 
 - **Kontrollsak** — en sak opprettet av en saksbehandler i Nav Kontroll for å undersøke mulig misbruk
 - **Saksbehandler** — Nav Kontroll-ansatt som bruker Watson
-- **Tilgangskontroll** — to grupper: Basic (oppslag) og Utvidet (full tilgang)
+- **Tilgangskontroll** — Watson Sak bruker `0000-CA-kontroll-Watson` og `0000-CA-kontroll-Watson-Leder`. Tilgangsmaskinen avgjør innsyn i kontrollobjektet
 - **Kontrollsakstype** — kategoriserer type mulig misbruk
 
 ## Tekniske regler for dette repoet

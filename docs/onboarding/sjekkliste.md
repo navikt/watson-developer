@@ -12,7 +12,7 @@ Spør en kollega dersom noe er uklart — vi hjelper gjerne.
 
 - [ ] Tilgang til GitHub-organisasjon [navikt](https://github.com/navikt) og team [holmes](https://github.com/orgs/navikt/teams/holmes)
 - [ ] Tilgang til [Nais console](https://console.nav.cloud.nais.io) — namespace `holmes` i dev og prod
-- [ ] Azure AD-grupper: `0000-GA-kontroll-Oppslag-Bruker-Basic` og `0000-GA-kontroll-Oppslag-Bruker-Utvidet`
+- [ ] Azure AD-grupper: `0000-CA-kontroll-Watson` (ledere: `0000-CA-kontroll-Watson-Leder`) for Watson Sak, og `0000-GA-kontroll-Oppslag-Bruker-Basic` og `0000-GA-kontroll-Oppslag-Bruker-Utvidet` for watson-sok
 - [ ] Tilgang til [Grafana](https://grafana.nav.cloud.nais.io) for overvåking
 - [ ] Invitasjon til relevante Slack-kanaler (se teammedlem for liste)
 
