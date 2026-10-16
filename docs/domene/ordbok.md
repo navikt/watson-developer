@@ -79,13 +79,18 @@ tilknytning til kontrollsaker.
 
 ## Tilgangsgrupper (Azure AD)
 
-| Gruppe                                    | Kortform | Tilgang                             |
-| ----------------------------------------- | -------- | ----------------------------------- |
-| `0000-GA-kontroll-Oppslag-Bruker-Basic`   | Basic    | Les tilgang — søk og oppslag        |
-| `0000-GA-kontroll-Oppslag-Bruker-Utvidet` | Utvidet  | Skrivetilgang — full saksbehandling |
+Watson Sak bruker to grupper:
 
-Tilgangsgrupper sjekkes av `watson-admin-api` via token claims. Ingen bruker
-skal ha tilgang uten å være i minst én av disse gruppene.
+| Gruppe                          | Kortform     | Tilgang                        |
+| ------------------------------- | ------------ | ------------------------------ |
+| `0000-CA-kontroll-Watson`       | Watson       | Saksbehandling                 |
+| `0000-CA-kontroll-Watson-Leder` | Watson-Leder | Saksbehandling og ledertilgang |
+
+Azure AD slipper bare brukere i en av gruppene inn i watson-admin-api. Hva
+saksbehandleren ser om kontrollobjektet, avgjør tilgangsmaskinen.
+
+watson-sok bruker fortsatt `0000-GA-kontroll-Oppslag-Bruker-Basic` og
+`0000-GA-kontroll-Oppslag-Bruker-Utvidet`.
 
 ---
 

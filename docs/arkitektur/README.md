@@ -57,12 +57,23 @@ Alle Watson-applikasjoner bruker **Azure AD** med **Wonderwall sidecar** for aut
 
 | Tjeneste            | Autentisering                      | Tilgangsgrupper                |
 | ------------------- | ---------------------------------- | ------------------------------ |
-| watson-sak-frontend | Azure AD Sidecar (Wonderwall)      | Basic + Utvidet                |
+| watson-sak-frontend | Azure AD Sidecar (Wonderwall)      | Watson + Watson-Leder          |
 | watson-sok          | Azure AD Sidecar (Wonderwall)      | Basic + Utvidet                |
-| watson-admin-api    | token-validation-spring (Azure AD) | Basic + Utvidet                |
+| watson-admin-api    | token-validation-spring (Azure AD) | Watson + Watson-Leder          |
 | nav-persondata-api  | Azure AD OBO                       | Delegert fra kallende tjeneste |
 
 ### Tilgangsgrupper
+
+Watson Sak (watson-sak-frontend og watson-admin-api):
+
+| Gruppe       | AD-navn                         | Tilgang                        |
+| ------------ | ------------------------------- | ------------------------------ |
+| Watson       | `0000-CA-kontroll-Watson`       | Saksbehandling                 |
+| Watson-Leder | `0000-CA-kontroll-Watson-Leder` | Saksbehandling og ledertilgang |
+
+Tilgangsmaskinen (kjerneregelsettet) avgjør hvilke opplysninger saksbehandleren ser om kontrollobjektet. Uten tilgang vises saken maskert, og watson-admin-api avviser handlinger på personen med 403. Hvem som kan se og endre selve saken, styres av eierskap, deling og lederrolle.
+
+watson-sok:
 
 | Gruppe  | AD-navn                                   | Tilgang             |
 | ------- | ----------------------------------------- | ------------------- |
