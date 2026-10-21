@@ -32,21 +32,35 @@ Sluttsummen skal gå opp: `rader i filen = importert + mangler_ident + ugyldig +
 Filene har `;` som skilletegn og en headerlinje. Kolonnene finnes via navn, så rekkefølgen er likegyldig. Alle
 filer må ha kolonnene `FNR`, datokolonnen og PID-kolonnen over, pluss minst én av `NAVIDENT` og `Ident`
 (NAV-ident for ansvarlig saksbehandler). SV- og tipsfilene har `NAVIDENT`; dagpenger og AAP har `Ident`.
-`NAVIDENT` har forrang. Er den tom, brukes `Ident` hvis filen har den, ellers standardidenten. Datoformat er `d.M.yyyy HH.mm.ss`. Andre kolonner, blant annet `PAABEGYNT` og
-`PROSJEKTIDENT`, ignoreres. Mangler en filen både `NAVIDENT` og `Ident`, stopper importen i stedet for å flagge alle rader.
+Datoformat er `d.M.yyyy HH.mm.ss`. `PROSJEKTIDENT` er valgfri og brukes bare til ansvarlig (se under). Andre kolonner, blant annet `PAABEGYNT`, ignoreres. Mangler en filen både `NAVIDENT` og `Ident`, stopper importen i stedet for å flagge alle rader.
 
 ### Utfall per rad
 
 | Utfall | Når | Hva skjer |
 | --- | --- | --- |
 | Importert | PID, fnr og ident er gyldige | Rad settes inn med `migrering_status = IKKE_PABEGYNT` |
-| `mangler_ident` | `Ident` er tom og `MIGRERING_IMPORT_STANDARDIDENT` er ikke satt (bare dry-run) | Rad skrives til `<avviksprefiks>mangler_ident/<batch>/<kategori>.csv` |
+| `mangler_ident` | Ingen ident i filen, ingen treff i prosjektlisten og `MIGRERING_IMPORT_STANDARDIDENT` er ikke satt (bare dry-run) | Rad skrives til `<avviksprefiks>mangler_ident/<batch>/<kategori>.csv` |
 | `ugyldig` | Ugyldig PID, fnr, dato eller ident, feil antall felt, eller duplikat | Rad skrives til `<avviksprefiks>ugyldig/<batch>/<kategori>.csv` med kolonnen `AARSAK` |
 | Utelatt | `(kilde, pid)` finnes allerede og er under arbeid | Røres ikke |
 
-Er `Ident` tom og `MIGRERING_IMPORT_STANDARDIDENT` satt, blir raden importert med den identen som ansvarlig. Verdien
-ligger i Nais-configen `watson-migrering-import` (`envFrom`), og er påkrevd ved ekte kjøring. Identer normaliseres til
-store bokstaver. Både gamle (tre bokstaver og fire siffer) og nye formater godtas.
+### Ansvarlig for en rad
+
+Rekkefølgen er:
+
+1. `NAVIDENT`
+2. `Ident`
+3. ansvarlig for `PROSJEKTIDENT` i `MIGRERING_IMPORT_PROSJEKTANSVARLIGE`
+4. `MIGRERING_IMPORT_STANDARDIDENT`
+5. ellers `mangler_ident` (bare dry-run)
+
+Begge variablene ligger i Nais-configen `watson-migrering-import` (`envFrom`). `MIGRERING_IMPORT_STANDARDIDENT` er påkrevd
+ved ekte kjøring. `MIGRERING_IMPORT_PROSJEKTANSVARLIGE` er valgfri og har formen `vest=Z190190,ost=Z190191`. Nøkkelen
+sammenlignes med `PROSJEKTIDENT` uten hensyn til store og små bokstaver. Ugyldig format, ugyldig ident eller samme prosjekt
+to ganger stopper importen. Feilmeldingen nevner elementnummer, aldri verdiene. Config leses ved oppstart, så poden må
+restartes etter endring.
+
+Sett verdien i [Nais Console](https://console.nav.cloud.nais.io/team/holmes/configs) per miljø (dev og prod). Identer
+normaliseres til store bokstaver. Både gamle (tre bokstaver og fire siffer) og nye formater godtas.
 Avviksfilene har fnr. De ligger bare i den private bucketen og skal ikke kopieres ut. Teamet som eier
 masterdata får tilgang til avviksmappen, ikke til hele bucketen.
 
