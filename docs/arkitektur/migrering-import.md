@@ -73,6 +73,14 @@ Rader som saksbehandlere har tatt i bruk (`UNDER_MIGRERING` eller `FULLSTENDIG`)
 aldri. En databasetrigger (`V17`) hindrer det også hvis koden skulle ha en feil. Kjør importen utenfor
 arbeidstid: en saksbehandler som oppretter sak midt i en kjøring kan få en feilmelding.
 
+### Status når saken avsluttes
+
+En kandidat går fra `IKKE_PABEGYNT` til `UNDER_MIGRERING` når saksbehandleren knytter den til en sak, og til `FULLSTENDIG`
+når saksbehandleren trykker «ferdig». Avsluttes saken mens kandidaten er `UNDER_MIGRERING`, settes kandidaten automatisk til
+`FULLSTENDIG` i samme transaksjon. Den som avslutter saken står som fullført av. Det gir en `MIGRERING_FULLFORT`-hendelse
+og en auditlogg. Andre statuser og saker uten kandidat røres ikke. Gamle rader som står som «Under flytting» med en avsluttet sak
+ryddes ikke. Risiko: avsluttes saken før filene er flyttet, vises kandidaten likevel som ferdig flyttet.
+
 ## Slik styres den
 
 Importen er **av** som standard, også ved vanlige deploys. Workflowen «Deploy to dev» har to valg ved
