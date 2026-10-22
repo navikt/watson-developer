@@ -39,7 +39,7 @@ Datoformat er `d.M.yyyy HH.mm.ss`. `PROSJEKTIDENT` er valgfri og brukes bare til
 | Utfall | Når | Hva skjer |
 | --- | --- | --- |
 | Importert | PID, fnr og ident er gyldige | Rad settes inn med `migrering_status = IKKE_PABEGYNT` |
-| `mangler_ident` | Ingen ident i filen, ingen treff i prosjektlisten og `MIGRERING_IMPORT_STANDARDIDENT` er ikke satt (bare dry-run) | Rad skrives til `<avviksprefiks>mangler_ident/<batch>/<kategori>.csv` |
+| `mangler_ident` | Ingen ident i filen, ingen treff i prosjektlisten og `MIGRERING_IMPORT_STANDARDIDENT` er ikke satt (bare dry-run) | Raden telles som `mangler_ident`. Det skrives ingen avviksfil, siden dry-run ikke skriver til bucketen |
 | `ugyldig` | Ugyldig PID, fnr, dato eller ident, feil antall felt, eller duplikat | Rad skrives til `<avviksprefiks>ugyldig/<batch>/<kategori>.csv` med kolonnen `AARSAK` |
 | Utelatt | `(kilde, pid)` finnes allerede og er under arbeid | Røres ikke |
 
@@ -186,7 +186,7 @@ Migreringsliste MINE for Z993376: radeIKilde=110, medPersoninnsyn=110, utilgjeng
 | Logglinje | Betydning | Tiltak |
 | --- | --- | --- |
 | `radeIKilde=0` | Ingen rader med denne identen i databasen | Importen er ikke kjørt med filer for denne identen. Lag og last opp filer med riktig `-Pident`, og kjør importen |
-| `radeIKilde>0`, `medPersoninnsyn=0` | Tilgangskontrollen avviser alle | Brukeren mangler gruppene Basic eller Utvidet, eller tilgangsmaskinen avviser Dolly-personene |
+| `radeIKilde>0`, `medPersoninnsyn=0` | Tilgangskontrollen avviser alle | Kontroller tilgangsmaskinens innsyn i Dolly-personene (fnr finnes i PDL og tilgangsmaskinen i dev). Basic og Utvidet gjelder `watson-sok`, ikke Watson Sak |
 | `utilgjengelig=true` | NOM eller tilgangsmaskinen svarte ikke | Gul melding i UI. Prøv igjen senere |
 | Ingen linje | Kallet nådde ikke backend | Sjekk frontend (404 betyr at miljøet er stengt) |
 
@@ -200,9 +200,11 @@ Migreringsliste MINE for Z993376: radeIKilde=110, medPersoninnsyn=110, utilgjeng
 - **IAM på bucketen** (du må ha administratortilgang på `access_oracle_migration`). Gi **appens** service
   account tilgang. Den finnes allerede, siden appen kjører:
   ```bash
-  kubectl -n holmes get serviceaccount watson-admin-api \
+  kubectl --context prod-gcp -n holmes get serviceaccount watson-admin-api \
     -o jsonpath='{.metadata.annotations.iam\.gke\.io/gcp-service-account}'
   ```
+  Kontroller at adressen tilhører prod-prosjektet (`holmes-prod-60aa`) før du fortsetter. Står du i dev-context, får
+  dev-appen lesetilgang til prod-bucketen med fnr.
   ```bash
   for ROLLE in roles/storage.objectViewer roles/storage.objectCreator; do
     gcloud storage buckets add-iam-policy-binding gs://access_oracle_migration \
