@@ -32,7 +32,7 @@ k8s_resource(
 local_resource(
     'watson-admin-api',
     serve_cmd='cd repos/watson-admin-api && export JAVA_HOME="$(/usr/libexec/java_home -v 21)" && export PATH="$JAVA_HOME/bin:$PATH" && SPRING_PROFILES_ACTIVE=local ./gradlew bootRun',
-    resource_deps=['postgres', 'mock-oauth2-server', 'watson-pdfgen'],
+    resource_deps=['postgres', 'mock-oauth2-server', 'watson-pdfgen', 'watson-gotenberg'],
     readiness_probe=probe(
         http_get=http_get_action(port=8080, path='/actuator/health'),
         period_secs=5,
@@ -133,6 +133,22 @@ local_resource(
     links=[
         link('http://localhost:8082/internal/is_ready', 'Health'),
         link('http://localhost:8082/internal/metrics', 'Metrics'),
+    ],
+    labels=['backend'],
+)
+
+# Gjør opplastede Word-filer om til PDF ved arkivering. Flaggene speiler .nais/gotenberg.yaml i watson-pdfgen.
+local_resource(
+    'watson-gotenberg',
+    cmd='cd repos/watson-pdfgen && docker build --tag watson-gotenberg:local gotenberg',
+    serve_cmd='docker rm -f watson-gotenberg >/dev/null 2>&1 || true; docker run --rm --name watson-gotenberg -p 127.0.0.1:8083:8080 watson-gotenberg:local gotenberg --api-port=8080 --api-timeout=55s --api-disable-download-from --webhook-disable --chromium-disable-routes --pdfengines-disable-routes --libreoffice-auto-start=true --libreoffice-deny-public-ips --libreoffice-deny-private-ips',
+    readiness_probe=probe(
+        http_get=http_get_action(port=8083, path='/health'),
+        period_secs=5,
+        failure_threshold=30,
+    ),
+    links=[
+        link('http://localhost:8083/health', 'Health'),
     ],
     labels=['backend'],
 )
