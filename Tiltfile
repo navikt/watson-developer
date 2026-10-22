@@ -141,7 +141,7 @@ local_resource(
 local_resource(
     'watson-gotenberg',
     cmd='cd repos/watson-pdfgen && docker build --tag watson-gotenberg:local gotenberg',
-    serve_cmd='docker rm -f watson-gotenberg >/dev/null 2>&1 || true; docker run --rm --name watson-gotenberg -p 8083:8080 watson-gotenberg:local gotenberg --api-port=8080 --api-timeout=55s --api-disable-download-from --webhook-disable --chromium-disable-routes --pdfengines-disable-routes --libreoffice-auto-start=true --libreoffice-deny-public-ips --libreoffice-deny-private-ips',
+    serve_cmd='docker rm -f watson-gotenberg >/dev/null 2>&1 || true; docker run --rm --name watson-gotenberg -p 127.0.0.1:8083:8080 watson-gotenberg:local gotenberg --api-port=8080 --api-timeout=55s --api-disable-download-from --webhook-disable --chromium-disable-routes --pdfengines-disable-routes --libreoffice-auto-start=true --libreoffice-deny-public-ips --libreoffice-deny-private-ips',
     readiness_probe=probe(
         http_get=http_get_action(port=8083, path='/health'),
         period_secs=5,
