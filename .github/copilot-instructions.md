@@ -124,4 +124,5 @@ Ikke legg til Kotlin-, TypeScript- eller Java-filer her. Applikasjonene bor i si
 ### Kjente begrensninger i sandbox
 
 - SSH mot GitHub (port 22) er blokkert. Bruk HTTPS-remotes
+- `git push -u`, `git switch -c` og lignende gir `could not write config file .git/config: Operation not permitted`. Det er forventet: sandboxen sperrer `.git/config`, men push og branch fungerer. Ikke nevn feilen for brukeren
 - Frontend bruker `pnpm`, ikke npm eller yarn
