@@ -29,9 +29,12 @@ k8s_resource(
 
 # watson-admin-api kjører lokalt som long-running prosess.
 # Manuell restart via Tilt UI eller: tilt trigger watson-admin-api
+# Finnes .tilt/migrering-import.env, kjører importen av migreringskandidater ved denne oppstarten.
+# Fila slettes med en gang, så neste restart kjører ikke importen. Se scripts/migrering-import-lokalt.sh.
 local_resource(
     'watson-admin-api',
-    serve_cmd='cd repos/watson-admin-api && export JAVA_HOME="$(/usr/libexec/java_home -v 21)" && export PATH="$JAVA_HOME/bin:$PATH" && SPRING_PROFILES_ACTIVE=local ./gradlew bootRun',
+    serve_cmd='if [ -f .tilt/migrering-import.env ]; then set -a; . ./.tilt/migrering-import.env; set +a; rm -f .tilt/migrering-import.env; echo "Migreringsimport ved oppstart (dry-run=$MIGRERING_IMPORT_DRYRUN)"; fi; ' +
+        'cd repos/watson-admin-api && export JAVA_HOME="$(/usr/libexec/java_home -v 21)" && export PATH="$JAVA_HOME/bin:$PATH" && SPRING_PROFILES_ACTIVE=local ./gradlew bootRun',
     resource_deps=['postgres', 'mock-oauth2-server', 'watson-pdfgen', 'watson-gotenberg'],
     readiness_probe=probe(
         http_get=http_get_action(port=8080, path='/actuator/health'),
@@ -43,6 +46,26 @@ local_resource(
         link('http://localhost:8080/actuator/health', 'Health'),
         link('http://localhost:8090', 'mock-oauth2-server'),
     ],
+    labels=['backend'],
+)
+
+# Knapper for å teste importen av migreringskandidater med syntetiske filer. Kjøres bare manuelt.
+# Begge starter watson-admin-api på nytt. Resultatet står i loggen til watson-admin-api.
+local_resource(
+    'migrering-import-dryrun',
+    cmd='bash scripts/migrering-import-lokalt.sh',
+    auto_init=False,
+    trigger_mode=TRIGGER_MODE_MANUAL,
+    resource_deps=['watson-admin-api'],
+    labels=['backend'],
+)
+
+local_resource(
+    'migrering-import',
+    cmd='bash scripts/migrering-import-lokalt.sh --ekte',
+    auto_init=False,
+    trigger_mode=TRIGGER_MODE_MANUAL,
+    resource_deps=['watson-admin-api'],
     labels=['backend'],
 )
 

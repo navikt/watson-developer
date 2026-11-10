@@ -227,6 +227,28 @@ Migreringsliste MINE for Z993376: radeIKilde=110, medPersoninnsyn=110, utilgjeng
 - Sett opp en alert på loggmeldingen «Importen feilet» i Nais-konsollen (Loki).
 - Kontroller en kjøring: `SELECT id, startet, ferdig, status, tellinger FROM migrering_import_batch ORDER BY startet DESC;`
 
+## Lokalt med Tilt
+
+Tilt har to knapper under `backend` som kjører importen i appen mot syntetiske filer:
+
+- `migrering-import-dryrun` teller radene uten å lagre noe.
+- `migrering-import` lagrer kandidatene i den lokale databasen.
+
+Begge kjører `scripts/migrering-import-lokalt.sh`. Skriptet lager seks testfiler med `genererTestfiler` i
+`repos/watson-admin-api/build/import-lokal/`, skriver variablene til `.tilt/migrering-import.env` og starter
+`watson-admin-api` på nytt. Ved oppstart leser Tilt fila og sletter den, så bare denne oppstarten kjører importen.
+Resultatet står i loggen til `watson-admin-api` (`Importen starter` og `Sum:`).
+
+Appen leser fra katalogen fordi `MIGRERING_IMPORT_KATALOG` er satt. Variabelen er bare tillatt med profilen `local`.
+Lokalt finnes det ingen bucket, og GCS-klienten trenger ingen emulator.
+
+Ansvarlige i filene er `L999999`, `L900006`, `L900000` og `L900001`. Rader uten ident får `L999999`. Logg inn som en av
+dem og åpne «Migrering» for å se kandidatene. Overstyr med `IDENTER`, `ANTALL` og `STANDARDIDENT` hvis du kjører
+skriptet selv. Fødselsnumrene er syntetiske, 11 siffer som starter på 9.
+
+Importen sletter `IKKE_PABEGYNT`-kandidater uten sak i kategoriene den laster, også dem fra `LokalMigreringSeed`.
+Seeden legger dem inn igjen ved neste vanlige oppstart.
+
 ## Lokal kjøring uten Spring
 
 Den frittstående inngangen `ImportJobbMain` kjører samme logikk fra en katalog, for lokal testing:

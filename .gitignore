@@ -3,3 +3,4 @@
 .DS_Store
 /.pnpm-store/
 /repos/
+/.tilt/
