@@ -116,6 +116,10 @@ Ikke legg til Kotlin-, TypeScript- eller Java-filer her. Applikasjonene bor i si
 - Opprett én pull request i hvert repo som er endret, etter at lokal verifisering er fullført.
 - Legg til `https://nav1.aha.io/features/<Aha!-ID>` i PR-beskrivelsen når oppgaven har en Aha!-ID.
 
+### API-endringer i Kotlin-apper
+
+Når du legger til, endrer eller fjerner et endepunkt, en query-parameter, en request body eller en statuskode i en Kotlin-app, må du oppdatere repoets Postman-filer i samme PR. Finn dem med `find . -name '*.postman_collection.json'`. Oppdater hver collection som allerede har endepunktet.
+
 ### Verifisering før du er ferdig
 
 - **Frontend**: `pnpm verify`
