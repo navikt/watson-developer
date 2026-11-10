@@ -49,7 +49,8 @@ local_resource(
     labels=['backend'],
 )
 
-# Knapper for å teste importen av migreringskandidater med syntetiske filer. Kjøres bare manuelt.
+# Knapper for å teste importen av migreringskandidater fra en lokal katalog i stedet for GCS. Kjøres bare manuelt.
+# Legg egne kildefiler i migrering-importfiler/. Er mappa tom, lages syntetiske filer.
 # Begge starter watson-admin-api på nytt. Resultatet står i loggen til watson-admin-api.
 local_resource(
     'migrering-import-dryrun',
