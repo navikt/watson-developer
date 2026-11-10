@@ -5,6 +5,7 @@
 # 3. Lister avviksfilene
 #
 # Krever at Tilt kjører (fake-gcs og postgres) og at watson-admin-api har migrert databasen minst én gang.
+# IDENTER=L999999 gir alle rader med ident til Bjarte (saksbehandler-analyse). Se frontend: ./scripts/start-sak-frontend.sh
 # Eksempel: DRY_RUN=false ./scripts/import-lokalt.sh
 #           FILER=~/mine-filer DRY_RUN=true ./scripts/import-lokalt.sh
 set -euo pipefail
@@ -18,6 +19,7 @@ BUCKET="${BUCKET:-watson-migrering-lokal}"
 DRY_RUN="${DRY_RUN:-true}"
 FILER="${FILER:-}"
 ANTALL="${ANTALL:-30}"
+IDENTER="${IDENTER:-}"
 STANDARDIDENT="${STANDARDIDENT:-T100001}"
 ENHET_MAPPING="${ENHET_MAPPING:-su685d=D101803,he965h=B101057,vy687j=V122450,bu700k=S117055}"
 # Syntetisk testperson (ikke reell PII, brukes kun lokalt)
@@ -53,7 +55,7 @@ if [[ -z "$FILER" ]]; then
   fi
   echo "→ Genererer testfiler i $FILER"
   rm -rf "$FILER"
-  (cd "$API" && ./gradlew -q genererTestfiler -PdollyFil="$FNR_FIL" -Put="$FILER" -Pantall="$ANTALL")
+  (cd "$API" && ./gradlew -q genererTestfiler -PdollyFil="$FNR_FIL" -Put="$FILER" -Pantall="$ANTALL" ${IDENTER:+-Pident="$IDENTER"})
 fi
 
 for f in "$FILER"/*; do
