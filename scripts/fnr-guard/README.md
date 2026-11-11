@@ -51,6 +51,18 @@ node <watson-developer>/scripts/fnr-guard/scan.mjs --all       # alle sporede fi
 node <watson-developer>/scripts/fnr-guard/scan.mjs --history   # hele historikken, alle brancher
 ```
 
+### Eksportere numrene for gjennomgang
+
+For å sjekke om numrene tilhører ekte personer, kan du skrive dem til en fil. Kjør fra roten av watson-developer:
+
+```sh
+node scripts/fnr-guard/eksporter-funn.mjs ~/fnr-funn.txt --history [repo-sti ...]
+```
+
+Uten repo-stier skanner skriptet alle repoene i `repos/`. Terminalen viser bare antall funn per repo. Fila viser hvert nummer på tvers av repoene, og deretter alle funn med repo, commit, fil og linje.
+
+⚠️ Fila inneholder persondata hvis numrene er ekte. Den får rettigheter `600`, og skriptet nekter å legge den i et git-repo. Slett den når du er ferdig.
+
 ## Når CI finner et nummer
 
 Da er nummeret allerede på GitHub. Behandle det som et personvernavvik, ikke som en vanlig byggfeil:
