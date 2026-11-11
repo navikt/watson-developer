@@ -12,18 +12,51 @@ RED='\033[0;31m'
 NC='\033[0m'
 
 force=false
+status=false
 for arg in "$@"; do
   case "$arg" in
     --force) force=true ;;
-    *) echo "Bruk: $0 [--force]" >&2; exit 2 ;;
+    --status) status=true ;;
+    *) echo "Bruk: $0 [--force | --status]" >&2; exit 2 ;;
   esac
 done
 
-echo "🔧 Installerer fnr-guard Git-hooker"
-if ! (cd "$SCRIPT_DIR/fnr-guard" && npm ci --ignore-scripts >/dev/null 2>&1); then
-  echo -e "${RED}✗${NC} Kunne ikke installere fnr-guard-avhengigheter"
-  exit 1
+# --status: vis om fnr-guard er aktiv i hvert repo, uten å endre noe.
+# Exit 1 hvis noe mangler.
+if [ "$status" = true ]; then
+  missing=0
+  if ! command -v node >/dev/null 2>&1; then
+    echo -e "  ${RED}✗${NC} node mangler, hooken stopper alle commits"
+    missing=$((missing + 1))
+  fi
+  found=0
+  for repo_path in "$REPOS_DIR"/*/; do
+    [ -d "$repo_path" ] || continue
+    git -C "$repo_path" rev-parse --git-dir >/dev/null 2>&1 || continue
+    found=$((found + 1))
+    name="$(basename "$repo_path")"
+    current="$(git -C "$repo_path" config --get core.hooksPath || true)"
+    if [ "$current" = "$HOOKS_PATH" ]; then
+      echo -e "  ${GREEN}✓${NC} $name"
+    elif [ -z "$current" ]; then
+      echo -e "  ${RED}✗${NC} $name: fnr-guard er ikke installert"
+      missing=$((missing + 1))
+    else
+      echo -e "  ${RED}✗${NC} $name: core.hooksPath peker et annet sted ($current)"
+      missing=$((missing + 1))
+    fi
+  done
+  if [ "$found" -eq 0 ]; then
+    echo -e "  ${YELLOW}⚠${NC} Fant ingen repoer i $REPOS_DIR"
+  fi
+  if [ "$missing" -gt 0 ]; then
+    echo -e "  Kjør ${YELLOW}$SCRIPT_DIR/install-git-hooks.sh${NC} utenfor sandboxen for å installere."
+    exit 1
+  fi
+  exit 0
 fi
+
+echo "🔧 Installerer fnr-guard Git-hooker"
 
 installed=0
 skipped=0

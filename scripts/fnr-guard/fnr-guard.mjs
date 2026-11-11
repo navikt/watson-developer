@@ -7,12 +7,8 @@
 // Funnene inneholder aldri selve nummeret, bare linje og type, slik at ingen
 // logg (lokal eller CI) gjengir persondata.
 
-import { createRequire } from "node:module";
-
-const require = createRequire(import.meta.url);
-// fnr() og dnr() i v2.2.1 kaller idnr() og godtar derfor også hnr/tnr.
-// Vi bruker idnr() og filtrerer på type selv.
-const { idnr } = require("@navikt/fnrvalidator");
+// idnr() godtar alle typer (også hnr/tnr). Vi filtrerer på type selv.
+import { idnr } from "./fnrvalidator.mjs";
 
 const BLOKKERTE_TYPER = new Set(["fnr", "dnr"]);
 

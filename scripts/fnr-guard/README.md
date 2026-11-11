@@ -12,7 +12,7 @@ Stopper commits som inneholder gyldige fødselsnumre eller D-numre. Det er et si
 | T-nummer (måned + 80) | Tenor | ✅ slipper gjennom |
 | Ugyldige tall, som `12345678901` | mock | ✅ slipper gjennom |
 
-Numrene valideres med [@navikt/fnrvalidator](https://github.com/navikt/fnrvalidator). Skanneren finner 11 siffer etter hverandre, også med mellomrom, bindestrek eller punktum mellom de 6 første og de 5 siste. Filnavn skannes også. PDF-er skannes når `pdftotext` er installert (`brew install poppler`).
+Numrene valideres med en kopi av [@navikt/fnrvalidator](https://github.com/navikt/fnrvalidator) v2.2.1 i `fnrvalidator.mjs`. Hooken trenger derfor bare Node, ingen `npm install`. Skanneren finner 11 siffer etter hverandre, også med mellomrom, bindestrek eller punktum mellom de 6 første og de 5 siste. Filnavn skannes også. PDF-er skannes når `pdftotext` er installert (`brew install poppler`).
 
 Utskriften inneholder aldri selve nummeret, bare fil, linje og type.
 
@@ -23,9 +23,12 @@ Utskriften inneholder aldri selve nummeret, bare fil, linje og type.
 ```sh
 ./scripts/install-git-hooks.sh          # hopper over repoer med egen core.hooksPath
 ./scripts/install-git-hooks.sh --force  # overstyrer
+./scripts/install-git-hooks.sh --status # viser om hooken er aktiv i hvert repo
 ```
 
-Skriptet setter `core.hooksPath` i hvert repo under `repos/` til `scripts/git-hooks/`. Hooken kjører også repoets egen `.git/hooks/pre-commit` etterpå, hvis den finnes. Mangler Node eller avhengighetene, stopper hooken commiten.
+`scripts/doctor.sh` kjører også statussjekken.
+
+Skriptet setter `core.hooksPath` i hvert repo under `repos/` til `scripts/git-hooks/`. Hooken kjører også repoets egen `.git/hooks/pre-commit` etterpå, hvis den finnes. Mangler Node, stopper hooken commiten.
 
 ## CI
 
@@ -74,7 +77,9 @@ Da er nummeret allerede på GitHub. Behandle det som et personvernavvik, ikke so
 ## Utvikling
 
 ```sh
-cd scripts/fnr-guard && npm ci --ignore-scripts && npm test
+cd scripts/fnr-guard && npm test
 ```
+
+Ved oppdatering av `fnrvalidator.mjs`: sammenlign med ny versjon av `validator.ts` i fnrvalidator og kjør testene.
 
 Testene lager gyldige numre mens de kjører. Skriv aldri et gyldig fnr rett inn i en testfil, for da stopper hooken sin egen commit.

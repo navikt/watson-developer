@@ -45,6 +45,9 @@ test("slipper syntetiske og ugyldige numre gjennom", () => {
   assert.equal(blokkertType(TNR), null);
   assert.equal(blokkertType("12345678901"), null);
   assert.equal(blokkertType("11111111111"), null);
+  // Eksempler fra fnrvalidator: T-nummer og D-nummer + T-nummer
+  assert.equal(blokkertType("10915596784"), null);
+  assert.equal(blokkertType("50846202355"), null);
 });
 
 test("finner numre i JSON-strenger og JSON-tall", () => {

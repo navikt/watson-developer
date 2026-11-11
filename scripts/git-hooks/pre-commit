@@ -11,8 +11,9 @@ fail_setup() {
 }
 
 command -v node >/dev/null 2>&1 || fail_setup "node er ikke installert eller finnes ikke i PATH"
-[ -d "$GUARD/node_modules/@navikt/fnrvalidator" ] || fail_setup "fnr-guard-avhengigheten mangler"
-[ -f "$GUARD/scan.mjs" ] || fail_setup "fnr-guard/scan.mjs mangler"
+for fil in scan.mjs fnr-guard.mjs fnrvalidator.mjs; do
+  [ -f "$GUARD/$fil" ] || fail_setup "fnr-guard/$fil mangler"
+done
 
 if node "$GUARD/scan.mjs" --staged; then
   :
