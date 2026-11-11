@@ -8,7 +8,7 @@ import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { blokkertType, skannTekst, lesUnntak, masker } from "./fnr-guard.mjs";
-import { parseDiff } from "./git-kilder.mjs";
+import { parseDiff, parseNavneliste } from "./git-kilder.mjs";
 
 const HER = dirname(fileURLToPath(import.meta.url));
 
@@ -238,5 +238,38 @@ test("eksporter-funn.mjs: overskriver aldri en eksisterende fil og lager fil med
   } finally {
     rmSync(repo, { recursive: true, force: true });
     rmSync(ut, { recursive: true, force: true });
+  }
+});
+
+test("parseNavneliste: filnavn kan ikke forveksles med commit-markør", () => {
+  const logg = "\0aaa\0\n@@COMMIT x\0n\ny\0\0bbb\0\nc\0";
+  assert.deepEqual([...parseNavneliste(logg, false)], [
+    { commit: "aaa", sti: "@@COMMIT x" },
+    { commit: "aaa", sti: "n\ny" },
+    { commit: "bbb", sti: "c" },
+  ]);
+  assert.deepEqual([...parseNavneliste("@@COMMIT x\0c\0", true)], [
+    { commit: null, sti: "@@COMMIT x" },
+    { commit: null, sti: "c" },
+  ]);
+});
+
+test("scan.mjs: finner fnr i filnavn som starter med @@COMMIT, staged og i range", () => {
+  const { repo, g } = lagRepo();
+  try {
+    g("commit", "-q", "--allow-empty", "-m", "start");
+    const base = g("rev-parse", "HEAD");
+    writeFileSync(join(repo, `@@COMMIT ${FNR}.txt`), "x\n");
+    g("add", ".");
+    const staged = kjørScan(repo, "--staged");
+    assert.equal(staged.status, 1);
+    assert.match(staged.stderr, /@@COMMIT \*{11}\.txt \(filnavn\)/);
+    g("commit", "-q", "-m", "a");
+    const range = kjørScan(repo, "--range", `${base}..HEAD`);
+    assert.equal(range.status, 1);
+    assert.match(range.stderr, /@@COMMIT \*{11}\.txt \(filnavn\)/);
+    assert.doesNotMatch(staged.stderr + range.stderr, new RegExp(FNR));
+  } finally {
+    rmSync(repo, { recursive: true, force: true });
   }
 });

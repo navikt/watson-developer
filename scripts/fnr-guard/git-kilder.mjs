@@ -44,9 +44,11 @@ function diffArgs(kilde) {
 }
 
 function navneArgs(kilde) {
-  const felles = ["--name-only", "--no-renames", "--diff-filter=d"];
+  // -z: filnavn skilles med NUL. %x00%H gir et tomt felt foran hver commit-hash.
+  // Et filnavn kan aldri være tomt, så filnavn kan ikke forveksles med commits.
+  const felles = ["-z", "--name-only", "--no-renames", "--diff-filter=d"];
   if (kilde.type === "staged") return ["diff", "--cached", ...felles];
-  const logg = ["log", ...felles, "--diff-merges=first-parent", `--format=${COMMIT_MERKE}%H`];
+  const logg = ["log", ...felles, "--diff-merges=first-parent", "--format=%x00%H"];
   if (kilde.type === "range") return [...logg, kilde.range];
   return [...logg, "--all"];
 }
@@ -113,17 +115,36 @@ export function tillagteLinjer(kilde, git = lagGit()) {
   return parseDiff(git.tekst(diffArgs(kilde)));
 }
 
+/**
+ * Leser utdata fra navneArgs() og gir { commit, sti }.
+ * Staged: `sti\0sti\0`. Logg: `\0<hash>\0\n<sti>\0<sti>\0` per commit, der
+ * første sti etter hashen har en ledende linjeskift.
+ */
+export function* parseNavneliste(utdata, staged) {
+  const felter = utdata.split("\0");
+  let commit = null;
+  let forsteEtterHash = false;
+  for (let i = 0; i < felter.length; i++) {
+    let felt = felter[i];
+    if (felt === "") {
+      if (!staged && i + 1 < felter.length) {
+        commit = felter[++i];
+        forsteEtterHash = true;
+      }
+      continue;
+    }
+    if (forsteEtterHash && felt.startsWith("\n")) felt = felt.slice(1);
+    forsteEtterHash = false;
+    yield { commit, sti: felt };
+  }
+}
+
 /** Gir { commit, sti, les } for hver fil som legges til eller endres. */
 export function* endredeFiler(kilde, git = lagGit()) {
-  let commit = null;
-  for (const rad of git.tekst(navneArgs(kilde)).split("\n")) {
-    if (rad.startsWith(COMMIT_MERKE)) {
-      commit = rad.slice(COMMIT_MERKE.length).trim();
-    } else if (rad) {
-      const sti = avsiterSti(rad);
-      const ref = kilde.type === "staged" ? `:${sti}` : `${commit}:${sti}`;
-      yield { commit, sti, les: () => git(["show", ref]) };
-    }
+  const staged = kilde.type === "staged";
+  for (const { commit, sti } of parseNavneliste(git.tekst(navneArgs(kilde)), staged)) {
+    const ref = staged ? `:${sti}` : `${commit}:${sti}`;
+    yield { commit, sti, les: () => git(["show", ref]) };
   }
 }
 
