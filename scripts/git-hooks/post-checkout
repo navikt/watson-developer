@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# Sender videre til repoets egen hook. Se _videresend.
+exec "$(dirname "${BASH_SOURCE[0]}")/_videresend" "$(basename "$0")" "$@"

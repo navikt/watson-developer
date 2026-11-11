@@ -1,0 +1,9 @@
+{
+  "name": "fnr-guard",
+  "private": true,
+  "type": "module",
+  "description": "Stopper commits som inneholder gyldige fødselsnumre eller D-numre",
+  "scripts": {
+    "test": "node --test"
+  }
+}

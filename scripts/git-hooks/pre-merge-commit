@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# Kjører fnr-guard på staged endringer, deretter repoets egen hook.
+# Brukes både som pre-commit og pre-merge-commit.
+set -euo pipefail
+
+HOOKS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+GUARD="$HOOKS_DIR/../fnr-guard"
+INSTALL_SCRIPT="$HOOKS_DIR/../install-git-hooks.sh"
+
+fail_setup() {
+  echo "Feil: $1. Kjør $INSTALL_SCRIPT for å installere fnr-guard." >&2
+  exit 1
+}
+
+command -v node >/dev/null 2>&1 || fail_setup "node er ikke installert eller finnes ikke i PATH"
+for fil in scan.mjs fnr-guard.mjs fnrvalidator.mjs git-kilder.mjs; do
+  [ -f "$GUARD/$fil" ] || fail_setup "fnr-guard/$fil mangler"
+done
+
+node "$GUARD/scan.mjs" --staged
+
+exec "$HOOKS_DIR/_videresend" "$(basename "$0")" "$@"

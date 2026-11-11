@@ -1,0 +1,24 @@
+name: FNR-guard
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  fnr-guard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Sjekk ut kode
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Kjør FNR-guard
+        # TODO: bytt til commit-SHA i main etter merge
+        uses: navikt/watson-developer/.github/actions/fnr-guard@REPLACE_WITH_SHA # zizmor: ignore[unpinned-uses]

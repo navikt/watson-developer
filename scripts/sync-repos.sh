@@ -107,4 +107,6 @@ if [ "$failed" -gt 0 ]; then
   exit 1
 fi
 
+"$SCRIPT_DIR/install-git-hooks.sh"
+
 echo "✅ Alle repoer er oppdatert!"

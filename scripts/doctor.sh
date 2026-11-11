@@ -218,6 +218,13 @@ else
 fi
 
 echo ""
+echo -e "${BOLD}fnr-guard (pre-commit mot fødselsnumre):${NC}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if ! "$SCRIPT_DIR/install-git-hooks.sh" --status; then
+    ERRORS=$((ERRORS + 1))
+fi
+
+echo ""
 echo "────────────────────────────────────────"
 
 if [ "$ERRORS" -eq 0 ]; then
