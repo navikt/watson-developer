@@ -46,10 +46,13 @@ export function skannTekst(tekst, unntak = new Set(), forsteLinje = 1) {
   return funn;
 }
 
-/** Erstatter blokkerte numre i en tekst (f.eks. et filnavn) med stjerner før utskrift. */
-export function masker(tekst, unntak = new Set()) {
-  return tekst.replace(KANDIDAT, (hele, a, b) =>
-    !unntak.has(a + b) && blokkertType(a + b) ? "*".repeat(hele.length) : hele,
+/**
+ * Erstatter alle gyldige fnr/D-numre i en tekst (filnavn, feilmeldinger) med
+ * stjerner før utskrift. Unntakslisten gjelder bare blokkering, ikke maskering.
+ */
+export function masker(tekst) {
+  return String(tekst).replace(KANDIDAT, (hele, a, b) =>
+    blokkertType(a + b) ? "*".repeat(hele.length) : hele,
   );
 }
 

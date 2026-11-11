@@ -23,7 +23,7 @@ runs:
 
         case "$EVENT_NAME" in
           pull_request|pull_request_target)
-            args=(--range "$BASE_SHA...$HEAD_SHA")
+            args=(--range "$BASE_SHA..$HEAD_SHA")
             ;;
           push)
             zero_sha=0000000000000000000000000000000000000000

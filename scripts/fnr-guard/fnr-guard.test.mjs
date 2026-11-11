@@ -3,11 +3,12 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
-import { mkdtempSync, writeFileSync, rmSync } from "node:fs";
+import { mkdtempSync, writeFileSync, rmSync, mkdirSync, chmodSync, statSync, readFileSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { blokkertType, skannTekst, lesUnntak, masker } from "./fnr-guard.mjs";
+import { parseDiff } from "./git-kilder.mjs";
 
 const HER = dirname(fileURLToPath(import.meta.url));
 
@@ -81,6 +82,12 @@ test("masker skjuler blokkerte numre", () => {
   assert.equal(masker(`data/${TNR}.json`), `data/${TNR}.json`);
 });
 
+test("masker skjuler også numre i unntakslisten", () => {
+  // Unntak styrer blokkering, ikke hva som kan stå i logger
+  assert.equal(masker(`feil i ${FNR}`), "feil i ***********");
+});
+
+
 test("scan.mjs --staged: stopper commit, skriver ikke nummeret og slipper unntak", () => {
   const repo = mkdtempSync(join(tmpdir(), "fnr-guard-"));
   try {
@@ -101,5 +108,135 @@ test("scan.mjs --staged: stopper commit, skriver ikke nummeret og slipper unntak
     assert.equal(kjør().status, 0);
   } finally {
     rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+// Hjelpere for integrasjonstester mot ekte git-repoer
+function lagRepo() {
+  const repo = mkdtempSync(join(tmpdir(), "fnr-guard-"));
+  const g = (...a) => execFileSync("git", ["-c", "core.hooksPath=/dev/null", "-c", "user.name=t", "-c", "user.email=t@t", "-c", "commit.gpgsign=false", ...a], { cwd: repo }).toString().trim();
+  g("init", "-q", "-b", "main");
+  return { repo, g };
+}
+const kjørScan = (repo, ...args) => spawnSync("node", [join(HER, "scan.mjs"), ...args], { cwd: repo, encoding: "utf8" });
+
+test("parseDiff: innholdslinje som starter med ++ er ikke et filhode", () => {
+  const diff = [
+    "diff --git a/a.txt b/a.txt",
+    "--- a/a.txt",
+    "+++ b/a.txt",
+    "@@ -0,0 +1,2 @@",
+    `+++ ${FNR}`,
+    "+++ /dev/null",
+  ].join("\n");
+  const linjer = [...parseDiff(diff)];
+  assert.equal(linjer.length, 2);
+  assert.deepEqual(linjer[0], { commit: null, fil: "a.txt", linje: 1, tekst: `++ ${FNR}` });
+  assert.equal(linjer[1].fil, "a.txt");
+});
+
+test("scan.mjs --staged: finner fnr på linje som starter med ++", () => {
+  const { repo, g } = lagRepo();
+  try {
+    writeFileSync(join(repo, "a.txt"), `++ ${FNR}\n`);
+    g("add", ".");
+    const r = kjørScan(repo, "--staged");
+    assert.equal(r.status, 1);
+    assert.match(r.stderr, /a\.txt:1 {2}type=fnr/);
+  } finally {
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test("scan.mjs --range: finner fnr som legges til og fjernes i neste commit", () => {
+  const { repo, g } = lagRepo();
+  try {
+    g("commit", "-q", "--allow-empty", "-m", "start");
+    const base = g("rev-parse", "HEAD");
+    writeFileSync(join(repo, "a.json"), `{"fnr": "${FNR}"}\n`);
+    g("add", "."); g("commit", "-q", "-m", "legg til");
+    writeFileSync(join(repo, "a.json"), `{"fnr": "${HNR}"}\n`);
+    g("add", "."); g("commit", "-q", "-m", "fjern");
+    const r = kjørScan(repo, "--range", `${base}...HEAD`);
+    assert.equal(r.status, 1);
+    assert.match(r.stderr, /a\.json:1 {2}type=fnr/);
+    assert.doesNotMatch(r.stdout + r.stderr, new RegExp(FNR.slice(0, 6)));
+  } finally {
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test("scan.mjs --range og --history: finner fnr som bare finnes i en merge-commit", () => {
+  const { repo, g } = lagRepo();
+  try {
+    writeFileSync(join(repo, "a.txt"), "start\n");
+    g("add", "."); g("commit", "-q", "-m", "start");
+    const base = g("rev-parse", "HEAD");
+    g("switch", "-q", "-c", "gren");
+    writeFileSync(join(repo, "b.txt"), "b\n");
+    g("add", "."); g("commit", "-q", "-m", "b");
+    g("switch", "-q", "main");
+    writeFileSync(join(repo, "c.txt"), "c\n");
+    g("add", "."); g("commit", "-q", "-m", "c");
+    g("merge", "-q", "--no-commit", "--no-ff", "gren");
+    writeFileSync(join(repo, "a.txt"), `start ${FNR}\n`);
+    g("add", "."); g("commit", "-q", "-m", "merge");
+    for (const args of [["--range", `${base}..HEAD`], ["--history"]]) {
+      const r = kjørScan(repo, ...args);
+      assert.equal(r.status, 1, args.join(" "));
+      assert.match(r.stderr, /a\.txt:1 {2}type=fnr/);
+    }
+  } finally {
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test("scan.mjs: feilmeldinger maskerer fnr i filstier", () => {
+  const { repo } = lagRepo();
+  try {
+    const r = kjørScan(repo, "--range", `${FNR}..HEAD`);
+    assert.equal(r.status, 2);
+    assert.doesNotMatch(r.stderr, new RegExp(FNR));
+    assert.match(r.stderr, /\*{11}/);
+  } finally {
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test("hooks: commit-msg i .git/hooks kjører fortsatt med core.hooksPath", () => {
+  const { repo, g } = lagRepo();
+  try {
+    const egen = join(repo, ".git", "hooks", "commit-msg");
+    writeFileSync(egen, "#!/bin/sh\ntouch \"$(git rev-parse --git-dir)/commit-msg-kjort\"\n");
+    chmodSync(egen, 0o755);
+    writeFileSync(join(repo, "a.txt"), "a\n");
+    execFileSync("git", ["-c", `core.hooksPath=${join(HER, "..", "git-hooks")}`, "-c", "user.name=t", "-c", "user.email=t@t", "-c", "commit.gpgsign=false", "add", "."], { cwd: repo });
+    execFileSync("git", ["-c", `core.hooksPath=${join(HER, "..", "git-hooks")}`, "-c", "user.name=t", "-c", "user.email=t@t", "-c", "commit.gpgsign=false", "commit", "-q", "-m", "a"], { cwd: repo });
+    assert.ok(existsSync(join(repo, ".git", "commit-msg-kjort")));
+  } finally {
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test("eksporter-funn.mjs: overskriver aldri en eksisterende fil og lager fil med 600", () => {
+  const { repo, g } = lagRepo();
+  const ut = mkdtempSync(join(tmpdir(), "fnr-ut-"));
+  try {
+    writeFileSync(join(repo, "a.txt"), `++ ${FNR}\n`);
+    g("add", "."); g("commit", "-q", "-m", "a");
+    const fil = join(ut, "funn.txt");
+    const r = spawnSync("node", [join(HER, "eksporter-funn.mjs"), fil, "--history", repo], { encoding: "utf8" });
+    assert.equal(r.status, 0, r.stderr);
+    assert.doesNotMatch(r.stdout + r.stderr, new RegExp(FNR));
+    assert.equal(statSync(fil).mode & 0o777, 0o600);
+    assert.match(readFileSync(fil, "utf8"), new RegExp(FNR));
+
+    writeFileSync(join(ut, "finnes.txt"), "behold");
+    const r2 = spawnSync("node", [join(HER, "eksporter-funn.mjs"), join(ut, "finnes.txt"), repo], { encoding: "utf8" });
+    assert.equal(r2.status, 2);
+    assert.equal(readFileSync(join(ut, "finnes.txt"), "utf8"), "behold");
+  } finally {
+    rmSync(repo, { recursive: true, force: true });
+    rmSync(ut, { recursive: true, force: true });
   }
 });

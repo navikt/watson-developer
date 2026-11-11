@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# core.hooksPath peker på denne katalogen, så git ser ikke lenger etter hooker
+# i .git/hooks. Dette skriptet kjører repoets egen hook med samme navn, hvis den
+# finnes, slik at eksisterende hooker (commit-msg, pre-push osv.) virker som før.
+set -euo pipefail
+
+navn="$1"
+shift
+hooks_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+repo_hook="$(git rev-parse --git-common-dir)/hooks/$navn"
+
+if [ -x "$repo_hook" ]; then
+  repo_hook="$(cd "$(dirname "$repo_hook")" && pwd)/$navn"
+  # Unngå løkke hvis .git/hooks av en eller annen grunn er denne katalogen
+  if [ "$repo_hook" != "$hooks_dir/$navn" ]; then
+    exec "$repo_hook" "$@"
+  fi
+fi
+exit 0

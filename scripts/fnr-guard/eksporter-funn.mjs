@@ -7,17 +7,20 @@
 //   node scripts/fnr-guard/eksporter-funn.mjs <utfil> [--history] [repo-sti ...]
 //
 // Uten repo-stier skannes alle git-repoer i watson-developer/repos/.
-// --history skanner hele historikken (alle brancher), ellers sporede filer nå.
+// --history skanner hvert commit i hele historikken (alle brancher, også
+// merge-commits), ellers sporede filer nå. PDF-er skannes når pdftotext finnes.
 //
 // Utfilen inneholder persondata hvis numrene er ekte:
-// - den lages med rettigheter 600 og kan ikke ligge inne i et git-repo
+// - den opprettes atomisk med rettigheter 600, aldri over en eksisterende sti,
+//   og kan ikke ligge inne i et git-repo
 // - slett den når du er ferdig
 
 import { execFileSync } from "node:child_process";
-import { readFileSync, writeFileSync, existsSync, readdirSync } from "node:fs";
+import { openSync, writeSync, closeSync, existsSync, readdirSync } from "node:fs";
 import { resolve, dirname, join, basename } from "node:path";
 import { fileURLToPath } from "node:url";
-import { finnIRad } from "./fnr-guard.mjs";
+import { finnIRad, masker } from "./fnr-guard.mjs";
+import { lagGit, tillagteLinjer, endredeFiler, arbeidstre, pdfTilTekst, erPdf } from "./git-kilder.mjs";
 
 const HER = dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
@@ -29,10 +32,6 @@ if (!utfil) {
   process.exit(2);
 }
 const utsti = resolve(utfil);
-if (existsSync(utsti)) {
-  console.error("Utfilen finnes allerede. Velg et annet navn eller slett den først.");
-  process.exit(2);
-}
 try {
   execFileSync("git", ["-C", dirname(utsti), "rev-parse", "--is-inside-work-tree"], { stdio: "ignore" });
   console.error("Utfilen kan ikke ligge inne i et git-repo. Bruk for eksempel ~/fnr-funn.txt.");
@@ -41,39 +40,49 @@ try {
   // ikke i et repo: ok
 }
 
+// Opprett utfilen før skanningen, atomisk: `wx` feiler hvis stien finnes
+// (også som symlink), og rettighetene settes ved opprettelse.
+let fd;
+try {
+  fd = openSync(utsti, "wx", 0o600);
+} catch (e) {
+  console.error(
+    e.code === "EEXIST"
+      ? "Utfilen finnes allerede. Velg et annet navn eller slett den først."
+      : `Kunne ikke opprette utfilen: ${e.code}`,
+  );
+  process.exit(2);
+}
+
 const reposDir = resolve(HER, "../../repos");
 const repoer = (repoArgs.length ? repoArgs.map((r) => resolve(r)) : readdirSync(reposDir).map((d) => join(reposDir, d)))
   .filter((r) => existsSync(join(r, ".git")));
 
 function skannRepo(cwd) {
-  const git = (a) =>
-    execFileSync("git", ["-c", "core.quotePath=false", ...a], { cwd, maxBuffer: 1024 ** 3 }).toString("utf8");
+  const git = lagGit(cwd);
   const rader = [];
   const legg = (commit, fil, linje, tekst) => {
-    for (const { type, nummer } of finnIRad(tekst)) rader.push({ commit, fil, linje, type, nummer });
+    for (const { type, nummer } of finnIRad(tekst)) rader.push({ commit: commit ?? "", fil, linje, type, nummer });
+  };
+  const leggPdf = (commit, sti, buffer) => {
+    const tekst = buffer && pdfTilTekst(buffer);
+    if (tekst) tekst.split(/\r?\n/).forEach((t, i) => legg(commit, `${sti} (pdf)`, i + 1, t));
   };
 
   if (historikk) {
-    let commit = "", fil = null, nr = 0;
-    for (const rad of git(["log", "--all", "-p", "-U0", "--no-color", "--no-ext-diff", "--format=@@COMMIT %h"]).split("\n")) {
-      if (rad.startsWith("@@COMMIT ")) commit = rad.slice(9);
-      else if (rad.startsWith("+++ ")) fil = rad === "+++ /dev/null" ? null : rad.slice(4).replace(/^"?b\//, "").replace(/"$/, "");
-      else if (rad.startsWith("@@ ")) nr = Number(/\+(\d+)/.exec(rad)?.[1] ?? 0);
-      else if (rad.startsWith("+") && fil) { legg(commit, fil, nr, rad.slice(1)); nr++; }
-    }
-    let c = "";
-    for (const rad of git(["log", "--all", "--name-only", "--format=@@COMMIT %h"]).split("\n")) {
-      if (rad.startsWith("@@COMMIT ")) c = rad.slice(9);
-      else if (rad) legg(c, rad, 0, rad);
+    const kilde = { type: "historikk" };
+    for (const l of tillagteLinjer(kilde, git)) legg(l.commit, l.fil, l.linje, l.tekst);
+    for (const f of endredeFiler(kilde, git)) {
+      legg(f.commit, f.sti, 0, f.sti);
+      if (erPdf(f.sti)) leggPdf(f.commit, f.sti, f.les());
     }
   } else {
-    for (const f of git(["ls-files", "-z"]).split("\0").filter(Boolean)) {
-      legg("", f, 0, f);
-      const full = join(cwd, f);
-      if (!existsSync(full)) continue;
-      const b = readFileSync(full);
-      if (b.includes(0)) continue;
-      b.toString("utf8").split(/\r?\n/).forEach((t, i) => legg("", f, i + 1, t));
+    for (const { sti, les } of arbeidstre(git, cwd)) {
+      legg("", sti, 0, sti);
+      const b = les();
+      if (!b) continue;
+      if (erPdf(sti)) leggPdf("", sti, b);
+      else if (!b.includes(0)) b.toString("utf8").split(/\r?\n/).forEach((t, i) => legg("", sti, i + 1, t));
     }
   }
   return rader;
@@ -85,16 +94,17 @@ for (const repo of repoer) {
   const navn = basename(repo);
   try {
     const rader = skannRepo(repo);
-    const unike = new Map(rader.map((r) => [[r.commit, r.fil, r.linje, r.nummer].join("\t"), r]));
-    for (const r of unike.values()) funn.push({ repo: navn, ...r });
+    const unike = [...new Map(rader.map((r) => [[r.commit, r.fil, r.linje, r.nummer].join("\t"), r])).values()];
+    for (const r of unike) funn.push({ repo: navn, ...r });
     oppsummering.push({
       navn,
-      funn: unike.size,
-      numre: new Set([...unike.values()].map((r) => r.nummer)).size,
-      filer: new Set([...unike.values()].map((r) => r.fil)).size,
+      funn: unike.length,
+      numre: new Set(unike.map((r) => r.nummer)).size,
+      filer: new Set(unike.map((r) => r.fil)).size,
     });
   } catch (e) {
-    oppsummering.push({ navn, feil: e.message.split("\n")[0] });
+    // Feilmeldinger kan inneholde filstier med fnr
+    oppsummering.push({ navn, feil: masker(e.message.split("\n")[0]) });
   }
 }
 
@@ -127,7 +137,8 @@ const innhold = [
   ]),
   "",
 ].join("\n");
-writeFileSync(utsti, innhold, { mode: 0o600 });
+writeSync(fd, innhold);
+closeSync(fd);
 
 // Terminal: bare antall
 const bredde = Math.max(...oppsummering.map((o) => o.navn.length), 4);
