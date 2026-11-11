@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+HOOKS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+GUARD="$HOOKS_DIR/../fnr-guard"
+INSTALL_SCRIPT="$HOOKS_DIR/../install-git-hooks.sh"
+
+fail_setup() {
+  echo "Feil: $1. Kjør $INSTALL_SCRIPT for å installere fnr-guard." >&2
+  exit 1
+}
+
+command -v node >/dev/null 2>&1 || fail_setup "node er ikke installert eller finnes ikke i PATH"
+[ -d "$GUARD/node_modules/@navikt/fnrvalidator" ] || fail_setup "fnr-guard-avhengigheten mangler"
+[ -f "$GUARD/scan.mjs" ] || fail_setup "fnr-guard/scan.mjs mangler"
+
+if node "$GUARD/scan.mjs" --staged; then
+  :
+else
+  exit "$?"
+fi
+
+# core.hooksPath peker hit, så repoets egen hook ligger fortsatt i .git/hooks
+repo_hook="$(git rev-parse --git-common-dir)/hooks/pre-commit"
+if [ -x "$repo_hook" ]; then
+  repo_hook="$(cd "$(dirname "$repo_hook")" && pwd)/$(basename "$repo_hook")"
+  if [ "$repo_hook" != "$HOOKS_DIR/pre-commit" ]; then
+    exec "$repo_hook" "$@"
+  fi
+fi

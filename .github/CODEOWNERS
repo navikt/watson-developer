@@ -1,0 +1,4 @@
+/scripts/fnr-guard/ @navikt/holmes
+/scripts/git-hooks/ @navikt/holmes
+/scripts/install-git-hooks.sh @navikt/holmes
+/.github/actions/fnr-guard/ @navikt/holmes

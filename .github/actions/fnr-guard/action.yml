@@ -1,0 +1,46 @@
+name: FNR-guard
+description: Skann endringer for fødselsnumre.
+runs:
+  using: composite
+  steps:
+    - name: Sett opp Node.js
+      uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+      with:
+        node-version: 24
+
+    - name: Installer avhengigheter
+      shell: bash
+      working-directory: ${{ github.action_path }}/../../../scripts/fnr-guard
+      run: npm ci --ignore-scripts
+
+    - name: Skann endringer
+      shell: bash
+      working-directory: ${{ github.workspace }}
+      env:
+        ACTION_PATH: ${{ github.action_path }}
+        EVENT_NAME: ${{ github.event_name }}
+        BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        BEFORE: ${{ github.event.before }}
+        SHA: ${{ github.sha }}
+      run: |
+        set -euo pipefail
+
+        case "$EVENT_NAME" in
+          pull_request|pull_request_target)
+            args=(--range "$BASE_SHA...$HEAD_SHA")
+            ;;
+          push)
+            zero_sha=0000000000000000000000000000000000000000
+            if [[ -z "$BEFORE" || "$BEFORE" == "$zero_sha" ]] || ! git cat-file -e "${BEFORE}^{commit}" 2>/dev/null; then
+              args=(--all)
+            else
+              args=(--range "$BEFORE..$SHA")
+            fi
+            ;;
+          *)
+            args=(--all)
+            ;;
+        esac
+
+        node "$ACTION_PATH/../../../scripts/fnr-guard/scan.mjs" "${args[@]}"
