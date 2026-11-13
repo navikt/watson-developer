@@ -67,8 +67,14 @@ for repo_path in "$REPOS_DIR"/*/; do
   fi
 
   existing_hooks_path="$(git -C "$repo_path" config --get core.hooksPath || true)"
-  if [ -z "$existing_hooks_path" ] || [ "$existing_hooks_path" = "$HOOKS_PATH" ] || [ "$force" = true ]; then
-    git -C "$repo_path" config core.hooksPath "$HOOKS_PATH"
+  if [ "$existing_hooks_path" = "$HOOKS_PATH" ]; then
+    echo -e "  ${GREEN}✓${NC} $(basename "$repo_path"): fnr-guard installert"
+    installed=$((installed + 1))
+  elif [ -z "$existing_hooks_path" ] || [ "$force" = true ]; then
+    if ! git -C "$repo_path" config core.hooksPath "$HOOKS_PATH"; then
+      echo -e "  ${RED}✗${NC} $(basename "$repo_path"): kunne ikke installere fnr-guard. Installer hooken utenfor sandkassen." >&2
+      exit 1
+    fi
     echo -e "  ${GREEN}✓${NC} $(basename "$repo_path"): fnr-guard installert"
     installed=$((installed + 1))
   else
