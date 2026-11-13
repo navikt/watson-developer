@@ -6,6 +6,12 @@ ROOT_REPO_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 REPOS_DIR="$ROOT_REPO_DIR/repos"
 HOOKS_PATH="$SCRIPT_DIR/git-hooks"
 
+repo_paths=("$ROOT_REPO_DIR")
+for repo_path in "$REPOS_DIR"/*/; do
+  [ -d "$repo_path" ] || continue
+  repo_paths+=("$repo_path")
+done
+
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 RED='\033[0;31m'
@@ -30,10 +36,11 @@ if [ "$status" = true ]; then
     missing=$((missing + 1))
   fi
   found=0
-  for repo_path in "$REPOS_DIR"/*/; do
-    [ -d "$repo_path" ] || continue
+  for repo_path in "${repo_paths[@]}"; do
     git -C "$repo_path" rev-parse --git-dir >/dev/null 2>&1 || continue
-    found=$((found + 1))
+    if [ "$repo_path" != "$ROOT_REPO_DIR" ]; then
+      found=$((found + 1))
+    fi
     name="$(basename "$repo_path")"
     current="$(git -C "$repo_path" config --get core.hooksPath || true)"
     if [ "$current" = "$HOOKS_PATH" ]; then
@@ -60,8 +67,7 @@ echo "🔧 Installerer fnr-guard Git-hooker"
 
 installed=0
 skipped=0
-for repo_path in "$REPOS_DIR"/*/; do
-  [ -d "$repo_path" ] || continue
+for repo_path in "${repo_paths[@]}"; do
   if ! git -C "$repo_path" rev-parse --git-dir >/dev/null 2>&1; then
     continue
   fi
