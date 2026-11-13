@@ -28,7 +28,7 @@ Utskriften inneholder aldri selve nummeret, bare fil, linje og type.
 
 `scripts/doctor.sh` kjører også statussjekken.
 
-Skriptet setter `core.hooksPath` i hvert repo under `repos/` til `scripts/git-hooks/`. Hookene der sender videre til repoets egne hooker i `.git/hooks` (`commit-msg`, `pre-push` osv.), så de virker som før. fnr-guard kjører i `pre-commit` og `pre-merge-commit`. Mangler Node, stopper hooken commiten.
+Skriptet setter `core.hooksPath` i root-repoet og alle Git-repoer under `repos/` til `scripts/git-hooks/`. Hookene der sender videre til repoets egne hooker i `.git/hooks` (`commit-msg`, `pre-push` osv.), så de virker som før. fnr-guard kjører i `pre-commit` og `pre-merge-commit`. Mangler Node, stopper hooken commiten.
 
 ## CI
 
