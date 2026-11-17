@@ -237,6 +237,27 @@ DRY_RUN=true IMPORT_KATALOG=build/import-testfiler \
   -cp build/libs/app.jar org.springframework.boot.loader.launch.PropertiesLauncher
 ```
 
+## Vest-migrering (SAK-67-2)
+
+To Access-filer fra Vest (`M_SV_RESTANSER_VEST2.txt` og `M_SV_VENTER_POL_DOM_VEST2.txt`) oppretter ferdige
+kontrollsaker, ikke kandidater. En leder sender filen til `POST /api/v1/migrering/vest/{SV_RESTANSER|SV_VENTER_POL_DOM}`
+i `watson-admin-api`. Filnavn med `_vest2` plukkes ikke opp av den ordinære importen.
+
+| Fil | Steg | Ansvarlig | Ytelse fra | Dato fra |
+| --- | --- | --- | --- | --- |
+| `SV_RESTANSER` | Strafferettslig vurdering | `NAVIDENT`, ellers ufordelt | `Ytelse` | `SVMOTTAT` |
+| `SV_VENTER_POL_DOM` | Politi (anmeldt) | `NAVIDENT`, ellers `MIGRERING_VEST_POLITI_IDENT` | `SAK` | `SVMOTTATT` |
+
+Felles: kategori Arbeid, misbrukstype Hvit inntekt, kilde Access migrering, enhet Vest, `legacyKilde=SV` og `legacyPid=PID`.
+Politisaker får anmeldt beløp fra `STRBELOP` (komma som desimaltegn, tom blir 0), politidistrikt fra `POLITIDISTRIKT2`
+(`?` først blir `Ø`, tom gir avvik) og saksreferanse fra `POLSAKNR`.
+
+Parametere: `dryRun` (standard `true`), `maks` (standard 100, høyst 200) og `fra`. Send samme fil på nytt til `gjenstaar`
+er 0. Rader med kilde `SV` og samme PID hoppes over. Svaret har tellere og radnummer med årsakskode, aldri fnr.
+
+Test lokalt med `./scripts/vest-lokalt.sh` (egne filer med `FILER=<katalog>`, bare tørrkjøring med `OPPRETT=false`).
+Start backend med `MIGRERING_VEST_POLITI_IDENT=<ident>` for å teste politisaker uten NAVIDENT.
+
 ## Viktig om migrasjonene
 
 V13–V17 er anvendt i dev (og senere prod). **Ikke endre dem**, heller ikke kommentarer: Flyway sjekker innholdet, og en
