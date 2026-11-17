@@ -121,10 +121,11 @@ local_resource(
     labels=['frontend'],
 )
 
+# pdfgenrs publiseres bare for linux/amd64. På Mac med Apple Silicon kjører Docker imaget med emulering.
 local_resource(
     'watson-pdfgen',
-    cmd='cd repos/watson-pdfgen && docker build --tag watson-pdfgen:local .',
-    serve_cmd='docker rm -f watson-pdfgen >/dev/null 2>&1 || true; docker run --rm --name watson-pdfgen -p 8082:8080 watson-pdfgen:local',
+    cmd='cd repos/watson-pdfgen && docker build --platform linux/amd64 --tag watson-pdfgen:local .',
+    serve_cmd='docker rm -f watson-pdfgen >/dev/null 2>&1 || true; docker run --rm --platform linux/amd64 --name watson-pdfgen -p 8082:8080 watson-pdfgen:local',
     readiness_probe=probe(
         http_get=http_get_action(port=8082, path='/internal/is_ready'),
         period_secs=5,
