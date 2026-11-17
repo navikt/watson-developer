@@ -17,6 +17,8 @@ DB_PORT="${DB_PORT:-5432}"
 DB_NAME="${DB_NAME:-watson_admin}"
 DB_USER="${DB_USER:-postgres}"
 DB_PASS="${DB_PASS:-postgres}"
+# Tilt kjører backend i eget schema, se Tiltfile. Tom verdi bruker standard search_path.
+DB_SCHEMA="${DB_SCHEMA-watson_migrering_local}"
 
 echo "→ Henter token fra mock-oauth2-server..."
 TOKEN=$(curl -sf -X POST "$TOKEN_URL" \
@@ -87,6 +89,7 @@ elif ! command -v psql >/dev/null 2>&1; then
   echo "    Installer postgresql-client og kjør scriptet på nytt"
 else
   export PGPASSWORD="$DB_PASS"
+  [[ -z "$DB_SCHEMA" ]] || export PGOPTIONS="-c search_path=$DB_SCHEMA"
   DATES=('2024-01-15T10:00:00Z' '2024-02-20T09:00:00Z' '2024-04-05T11:00:00Z' '2024-06-12T14:00:00Z'
     '2024-08-19T10:30:00Z' '2024-10-28T08:00:00Z' '2025-01-08T09:00:00Z' '2025-02-14T11:00:00Z'
     '2025-04-03T10:00:00Z' '2025-05-22T13:00:00Z' '2025-07-11T09:30:00Z' '2025-11-04T10:00:00Z'

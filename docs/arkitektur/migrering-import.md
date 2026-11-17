@@ -248,3 +248,14 @@ Deployer noen eldre kode til dev mens V13–V17 er anvendt, får de `Detected ap
 Tabellen `migrering_import_batch` og kolonnen `migreringskandidat.import_batch_id` slettes sammen med
 `migreringskandidat`. Se `migrering-fjerning.md`. Slett også pakken `migrering/importjobb`, variablene
 `MIGRERING_IMPORT_*` i `nais.yaml` og `dev.json`, og valgene i `deploy-to-dev.yaml`.
+
+### Lokal test mot GCS-emulator
+
+Tilt starter `fake-gcs` (fake-gcs-server) i kind på port 4443. Klienten bruker emulatoren uten credentials når `STORAGE_EMULATOR_HOST` er satt. `scripts/import-lokalt.sh` oppretter bucket, laster opp filer og kjører importjobben mot lokal postgres. Avviksfilene havner i `avvik/` i bucketen.
+
+```bash
+DRY_RUN=false ./scripts/import-lokalt.sh                 # genererte filer
+FILER=~/mine-filer DRY_RUN=true ./scripts/import-lokalt.sh # egne filer, for eksempel uten ENHET-kolonne
+```
+
+Genererte filer bruker fem enheter fra mappingen og én ukjent (`ukjent01`), og noen rader mangler `Ident`. Slik treffer alle grenene i identvalget. Endre `ENHET_MAPPING`, `STANDARDIDENT` og `ANTALL` for å prøve andre kombinasjoner.

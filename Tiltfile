@@ -13,11 +13,19 @@
 k8s_yaml([
     'k8s/watson-admin-api/postgres.yaml',
     'k8s/watson-admin-api/mock-oauth2-server.yaml',
+    'k8s/watson-admin-api/fake-gcs.yaml',
 ])
 
 k8s_resource(
     'postgres',
     port_forwards=['5432:5432'],
+    labels=['infra'],
+)
+
+# Lokal GCS-emulator for migreringsimporten. Se scripts/import-lokalt.sh
+k8s_resource(
+    'fake-gcs',
+    port_forwards=['4443:4443'],
     labels=['infra'],
 )
 
@@ -28,10 +36,11 @@ k8s_resource(
 )
 
 # watson-admin-api kjører lokalt som long-running prosess.
+# Isolert schema: lar Flyway starte fra V1 uten å reparere/slette lokal public-data.
 # Manuell restart via Tilt UI eller: tilt trigger watson-admin-api
 local_resource(
     'watson-admin-api',
-    serve_cmd='cd repos/watson-admin-api && export JAVA_HOME="$(/usr/libexec/java_home -v 21)" && export PATH="$JAVA_HOME/bin:$PATH" && SPRING_PROFILES_ACTIVE=local ./gradlew bootRun',
+    serve_cmd='cd repos/watson-admin-api && export JAVA_HOME="$(/usr/libexec/java_home -v 21)" && export PATH="$JAVA_HOME/bin:$PATH" && SPRING_PROFILES_ACTIVE=local SPRING_DATASOURCE_URL="jdbc:postgresql://localhost:5432/watson_admin?currentSchema=watson_migrering_local" SPRING_FLYWAY_SCHEMAS=watson_migrering_local SPRING_FLYWAY_DEFAULT_SCHEMA=watson_migrering_local SPRING_FLYWAY_CREATE_SCHEMAS=true SPRING_FLYWAY_BASELINE_ON_MIGRATE=false ./gradlew bootRun',
     resource_deps=['postgres', 'mock-oauth2-server', 'watson-pdfgen', 'watson-gotenberg'],
     readiness_probe=probe(
         http_get=http_get_action(port=8080, path='/actuator/health'),
