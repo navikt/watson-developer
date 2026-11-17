@@ -1,92 +1,65 @@
 #!/usr/bin/env bash
+# Installerer fnr-guard (@navikt/fnr-guard) som pre-commit-hook i watson-developer
+# og alle repoer i repos/. Hvilke repoer som omfattes, står i .fnr-guard.json.
+#
+#   ./scripts/install-git-hooks.sh           installer, hopper over repoer med egen core.hooksPath
+#   ./scripts/install-git-hooks.sh --force   overstyr eksisterende core.hooksPath
+#   ./scripts/install-git-hooks.sh --status  vis status uten å endre noe (exit 1 hvis noe mangler)
+#
+# Kjøres av clone-repos.sh og sync-repos.sh. Se https://github.com/navikt/fnr-guard
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_REPO_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-REPOS_DIR="$ROOT_REPO_DIR/repos"
-HOOKS_PATH="$SCRIPT_DIR/git-hooks"
+FNR_GUARD="$ROOT_REPO_DIR/node_modules/.bin/fnr-guard"
+# Tidligere versjon la hookene her. Repoer som fortsatt peker hit, flyttes over.
+GAMMEL_HOOKS_PATH="$SCRIPT_DIR/git-hooks"
 
-repo_paths=("$ROOT_REPO_DIR")
-for repo_path in "$REPOS_DIR"/*/; do
-  [ -d "$repo_path" ] || continue
-  repo_paths+=("$repo_path")
-done
-
-GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 RED='\033[0;31m'
 NC='\033[0m'
 
-force=false
-status=false
+modus=install
+force=()
 for arg in "$@"; do
   case "$arg" in
-    --force) force=true ;;
-    --status) status=true ;;
+    --force) force=(--force) ;;
+    --status) modus=status ;;
     *) echo "Bruk: $0 [--force | --status]" >&2; exit 2 ;;
   esac
 done
 
-# --status: vis om fnr-guard er aktiv i hvert repo, uten å endre noe.
-# Exit 1 hvis noe mangler.
-if [ "$status" = true ]; then
-  missing=0
-  if ! command -v node >/dev/null 2>&1; then
-    echo -e "  ${RED}✗${NC} node mangler, hooken stopper alle commits"
-    missing=$((missing + 1))
-  fi
-  found=0
-  for repo_path in "${repo_paths[@]}"; do
-    git -C "$repo_path" rev-parse --git-dir >/dev/null 2>&1 || continue
-    if [ "$repo_path" != "$ROOT_REPO_DIR" ]; then
-      found=$((found + 1))
-    fi
-    name="$(basename "$repo_path")"
-    current="$(git -C "$repo_path" config --get core.hooksPath || true)"
-    if [ "$current" = "$HOOKS_PATH" ]; then
-      echo -e "  ${GREEN}✓${NC} $name"
-    elif [ -z "$current" ]; then
-      echo -e "  ${RED}✗${NC} $name: fnr-guard er ikke installert"
-      missing=$((missing + 1))
-    else
-      echo -e "  ${RED}✗${NC} $name: core.hooksPath peker et annet sted ($current)"
-      missing=$((missing + 1))
-    fi
-  done
-  if [ "$found" -eq 0 ]; then
-    echo -e "  ${YELLOW}⚠${NC} Fant ingen repoer i $REPOS_DIR"
-  fi
-  if [ "$missing" -gt 0 ]; then
-    echo -e "  Kjør ${YELLOW}$SCRIPT_DIR/install-git-hooks.sh${NC} utenfor sandboxen for å installere."
-    exit 1
-  fi
-  exit 0
+if ! command -v node >/dev/null 2>&1; then
+  echo -e "  ${RED}✗${NC} node mangler, og hooken stopper alle commits. Installer Node 20+."
+  exit 1
 fi
 
-echo "🔧 Installerer fnr-guard Git-hooker"
+if [ ! -x "$FNR_GUARD" ]; then
+  echo -e "  ${RED}✗${NC} fnr-guard er ikke installert. Kjør ${YELLOW}pnpm install${NC} i $ROOT_REPO_DIR."
+  echo "    Krever tilgang til GitHub Packages, se https://github.com/navikt/fnr-guard#før-du-starter-tilgang-til-github-packages"
+  exit 1
+fi
 
-installed=0
-skipped=0
-for repo_path in "${repo_paths[@]}"; do
-  if ! git -C "$repo_path" rev-parse --git-dir >/dev/null 2>&1; then
-    continue
-  fi
+cd "$ROOT_REPO_DIR"
 
-  existing_hooks_path="$(git -C "$repo_path" config --get core.hooksPath || true)"
-  if [ "$existing_hooks_path" = "$HOOKS_PATH" ]; then
-    echo -e "  ${GREEN}✓${NC} $(basename "$repo_path"): fnr-guard installert"
-    installed=$((installed + 1))
-  elif [ -z "$existing_hooks_path" ] || [ "$force" = true ]; then
-    if ! git -C "$repo_path" config core.hooksPath "$HOOKS_PATH"; then
-      echo -e "  ${RED}✗${NC} $(basename "$repo_path"): kunne ikke installere fnr-guard. Installer hooken utenfor sandkassen." >&2
+if [ "$modus" = status ]; then
+  exec "$FNR_GUARD" status
+fi
+
+# Fjern core.hooksPath som peker til de gamle hookene i scripts/git-hooks,
+# ellers hopper fnr-guard install over repoet.
+for repo_path in "$ROOT_REPO_DIR" "$ROOT_REPO_DIR"/repos/*/; do
+  git -C "$repo_path" rev-parse --git-dir >/dev/null 2>&1 || continue
+  naa="$(git -C "$repo_path" config --get core.hooksPath || true)"
+  if [ "$naa" = "$GAMMEL_HOOKS_PATH" ]; then
+    if ! git -C "$repo_path" config --unset core.hooksPath; then
+      echo -e "  ${RED}✗${NC} $(basename "$repo_path"): kunne ikke fjerne gammel hook. Kjør skriptet utenfor sandboxen." >&2
       exit 1
     fi
-    echo -e "  ${GREEN}✓${NC} $(basename "$repo_path"): fnr-guard installert"
-    installed=$((installed + 1))
-  else
-    echo -e "  ${YELLOW}⚠${NC} $(basename "$repo_path"): eksisterende core.hooksPath beholdt ($existing_hooks_path); bruk --force for å overstyre"
-    skipped=$((skipped + 1))
   fi
 done
 
-echo "✅ Ferdig: $installed installert, $skipped hoppet over"
+if ! "$FNR_GUARD" install ${force[@]+"${force[@]}"}; then
+  echo -e "  ${YELLOW}⚠${NC} Ikke alle repoer fikk hooken. Bruk --force for å overstyre, eller kjør utenfor sandboxen."
+  exit 1
+fi

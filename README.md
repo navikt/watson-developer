@@ -65,6 +65,27 @@ Det endrer ikke brancher, arbeidsfiler eller globale Git-innstillinger.
 
 ---
 
+## fnr-guard
+
+[fnr-guard](https://github.com/navikt/fnr-guard) stopper commits som inneholder gyldige fødselsnumre eller D-numre, i `watson-developer` og i alle repoene under `repos/`. `clone-repos.sh` og `sync.sh` installerer den. Den hentes som devDependency fra GitHub Packages, så `~/.npmrc` må ha et token med `read:packages` (se [fnr-guard-README](https://github.com/navikt/fnr-guard#før-du-starter-tilgang-til-github-packages)).
+
+```bash
+./scripts/install-git-hooks.sh           # installer på nytt
+./scripts/install-git-hooks.sh --status  # vis status, kjøres også av doctor.sh
+```
+
+Hvilke repoer og mapper som skannes, står i `.fnr-guard.json`. Hvis et tall bare ser ut som et fødselsnummer, kan du unnta linjen med `fnr-guard-ignore: <begrunnelse>`. Se [unntak](https://github.com/navikt/fnr-guard/blob/main/docs/unntak.md).
+
+For å sjekke om funn i historikken er ekte personer, kan du eksportere numrene til en fil utenfor repoet:
+
+```bash
+node scripts/eksporter-funn.mjs ~/fnr-funn.txt --history
+```
+
+⚠️ Fila inneholder persondata hvis numrene er ekte. Slett den når du er ferdig.
+
+---
+
 ## Starte lokalmiljøet interaktivt
 
 ```bash
