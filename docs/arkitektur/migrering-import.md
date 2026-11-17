@@ -30,7 +30,7 @@ Sluttsummen skal gå opp: `rader i filen = importert + mangler_ident + ugyldig +
 | `M_register_AAP` | `REGISTER_AAP` | `NKA_AAP` | `PABEGYNTDATO` | `ID` |
 
 Filene har `;` som skilletegn og en headerlinje. Kolonnene finnes via navn, så rekkefølgen er likegyldig. Alle
-filer må ha kolonnene `FNR`, datokolonnen og PID-kolonnen over, pluss minst én av `NAVIDENT` og `Ident`
+filer må ha kolonnene `FNR`, `ENHET`, datokolonnen og PID-kolonnen over, pluss minst én av `NAVIDENT` og `Ident`
 (NAV-ident for ansvarlig saksbehandler). SV- og tipsfilene har `NAVIDENT`; dagpenger og AAP har `Ident`.
 Datoformat er `d.M.yyyy HH.mm.ss`. `PROSJEKTIDENT` er valgfri og brukes bare til ansvarlig (se under). Andre kolonner, blant annet `PAABEGYNT`, ignoreres. Mangler en filen både `NAVIDENT` og `Ident`, stopper importen i stedet for å flagge alle rader.
 
@@ -49,13 +49,14 @@ Rekkefølgen er:
 
 1. `NAVIDENT`
 2. `Ident`
-3. ansvarlig for `PROSJEKTIDENT` i `MIGRERING_IMPORT_PROSJEKTANSVARLIGE`
-4. `MIGRERING_IMPORT_STANDARDIDENT`
-5. ellers `mangler_ident` (bare dry-run)
+3. ansvarlig for `ENHET` i `MIGRERING_IMPORT_ENHETMAPPING`
+4. ansvarlig for `PROSJEKTIDENT` i `MIGRERING_IMPORT_PROSJEKTANSVARLIGE`
+5. `MIGRERING_IMPORT_STANDARDIDENT`
+6. ellers `mangler_ident` (bare dry-run)
 
-Begge variablene ligger i Nais-configen `watson-migrering-import` (`envFrom`). `MIGRERING_IMPORT_STANDARDIDENT` er påkrevd
-ved ekte kjøring. `MIGRERING_IMPORT_PROSJEKTANSVARLIGE` er valgfri og har formen `vest=Z190190,ost=Z190191`. Nøkkelen
-sammenlignes med `PROSJEKTIDENT` uten hensyn til store og små bokstaver. Ugyldig format, ugyldig ident eller samme prosjekt
+Variablene ligger i Nais-configen `watson-migrering-import` (`envFrom`). `MIGRERING_IMPORT_STANDARDIDENT` er påkrevd
+ved ekte kjøring. `MIGRERING_IMPORT_ENHETMAPPING` er valgfri og har formen `su685d=D101803,he965h=B101057`. `MIGRERING_IMPORT_PROSJEKTANSVARLIGE` er valgfri og har formen `vest=Z190190,ost=Z190191`. Nøklene
+sammenlignes med `ENHET` og `PROSJEKTIDENT` uten hensyn til store og små bokstaver. Ugyldig format, ugyldig ident eller samme prosjekt
 to ganger stopper importen. Feilmeldingen nevner elementnummer, aldri verdiene. Config leses ved oppstart, så poden må
 restartes etter endring.
 
