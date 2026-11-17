@@ -159,6 +159,59 @@ Tiltak, i prioritert rekkefølge:
 
 ---
 
+## Feilsøking: Testcontainers finner ikke Docker (Rancher Desktop)
+
+Symptom: integrasjonstester i `watson-admin-api` (alt som arver `PostgresIntegrationTestSupport`) feiler
+med `ApplicationContext failure threshold (1) exceeded`. Rotårsaken står lenger ned i testrapporten
+(`build/test-results/test/*.xml`), og er en av disse:
+
+```
+Could not find a valid Docker environment
+UnixSocketClientProviderStrategy: NoSuchFileException (/var/run/docker.sock)
+```
+
+eller, etter at første feil er rettet:
+
+```
+Container startup failed for image testcontainers/ryuk
+error while creating mount source path '/Users/<deg>/.rd/docker.sock': operation not supported
+```
+
+**Årsak:** Rancher Desktop legger Docker-socketen på `~/.rd/docker.sock`, ikke på `/var/run/docker.sock`
+som Testcontainers leter etter. `docker context` brukes ikke av Testcontainers. Ryuk (Testcontainers sin
+opprydder) monterer socketen inn i en container og trenger stien slik den ser ut inni Rancher-VM-en.
+
+**Fiks, en gang per maskin (kjør utenfor cplt-sandboxen):**
+
+1. Opprett `~/.testcontainers.properties` med:
+
+   ```properties
+   docker.host=unix:///Users/<deg>/.rd/docker.sock
+   ```
+
+   Bytt `<deg>` med brukernavnet ditt. `~` fungerer ikke i verdien.
+
+2. Sett miljøvariabelen for Ryuk i `~/.zshrc`:
+
+   ```bash
+   export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock
+   ```
+
+   Dette er bare en miljøvariabel. Nøkkelen finnes ikke i `.testcontainers.properties`.
+
+3. Åpne et nytt skall. IntelliJ må startes på nytt fra et skall som har variabelen, ellers ser den
+   den ikke. Verifiser med:
+
+   ```bash
+   cd repos/watson-admin-api
+   ./gradlew test --tests '*DokumentKommentarServiceIntegrationTest'
+   ```
+
+> **Merk:** cplt-sandboxen blokkerer Docker-socketen. Testene som starter Postgres i container kan derfor
+> ikke kjøres av agenten, bare av deg i en vanlig terminal.
+
+---
+
 ## Fallback: docker-compose
 
 `watson-admin-api` har en `docker-compose.yml` som alternativ til Tilt:
