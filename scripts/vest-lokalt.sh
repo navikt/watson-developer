@@ -55,34 +55,49 @@ TOKEN=$(curl -sf -X POST "$AUTH/azuread/token" \
   python3 -c "import sys,json; print(json.load(sys.stdin)['access_token'])")
 echo -e "${GREEN}✓ OK${NC} token for $BRUKERPROFIL"
 
-kall() { # $1 = fil-enum, $2 = filnavn, $3 = dryRun
+# Kaller endepunktet, skriver oppsummeringen og setter OPPRETTET, GJENSTAAR og NESTE_FRA.
+kall() { # $1 = fil-enum, $2 = filnavn, $3 = dryRun, $4 = fra
   local svar
-  svar=$(curl -s -X POST "$API/api/v1/migrering/vest/$1?dryRun=$3&maks=$MAKS" \
+  svar=$(curl -s -X POST "$API/api/v1/migrering/vest/$1?dryRun=$3&maks=$MAKS&fra=${4:-0}" \
     -H "Authorization: Bearer $TOKEN" -H "Content-Type: text/plain" --data-binary "@$FILER/$2")
-  python3 -c "
+  local tall
+  tall=$(python3 -c "
 import sys, json
 try:
     d = json.loads(sys.argv[1])
 except ValueError:
-    print('  ✗ ugyldig svar: ' + sys.argv[1][:200]); sys.exit(1)
+    print('  ✗ ugyldig svar: ' + sys.argv[1][:200], file=sys.stderr); sys.exit(1)
 if 'opprettet' not in d:
-    print('  ✗ ' + json.dumps(d, ensure_ascii=False)[:300]); sys.exit(1)
-print('  rader={antallRaderIFil} opprettet={opprettet} alleredeOpprettet={alleredeOpprettet} gjenstaar={gjenstaar} tomtBelop={tomtBelop}'.format(**d))
-for a in d['avvik']: print('  avvik linje {linjenummer}: {arsak}'.format(**a))
-for a in d['feil']: print('  feil  linje {linjenummer}: {arsak}'.format(**a))
-" "$svar"
+    print('  ✗ ' + json.dumps(d, ensure_ascii=False)[:300], file=sys.stderr); sys.exit(1)
+print('  rader={antallRaderIFil} opprettet={opprettet} alleredeOpprettet={alleredeOpprettet} gjenstaar={gjenstaar} tomtBelop={tomtBelop}'.format(**d), file=sys.stderr)
+for a in d['avvik']: print('  avvik linje {linjenummer}: {arsak}'.format(**a), file=sys.stderr)
+for a in d['feil']: print('  feil  linje {linjenummer}: {arsak}'.format(**a), file=sys.stderr)
+print(d['opprettet'], d['gjenstaar'], d['nesteFra'])
+" "$svar") || exit 1
+  read -r OPPRETTET GJENSTAAR NESTE_FRA <<< "$tall"
 }
 
 for par in "SV_RESTANSER:$RESTANSER" "SV_VENTER_POL_DOM:$POLITI"; do
   fil="${par%%:*}"; navn="${par#*:}"
   echo "→ $fil (tørrkjøring)"
   kall "$fil" "$navn" true
-  if [[ "$OPPRETT" == "true" ]]; then
-    echo "→ $fil (oppretter)"
-    kall "$fil" "$navn" false
-    echo "→ $fil (på nytt, skal ikke opprette noe)"
-    kall "$fil" "$navn" false
-  else
+  if [[ "$OPPRETT" != "true" ]]; then
     echo -e "${YELLOW}⟳ hopper over opprettelse (OPPRETT=false)${NC}"
+    continue
   fi
+  # Opprett batch for batch til et kall ikke oppretter noe mer
+  fra=0
+  for _ in $(seq 1 100); do
+    echo "→ $fil (oppretter, fra=$fra)"
+    kall "$fil" "$navn" false "$fra"
+    fra="$NESTE_FRA"
+    [[ "$OPPRETTET" -gt 0 ]] || break
+  done
+  echo "→ $fil (på nytt, skal ikke opprette noe)"
+  kall "$fil" "$navn" false 0
+  if [[ "$OPPRETTET" -ne 0 ]]; then
+    echo -e "${RED}✗ gjentakelsen opprettet $OPPRETTET saker, idempotensen svikter${NC}" >&2
+    exit 1
+  fi
+  echo -e "${GREEN}✓ OK${NC} $fil er idempotent"
 done
