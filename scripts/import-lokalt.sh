@@ -43,9 +43,20 @@ else
 fi
 
 # Rydder forrige kjøring slik at filene er de du ser nå
-for obj in $(curl -sf "$EMULATOR/storage/v1/b/$BUCKET/o" | python3 -c "import sys,json; [print(o['name'].replace('/','%2F')) for o in json.load(sys.stdin).get('items',[])]"); do
+# Ett URL-kodet objektnavn per linje, siden navn kan inneholde mellomrom og andre spesialtegn
+while IFS= read -r obj; do
+  [[ -n "$obj" ]] || continue
   curl -sf -X DELETE "$EMULATOR/storage/v1/b/$BUCKET/o/$obj" >/dev/null
-done
+done < <(curl -sf "$EMULATOR/storage/v1/b/$BUCKET/o" | python3 -c "
+import sys, json, urllib.parse
+for o in json.load(sys.stdin).get('items', []):
+    print(urllib.parse.quote(o['name'], safe=''))
+")
+
+# Gjør relative stier absolutte før vi bytter katalog til $API
+abs() { echo "$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"; }
+[[ -z "$FILER" ]] || FILER="$(abs "$FILER")"
+[[ -z "$FNR_FIL" ]] || FNR_FIL="$(abs "$FNR_FIL")"
 
 if [[ -z "$FILER" ]]; then
   FILER="$API/build/import-testfiler"
@@ -61,7 +72,8 @@ fi
 for f in "$FILER"/*; do
   [[ -f "$f" ]] || continue
   navn="$(basename "$f")"
-  curl -sf -X POST "$EMULATOR/upload/storage/v1/b/$BUCKET/o?uploadType=media&name=$navn" \
+  navn_kodet="$(python3 -c "import sys, urllib.parse; print(urllib.parse.quote(sys.argv[1], safe=''))" "$navn")"
+  curl -sf -X POST "$EMULATOR/upload/storage/v1/b/$BUCKET/o?uploadType=media&name=$navn_kodet" \
     -H 'Content-Type: text/csv' --data-binary "@$f" >/dev/null
   echo -e "${GREEN}✓ Lastet opp $navn${NC}"
 done
