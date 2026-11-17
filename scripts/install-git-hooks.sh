@@ -34,16 +34,30 @@ if ! command -v node >/dev/null 2>&1; then
   exit 1
 fi
 
-if [ ! -x "$FNR_GUARD" ]; then
-  echo -e "  ${RED}✗${NC} fnr-guard er ikke installert. Kjør ${YELLOW}pnpm install${NC} i $ROOT_REPO_DIR."
-  echo "    Krever tilgang til GitHub Packages, se https://github.com/navikt/fnr-guard#før-du-starter-tilgang-til-github-packages"
-  exit 1
-fi
+NPMRC_HJELP="Krever tilgang til GitHub Packages, se https://github.com/navikt/fnr-guard#før-du-starter-tilgang-til-github-packages"
 
 cd "$ROOT_REPO_DIR"
 
+# --status skriver ingenting, så den installerer heller ikke pakken.
 if [ "$modus" = status ]; then
+  if [ ! -x "$FNR_GUARD" ]; then
+    echo -e "  ${RED}✗${NC} fnr-guard er ikke installert. Kjør ${YELLOW}$SCRIPT_DIR/install-git-hooks.sh${NC}."
+    exit 1
+  fi
   exec "$FNR_GUARD" status
+fi
+
+# Hent eller oppdater pakken. Dette ligger her og ikke bare i sync-repos.sh,
+# slik at første ./sync.sh etter at hookene ble flyttet fullfører migreringen
+# selv om den kjører en eldre sync-repos.sh.
+echo "📦 Installerer fnr-guard"
+if ! pnpm install --frozen-lockfile --silent; then
+  echo -e "  ${RED}✗${NC} pnpm install feilet. $NPMRC_HJELP" >&2
+  exit 1
+fi
+if [ ! -x "$FNR_GUARD" ]; then
+  echo -e "  ${RED}✗${NC} fant ikke $FNR_GUARD etter pnpm install." >&2
+  exit 1
 fi
 
 # Fjern core.hooksPath som peker til de gamle hookene i scripts/git-hooks,

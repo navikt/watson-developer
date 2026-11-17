@@ -93,12 +93,6 @@ if [ "$failed" -gt 0 ]; then
   exit 1
 fi
 
-# fnr-guard hentes som devDependency fra GitHub Packages
-echo "📦 Installerer fnr-guard"
-if ! (cd "$SCRIPT_DIR/.." && pnpm install --frozen-lockfile --silent); then
-  echo -e "${RED}✗${NC} pnpm install feilet. Sjekk tilgangen til GitHub Packages i ~/.npmrc, se https://github.com/navikt/fnr-guard"
-  exit 1
-fi
 "$SCRIPT_DIR/install-git-hooks.sh"
 
 echo "✅ Ferdig!"
