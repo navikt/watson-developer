@@ -4,7 +4,7 @@
 // bare antall.
 //
 // Bruk:
-//   node scripts/fnr-guard/eksporter-funn.mjs <utfil> [--history] [repo-sti ...]
+//   node scripts/eksporter-funn.mjs <utfil> [--history] [repo-sti ...]
 //
 // Uten repo-stier skannes alle git-repoer i watson-developer/repos/.
 // --history skanner hvert commit i hele historikken (alle brancher, også
@@ -19,8 +19,10 @@ import { execFileSync } from "node:child_process";
 import { openSync, writeSync, closeSync, existsSync, readdirSync } from "node:fs";
 import { resolve, dirname, join, basename } from "node:path";
 import { fileURLToPath } from "node:url";
-import { finnIRad, masker } from "./fnr-guard.mjs";
-import { lagGit, tillagteLinjer, endredeFiler, arbeidstre, pdfTilTekst, erPdf } from "./git-kilder.mjs";
+// Kjernen fra @navikt/fnr-guard. Eksporten er bevisst ikke en del av den
+// offentlige pakken, siden den skriver ekte numre til fil.
+import { finnIRad, masker } from "@navikt/fnr-guard/src/kjerne.mjs";
+import { lagGit, tillagteLinjer, endredeFiler, arbeidstre, pdfTilTekst, erPdf } from "@navikt/fnr-guard/src/git-kilder.mjs";
 
 const HER = dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
@@ -54,7 +56,7 @@ try {
   process.exit(2);
 }
 
-const reposDir = resolve(HER, "../../repos");
+const reposDir = resolve(HER, "../repos");
 const repoer = (repoArgs.length ? repoArgs.map((r) => resolve(r)) : readdirSync(reposDir).map((d) => join(reposDir, d)))
   .filter((r) => existsSync(join(r, ".git")));
 

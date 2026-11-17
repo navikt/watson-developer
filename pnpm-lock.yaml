@@ -1,0 +1,24 @@
+lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    devDependencies:
+      '@navikt/fnr-guard':
+        specifier: 1.0.0
+        version: 1.0.0
+
+packages:
+
+  '@navikt/fnr-guard@1.0.0':
+    resolution: {integrity: sha512-rXdt2LU//lbanOggTsvfQhIbArlkSmU79mNOlKjqF9Vmw/F3uSwxfHmS5yqwsI8tzs1OENXdiBZzyBfqKl5Eig==, tarball: https://npm.pkg.github.com/download/@navikt/fnr-guard/1.0.0/1d07c030ceec89b14ff50c7b37932cc2ea201417}
+    engines: {node: '>=20'}
+    hasBin: true
+
+snapshots:
+
+  '@navikt/fnr-guard@1.0.0': {}

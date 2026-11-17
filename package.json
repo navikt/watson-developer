@@ -1,0 +1,9 @@
+{
+  "name": "watson-developer",
+  "private": true,
+  "description": "Lokalt utviklingsmiljø for Watson-porteføljen",
+  "packageManager": "pnpm@11.1.2",
+  "devDependencies": {
+    "@navikt/fnr-guard": "1.0.0"
+  }
+}

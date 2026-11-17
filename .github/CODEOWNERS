@@ -1,4 +1,8 @@
-/scripts/fnr-guard/ @navikt/holmes
-/scripts/git-hooks/ @navikt/holmes
+# fnr-guard: endringer her kan svekke eller slå av skanningen etter fødselsnumre
+/.fnr-guard.json @navikt/holmes
+/.github/workflows/fnr-guard.yml @navikt/holmes
 /scripts/install-git-hooks.sh @navikt/holmes
-/.github/actions/fnr-guard/ @navikt/holmes
+/scripts/eksporter-funn.mjs @navikt/holmes
+/package.json @navikt/holmes
+/pnpm-lock.yaml @navikt/holmes
+/.npmrc @navikt/holmes
