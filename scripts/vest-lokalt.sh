@@ -91,7 +91,9 @@ for par in "SV_RESTANSER:$RESTANSER" "SV_VENTER_POL_DOM:$POLITI"; do
     echo "→ $fil (oppretter, fra=$fra)"
     kall "$fil" "$navn" false "$fra"
     fra="$NESTE_FRA"
-    [[ "$OPPRETTET" -gt 0 ]] || break
+    [[ "$GJENSTAAR" -gt 0 ]] || break
+    # nesteFra=0 betyr at kallet nådde slutten. Uten fremgang da er det bare rader som feiler igjen.
+    [[ "$fra" -ne 0 || "$OPPRETTET" -gt 0 ]] || break
   done
   echo "→ $fil (på nytt, skal ikke opprette noe)"
   kall "$fil" "$navn" false 0
