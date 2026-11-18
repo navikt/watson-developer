@@ -1,53 +1,148 @@
-# Watson Developer — Porteføljekontekst for Copilot
+# Watson Developer: instruksjoner for kodeagenter
 
-Dette repoet er inngangsporten til **Team Holmes** sin Watson-portefølje.
-Watson er Nav Kontrolls system for å avdekke og forebygge misbruk av Nav-ytelser (trygdesvindel).
+Watson er Nav Kontrolls system for å avdekke trygdesvindel. `watson-developer` inneholder lokalmiljø (Tilt + kind), skript og dokumentasjon, ikke applikasjonskode.
+
+## Svarsstil
+
+- Konklusjonen først. Skriv «si «forklar» for detaljer» når du hopper over begrunnelsen
+- Kode direkte uten innledningsprosa
+- Dropp: oppsummering av oppgaven, høflighetsfraser, avsnitt som bare gjentar hva som skal gjøres
+- Still bare spørsmål når svaret faktisk endrer implementeringen
+- Les filer direkte. Ikke be brukeren lime inn innhold
+- Kjør målrettede tester (`./gradlew test --tests '*Test'` / `pnpm test -- <args>`) før full pipeline
 
 ## Portefølje
 
-| Repo                  | Rolle            | Teknologi                                   |
-| --------------------- | ---------------- | ------------------------------------------- |
-| `holmes-brain`        | Internwiki       | TypeScript                                  |
-| `nav-persondata-api`  | Persondata-API   | Spring Boot + Kotlin                        |
-| `watson-admin-api`    | Kjernebackend    | Spring Boot 4 + Kotlin + PostgreSQL + Kafka |
-| `watson-guide`        | Brukerveiledning | TypeScript                                  |
-| `watson-pdfgen`       | PDF-renderer     | pdfgenrs + Docker                           |
-| `watson-sak-frontend` | Saksbehandler-UI | React Router v7 + Aksel + TypeScript        |
-| `watson-sok`          | Brukeroppslag    | React Router v7 + Aksel + TypeScript        |
+| Repo                  | Beskrivelse                                                                |
+| --------------------- | -------------------------------------------------------------------------- |
+| `holmes-brain`        | TypeScript, KI-drevet internwiki for Team Holmes                          |
+| `nav-persondata-api`  | Spring Boot + Kotlin, persondata, ytelser, arbeidsforhold                 |
+| `watson-admin-api`    | Spring Boot 4 + Kotlin, kontrollsaker, tilgangsstyring, Kafka, PostgreSQL |
+| `watson-guide`        | TypeScript, brukerrettede veiledninger for Watson-porteføljen            |
+| `watson-pdfgen`       | pdfgenrs + Docker, PDF-renderer for Watson                                |
+| `watson-sak-frontend` | React Router v7 + Aksel, saksbehandler-UI                                 |
+| `watson-sok`          | React Router v7 + Aksel, brukeroppslag (fnr/d-nummer)                     |
 
-Sibling-repoer klones til `repos/` med `./scripts/clone-repos.sh`.
-`watson-developer` og alle repoene i `repos/` synkroniseres til nyeste standardbranch med `./sync.sh`.
+Repoer klones til `repos/` med `./scripts/clone-repos.sh`.
 
-## Dette repoet
-
-`watson-developer` inneholder:
-
-- `Tiltfile` — lokal utviklingsserver (Tilt + kind)
-- `sync.sh` — synkroniser `watson-developer` og alle repoer i `repos/` til nyeste standardbranch
-- `kind/cluster.yaml` — lokal Kubernetes-kluster
-- `k8s/` — Kubernetes-manifester for lokal infrastruktur
-- `scripts/` — hjelpeskript (klon repoer, sett opp kluster, pre-flight sjekk)
-- `docs/` — arkitektur, domene og onboarding-dokumentasjon
-- `repos/` — klonede sibling-repoer (git-ignorert)
+Synkroniser `watson-developer` og alle repoene i `repos/` med `./sync.sh`. Skriptet sjekker ut standardbranch og kjører `pull --ff-only`. Det hopper over repoer med ukommiterte endringer i sporede filer.
 
 ## Domene
 
-- **Kontrollsak** — en sak opprettet av en saksbehandler i Nav Kontroll for å undersøke mulig misbruk
-- **Saksbehandler** — Nav Kontroll-ansatt som bruker Watson
-- **Tilgangskontroll** — Watson Sak bruker `0000-CA-kontroll-Watson` og `0000-CA-kontroll-Watson-Leder`. Tilgangsmaskinen avgjør innsyn i kontrollobjektet
-- **Kontrollsakstype** — kategoriserer type mulig misbruk
+- **Kontrollsak**: en sak opprettet av en saksbehandler i Nav Kontroll for å undersøke mulig misbruk
+- **Saksbehandler**: Nav Kontroll-ansatt som bruker Watson
+- **Kontrollsakstype**: kategoriserer type mulig misbruk
+- Flere begreper i `docs/domene/ordbok.md`
 
-## Tekniske regler for dette repoet
+## Agentpakke
 
-- Shell-skript følger `set -euo pipefail` og er idempotente
-- Markdown bruker norsk bokmål
-- Tiltfile er `starlark` (Python-dialekt) — bruk `load()` for delte funksjoner
+`.github/agents`, `skills`, `instructions`, `prompts`, `hooks` og `extensions`
+materialiseres av `nav-pilot` fra kilden i `.nav-pilot/agentpakke.lock.json`:
+`navikt/watson-agentpakke`. Den pakka bygger videre på `navikt/copilot` sin
+`nav-pilot`-pakke (egen `.nav-pilot/agentpakke.lock.json` der) og legger til
+Watson-spesifikt innhold: agenten `vaktmester`, skillene
+`aha-oppgave`, `analytics-taxonomy`, `explain-diff-html`, `repo-activity-research`,
+`unleash-feature-toggle`, `watson-setup`, og extensionen `auto-format`.
 
-## Relaterte agenter
+Endre Watson-spesifikt innhold i `navikt/watson-agentpakke`, ikke her. Kjør
+`nav-pilot sync --apply --force` i en vanlig terminal utenfor cplt-sandboxen
+for å hente oppdateringer (hooks og extensions kan ikke skrives inne i
+sandboxen).
 
-Hver applikasjon i porteføljen har egne agenter under `.github/agents/`:
+## Plattform og autentisering
 
-- `auth-agent` — Azure AD, token-validering
-- `nais-agent` — Nais-deployment, GCP-ressurser
-- `observability-agent` — Prometheus, Grafana
-- `security-champion-agent` — trusselmodellering, personvern
+- **Plattform**: Nais (Kubernetes/GCP), namespace `holmes`
+- **Autentisering**: Azure AD med Wonderwall sidecar
+- **Tilgangsgrupper i Watson Sak**: `0000-CA-kontroll-Watson` og `0000-CA-kontroll-Watson-Leder`. Tilgangsmaskinen avgjør innsyn i kontrollobjektet
+- **Lokal mock**: mock-oauth2-server på port 8090
+
+## Regler for dette repoet
+
+### Shell-skript
+
+- Alltid `set -euo pipefail` øverst
+- Idempotente og trygge å kjøre flere ganger
+- Fargeutskrift: grønn (✓ OK), gul (⟳ hopper over), rød (✗ feil)
+- Legg skript i `scripts/`, ikke i rotkatalogen. Eneste unntak er `sync.sh`, en tynn wrapper som `exec`-er `scripts/sync-repos.sh`
+
+### Tiltfile
+
+- Starlark (Python-dialekt)
+- Infrastruktur-ressurser merkes `labels=['infra']`, backend merkes `labels=['backend']`
+- Bruk `local_resource()` for prosesser som kjører utenfor kind
+
+### Dokumentasjon
+
+- Norsk bokmål i all dokumentasjon
+- Arkitekturdokumenter i `docs/arkitektur/`
+- Onboarding-innhold i `docs/onboarding/`
+- Domenebegreper i `docs/domene/ordbok.md`
+
+### Hva dette repoet IKKE er
+
+Ikke legg til Kotlin-, TypeScript- eller Java-filer her. Applikasjonene bor i sine egne repoer.
+
+## Lokalt utviklingsmiljø
+
+- Kind-kluster: postgres (5432) og mock-oauth2-server (8090)
+- Lokale prosesser: watson-admin-api (8080) via `./gradlew bootRun`
+- Start med: `./scripts/setup-kind.sh && ./start` (kjør `setup-kind.sh` i en
+  vanlig terminal utenfor cplt-sandboxen, siden den trenger tilgang til
+  `~/.kube/config`, som sandboxen bevisst ikke får)
+
+## Arbeidsflyt for agenter
+
+### Repoer og terminologi
+
+- **«frontend»** betyr `repos/watson-sak-frontend`
+- **«backend»** betyr `repos/watson-admin-api`
+- For detaljer om frontend, se `repos/watson-sak-frontend/.github/copilot-instructions.md`
+- For detaljer om backend, se `repos/watson-admin-api/.github/copilot-instructions.md`
+
+### Når sesjonen starter
+
+1. Ikke kjør Homebrew-kommandoer i cplt-sandboxen. Homebrew skriver til mapper utenfor det sandboxen har tilgang til.
+
+### Før du begynner
+
+1. Kjør `./sync.sh` fra `watson-developer` før hver oppgave.
+2. Sammenlign commit på `main` i `watson-developer` før og etter synkroniseringen. Hvis `main` endret seg, be brukeren starte nav-pilot på nytt slik at endringene blir lest inn. Ikke fortsett oppgaven i den gamle sesjonen.
+3. Spør om Aha!-ID hvis oppgaven hører til en Aha!-sak og ID-en ikke er nevnt. Oppdater saken som beskrevet under «Aha!-status».
+4. Opprett en ny branch fra oppdatert `main` i hvert repo som skal endres. Bruk samme branch-navn i alle berørte repoer.
+5. Bruk `<Aha!-ID>/<beskrivende-navn>` når oppgaven har en Aha!-ID, for eksempel `SAK-50/legg-til-filter`. Bruk ellers et beskrivende navn med prefiks som `chore/`, `fix/` eller `feature/`.
+6. Start Tilt på nytt etter at backend er oppdatert.
+
+### Branching og commits
+
+- Aldri commit direkte til `main`
+- Opprett bare branch i repoer som faktisk endres
+- Commit underveis. Ikke samle alt i én stor commit
+
+### Pull requests
+
+- Opprett én pull request i hvert repo som er endret, etter at lokal verifisering er fullført.
+- Legg til `https://nav1.aha.io/features/<Aha!-ID>` i PR-beskrivelsen når oppgaven har en Aha!-ID.
+
+### Aha!-status
+
+Hold Aha!-saken i takt med arbeidet. Bruk Aha!-verktøyene (MCP), og finn den innloggede brukeren der i stedet for å spørre.
+
+- **Når du begynner på saken**: tildel den til brukeren og sett status til «In progress». Hopp over det som allerede stemmer.
+- **Når alle PR-ene for saken er merget**: sett status til «Done». Sjekk merge-status med `gh pr view` i hvert berørt repo. Står en PR fortsatt åpen, la statusen være.
+- Finnes ikke statusnavnet i saken sin arbeidsflyt, velg nærmeste tilsvarende og si hvilket du valgte.
+- Feiler oppdateringen, si det på én linje og fortsett med oppgaven.
+
+### API-endringer i Kotlin-apper
+
+Når du legger til, endrer eller fjerner et endepunkt, en query-parameter, en request body eller en statuskode i en Kotlin-app, må du oppdatere repoets Postman-filer i samme PR. Finn dem med `find . -name '*.postman_collection.json'`. Oppdater hver collection som allerede har endepunktet.
+
+### Verifisering før du er ferdig
+
+- **Frontend**: `pnpm verify`
+- **Backend**: `./gradlew build`
+
+### Kjente begrensninger i sandbox
+
+- SSH mot GitHub (port 22) er blokkert. Bruk HTTPS-remotes
+- `git push -u`, `git switch -c` og lignende gir `could not write config file .git/config: Operation not permitted`. Det er forventet: sandboxen sperrer `.git/config`, men push og branch fungerer. Ikke nevn feilen for brukeren
+- Frontend bruker `pnpm`, ikke npm eller yarn
