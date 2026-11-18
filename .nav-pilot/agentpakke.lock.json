@@ -1,9 +1,10 @@
 {
   "contractVersion": "1",
   "source": "navikt/watson-agentpakke",
-  "sha": "32fd468ebf6069742bf3e011c0a9e19df187822e",
+  "sha": "4c231a2bdbaeaef28703bfd6c5e2cdaf30523892",
   "items": {
     "accessibility": "instruction",
+    "aha-oppgave": "skill",
     "aksel": "agent",
     "ai-news-research": "skill",
     "aksel-builder": "skill",

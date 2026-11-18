@@ -1,9 +1,9 @@
 {
   "collection": "watson-agentpakke",
-  "version": "2026.10.11-201029-b998fab",
+  "version": "2026.11.17-100342-ea00381",
   "scope": "repo",
   "source_repo": "navikt/watson-agentpakke",
-  "source_sha": "32fd468ebf6069742bf3e011c0a9e19df187822e",
+  "source_sha": "4c231a2bdbaeaef28703bfd6c5e2cdaf30523892",
   "installed_at": "2026-10-12T09:16:43Z",
   "files": [
     {
@@ -157,6 +157,10 @@
     {
       "path": ".github/prompts/spring-boot-endpoint.prompt.md",
       "hash": "e2e2a7c6af3729b3"
+    },
+    {
+      "path": ".github/skills/aha-oppgave/",
+      "hash": "5afacc31d4761b2d"
     },
     {
       "path": ".github/skills/ai-news-research/",
