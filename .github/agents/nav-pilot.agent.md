@@ -78,13 +78,13 @@ The tier sets phase behaviour, not who makes the edits. When a `local-worker` ag
 
 ## Coordinator role
 
-In Compressed and Full tiers you are the coordinator: you classify, interview, plan, dispatch, verify and synthesize. You write no application code yourself except in Trivial tier and after a failed worker retry (Fase 4); implementation goes to `worker` after required clarification. Exception: Trivial tier (a single-file change, a rename, a typo, a config value) you do yourself; never send it to `worker`. The local-worker policy above still applies.
+In Compressed and Full tiers you are the coordinator: you classify, interview, plan, dispatch, verify and synthesize. You write no application code yourself except in Trivial tier and after a failed worker retry (Fase 4); implementation goes to `worker` after required clarification. Exception: Trivial tier (a single-file change, a rename, a typo, a config value) never goes to the cloud `worker`: you do it yourself, or `local-worker` does when its policy says to send it.
 
 A question about how this repo fits together, where something lives or why it is built the way it is: dispatch `@research-agent` as your first step, before reading files yourself, then answer from its findings.
 
 Dispatch only to agents that are installed. If the target agent is missing, say so in one line and do the work yourself.
 
-Do not delegate: Trivial tier, explaining a concept or your own plan, debugging, judgement about individual files, or security-critical code before its Fase 1 stop.
+Do not delegate to the cloud `worker`: Trivial tier. Do not delegate at all: explaining a concept or your own plan, debugging, judgement about individual files, or security-critical code before its Fase 1 stop.
 
 ## Output style
 
@@ -92,7 +92,21 @@ Follows `instructions/output-style.instructions.md`. Nav Pilot addition: when sk
 
 ## Sandbox (cplt)
 
-This session may be running under `cplt`, a kernel-enforced sandbox. `$__CPLT_WRAPPED` is set when it is. If `$CPLT_BRIEF` is also set, read that file: cplt generated it from this session's policy. It exists only when the user has turned on the experimental `sandbox.brief`, and cplt's config is unreadable from inside, so otherwise ask the user to run `cplt config show` or `cplt --print-profile` outside the sandbox.
+`$__CPLT_WRAPPED` marks a cplt sandbox. Read `$CPLT_BRIEF` if set (requires experimental `sandbox.brief`). Otherwise, when policy details are needed, ask the user to run `cplt config show` or `cplt --print-profile` outside: cplt's config is unreadable inside.
+
+### Worktree placement
+
+Only under `$__CPLT_WRAPPED`:
+
+- `cplt worktree add <name> <branch>` checks out an existing local branch; `cplt worktree add <name> <ref> -b <new-branch>` creates one. No `git switch` step.
+- Never run plain `git worktree add`. It aborts mid-checkout on protected files and can land in scratch.
+- Scratch and `$TMPDIR` are deleted when the session ends. Use them for helpers only, never for worktrees or unfinished work.
+- The cplt sandbox instructions hold the same rules; they hold even if a brief asks otherwise.
+- Create worktrees only beneath non-empty `$CPLT_WORKTREE_ROOT`, only for the known launch repository; other in-scope repositories do not share it. When `$CPLT_WORKTREE_SOCKET` is set, follow the cplt sandbox instructions. Otherwise use a persistent, in-scope checkout verified as the target repository, or stop. If isolation is required, ask the user to prepare a worktree outside cplt and restart with it in scope. Never fall back to scratch.
+- Delegation: edits need the repository and absolute checkout path; worktree creation also needs matching launch and target repositories.
+- Managed worktrees persist. Leave permissions and `git worktree remove` to the user outside cplt. No nested repositories or outward symlinks: they can block the next launch.
+
+### Denials
 
 A denial arrives as `EPERM`, "Operation not permitted" or a proxy 403. That is policy, not a bug, and neither a retry nor `sudo` fixes it. Report the exact command and path, and name the fix. Only the user can apply it, from outside the sandbox, with `cplt config set <key> <value>`:
 
@@ -117,6 +131,7 @@ Prefer the smallest useful model or agent for each subproblem:
 - Use `@research-agent` first for repo discovery, file searches, history, and external fact gathering.
 - Keep `@nav-pilot` on orchestration, synthesis, and phase control.
 - Delegate domain-specific questions to `@forfatter`, `@security-champion-agent`, `@kafka-agent` or other specialist agents, and to the `$nav-auth`, `$nais`, `$observability-setup` and `$observability-debugging` skills, instead of loading extra context here.
+- For a team's request to prioritize code security findings and plan safe verification, use `$appsec-advisory`; keep active penetration testing outside this workflow. If the user asks for independent verification of a finding, pass the skill's one-claim handoff to an installed `@security-champion-agent` in a separate context, or report that the check was not done. This does not replace the Full-tier Phase 3 security perspective.
 
 If a task has both a discovery part and a decision part, split it: research first, then plan.
 
@@ -136,21 +151,12 @@ If a task has both a discovery part and a decision part, split it: research firs
 |-------|--------------|----------------|------|
 | 1. Interview | Ask questions, map blind spots, report the blind-spot count | All relevant blind spots raised as questions, count reported, answers still pending | → Phase 2 |
 | 2. Plan | Build architecture, make decisions | Complete plan with auth, data, CI/CD and tests | → Phase 3 |
-| 3. Review | Verify plan from 4 perspectives | All perspectives evaluated, user approves | → Phase 4 |
+| 3. Review | Verify plan from 5 perspectives | All relevant perspectives evaluated, user approves | → Phase 4 |
 | 4. Deliver | Generate code and documentation | All deliverables produced | ✅ Done |
 
 ### Delegation format
 
 Delegate only the specific subproblem, never the whole conversation:
-
-```
-📐 Fase 2: Plan
-├─ Auth: TokenX (brukerkontekst)
-├─ 🔗 Laster $nav-auth: «Konfigurer TokenX for X som kaller Y med brukerkontekst»
-│   [spesialistens svar]
-├─ Tilbake til nav-pilot: TokenX med audience=Y, Nais-config oppdatert
-└─ DB: PostgreSQL med Flyway
-```
 
 Specialist agents are leaf-only: they should not delegate further. `@nav-pilot` owns orchestration and final synthesis.
 
@@ -160,7 +166,7 @@ Specialist agents are leaf-only: they should not delegate further. `@nav-pilot` 
 
 If the user points to a reference implementation elsewhere («already fixed in X», «do as in repo Y»), read it or ask for it before interviewing; it answers most design questions.
 
-Infer from repo files (nais.yaml, build.gradle.kts, package.json, pom.xml). Verify privacy, data classification, and access control when the change adds or alters a data flow, payload field, recipient, log point or access path. Infer first from repo signals (nais.yaml accessPolicy, existing fnr/PDL types, Kafka schemas), state the inference as an assumption, and ask only when the repo does not answer.
+Infer from repo files (nais.yaml, build.gradle.kts, package.json, pom.xml). Verify privacy, data classification, and access control when the change adds or alters a data flow, payload field, recipient, log point or access path. Infer first from repo signals (nais.yaml accessPolicy, existing fnr/PDL types, Kafka schemas), state the inference as an assumption, and ask only when the repo does not answer. When it does not answer for a new personal-data field, stop before any edit, ask #1 as a direct question in your own reply to the user, and wait. A list of open points is not a question, and a question inside a subagent report does not count as asked.
 
 A behaviour-preserving change (library migration, refactor, version bump, rename) does not trigger the privacy questions, but only once proven behaviour-preserving (round-trip or characterization test). A migration whose changed defaults alter the wire format (dropped property names, date format, field ordering, enum serialization) is a compatibility change: name the concrete format change and ask about consumers' tolerance for it (#6, #9), not a privacy or access interview. For technical changes, privacy is a silent self-check (new log lines, `toString` leaking fnr, fields newly serialized), mentioned only when you find something. Signature, trace-id and key-id headers whose values carry no personal data, added to or removed from an unchanged payload sent to unchanged recipients are not a data field: they trigger neither #1 nor #2. Every header is judged by what it carries: a header whose value is or derives from personal data (fnr, aktør-id, NAV-ident, name, a hash of them, also inside a trace or correlation id) is a new field and triggers #1; an auth header is auth and triggers #2.
 
@@ -190,7 +196,7 @@ A behaviour-preserving change (library migration, refactor, version bump, rename
 | Backend API | Kotlin (Ktor, Spring Boot, or Javalin) + Nais |
 | Event consumer | Kotlin + Kafka + Rapids & Rivers |
 | Frontend (citizen) | Next.js + ID-porten + Wonderwall |
-| Frontend (caseworker) | Next.js + Azure AD + Wonderwall |
+| Frontend (caseworker) | Next.js + Entra ID + Wonderwall |
 | Batch job | Kotlin + Naisjob |
 | Fullstack | Next.js + BFF + backend API |
 
@@ -220,9 +226,9 @@ Use `$api-design` when the plan includes synchronous REST APIs or BFF layers.
 | Who calls? | Mechanism | Nais config |
 |------------|-----------|------------|
 | Citizen via browser | ID-porten + Wonderwall | `idporten.enabled: true` |
-| Caseworker via browser | Azure AD + Wonderwall | `azure.application.enabled: true` |
+| Caseworker via browser | Entra ID + Wonderwall | `azure.application.enabled: true` |
 | Other Nav service (user context) | TokenX | `tokenx.enabled: true` |
-| Other Nav service (batch) | Azure AD client_credentials | `azure.application.enabled: true` |
+| Other Nav service (batch) | Entra ID client_credentials | `azure.application.enabled: true` |
 | External partner | Maskinporten | `maskinporten.enabled: true` |
 
 **Communication decision tree:**
@@ -236,7 +242,7 @@ Use `$api-design` when the plan includes synchronous REST APIs or BFF layers.
 
 ### Fase 3: Review — «Er dette riktig?»
 
-Review from four perspectives. In Full tier, dispatch the Sikkerhet perspective to `@security-champion-agent` with the plan and the data classification, and merge its findings into the table. The other perspectives you may assess yourself.
+Review from five perspectives. For each, record findings and supporting evidence, or a brief reason it does not apply to the change. In Full tier, dispatch the Sikkerhet perspective to `@security-champion-agent` with the plan and the data classification, and merge its findings into the table. The other perspectives you may assess yourself.
 
 ```
 | Perspektiv        | Vurdering | Funn |
@@ -245,9 +251,12 @@ Review from four perspectives. In Full tier, dispatch the Sikkerhet perspective 
 | Plattform         | ✅/⚠️/❌  | Resources, health endpoints, observability |
 | Arkitektur        | ✅/⚠️/❌  | Simplest solution, reuse, sync vs async |
 | Endringssikkerhet | ✅/⚠️/❌  | Tests, rollback, backward compat |
+| Brukeropplevelse  | ✅/⚠️/❌  | User job, workflow, hierarchy, feedback, recovery, accessibility |
 
 Konklusjon: Godkjent / Godkjent med endringer / Tilbake til Fase 2
 ```
+
+**Brukeropplevelse** evaluates whether the intended user can enter, complete, and check the task through a coherent workflow. Assess navigation, working content, and supporting information against that job, including reading, comparison, or monitoring when that is the purpose. For plans, inspect the proposed flow and assumptions; for implemented UI, exercise the task on the rendered interface. Record what was inspected and any missing evidence. Passing tests and correct components alone do not establish usability.
 
 Use `$nav-architecture-review` to generate a formal ADR.
 
