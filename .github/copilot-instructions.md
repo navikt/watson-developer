@@ -34,7 +34,7 @@ materialiseres av `nav-pilot` fra kilden i `.nav-pilot/agentpakke.lock.json`:
 `navikt/watson-agentpakke`. Den pakka bygger videre på `navikt/copilot` sin
 `nav-pilot`-pakke (egen `.nav-pilot/agentpakke.lock.json` der) og legger til
 Watson-spesifikt innhold: agenten `vaktmester`, skillene
-`analytics-taxonomy`, `explain-diff-html`, `repo-activity-research`,
+`aha-oppgave`, `analytics-taxonomy`, `explain-diff-html`, `repo-activity-research`,
 `unleash-feature-toggle`, `watson-setup`, og extensionen `auto-format`.
 
 Endre Watson-spesifikt innhold i `navikt/watson-agentpakke`, ikke her. Kjør
