@@ -2,8 +2,8 @@
 
 Detaljert guide for å sette opp Watson-porteføljens lokale utviklingsmiljø.
 
-> 💡 **Automatisk oppsett:** Aktiver Copilot-skillen `watson-setup`
-> (`@.github/skills/watson-setup/SKILL.md`) for å automatisere hele prosessen.
+> 💡 **Automatisk oppsett:** Kjør `./scripts/bootstrap.sh` (se «Helt ny Mac»
+> under) og be opencode kjøre skillen `watson-setup`.
 
 ---
 
@@ -30,6 +30,11 @@ ikke vil starte opencode med en gang.
 
 | Verktøy                                                              | Installasjon                        | Brukes til                                                    |
 | -------------------------------------------------------------------- | ----------------------------------- | ------------------------------------------------------------- |
+| Xcode Command Line Tools                                             | `xcode-select --install`            | git og kompilatorer på macOS                                  |
+| [Homebrew](https://brew.sh)                                          | `./scripts/bootstrap.sh`            | Pakkebehandler for resten av verktøyene                       |
+| git og [gh](https://cli.github.com)                                  | `brew install git gh`               | Kloning og GitHub-innlogging (`gh auth login`)                |
+| [opencode](https://opencode.ai/v2/docs) 2                            | `./scripts/bootstrap.sh`            | KI-agent som kjører skillen `watson-setup`                    |
+| [Docker Desktop](https://www.docker.com/products/docker-desktop/)    | `brew install --cask docker`        | Container-runtime for kind                                    |
 | [cplt](https://github.com/navikt/cplt)                               | `brew install navikt/tap/cplt`      | Kernel-sandbox for AI-agenter                                 |
 | [nav-pilot](https://ki-utvikling.nav.no/nav-pilot/docs)              | `brew install navikt/tap/nav-pilot` | Nav-kunnskap for GitHub Copilot                               |
 | [kind](https://kind.sigs.k8s.io/docs/user/quick-start/#installation) | `brew install kind`                 | Lokal Kubernetes-kluster                                      |
