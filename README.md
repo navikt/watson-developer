@@ -25,16 +25,47 @@ Inngangsport og utviklermiljø for **Team Holmes** sin Watson-portefølje.
 
 ## Kom i gang
 
-### Automatisk oppsett med Copilot
+Kjør dette i Terminal på Macen din:
 
-1. Installer [GitHub Copilot CLI](https://docs.github.com/en/copilot/github-copilot-in-the-cli) ved å følge dokumentasjonen.
-2. Start Copilot CLI med `copilot`.
-3. Gå ut av `/plan`-modus hvis Copilot CLI starter i denne modusen.
-4. Kjør skillen `/watson-setup`.
-5. Vent til oppsettet er ferdig. Skillen installerer verktøy, kloner repoer og oppretter kind-klusteret.
-6. Start lokalmiljøet med `./start` når skillen er ferdig.
+```bash
+xcode-select --install   # bare på helt ny Mac, vent til installasjonen er ferdig
+mkdir -p ~/code/nav/holmes/watson && cd ~/code/nav/holmes/watson
+git clone https://github.com/navikt/watson-developer.git
+cd watson-developer
+./scripts/bootstrap.sh
+```
+
+`xcode-select --install` trengs bare på en helt ny Mac. Uten Xcode Command
+Line Tools åpner `git clone` en installasjonsdialog i stedet for å klone.
+
+`bootstrap.sh` spør hvilken agent du vil bruke: [opencode](https://opencode.ai/v2/docs)
+(standard), [GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli)
+eller [pi](https://www.npmjs.com/package/@earendil-works/pi-coding-agent). Du kan
+også velge med `./scripts/bootstrap.sh --agent copilot`. Skriptet installerer
+Homebrew, git, gh og agenten, logger deg inn på GitHub og starter agenten i
+repoet. Når agenten har startet, skriver du:
+
+```text
+Kjør skillen watson-setup
+```
+
+Skillen installerer resten av verktøyene, kloner repoene og oppretter
+kind-klusteret. Start lokalmiljøet med `./start` når den er ferdig.
 
 For manuelt oppsett, se [docs/SETUP.md](docs/SETUP.md).
+
+### MCP-servere
+
+MCP-serverne teamet bruker står i [`mcp-servere.txt`](mcp-servere.txt).
+`bootstrap.sh` og `./sync.sh` setter opp de som mangler med
+`nav-pilot mcp enable`. Du kan også kjøre det selv i en vanlig terminal:
+
+```bash
+./scripts/setup-mcp.sh
+```
+
+Legg nye servere til i `mcp-servere.txt`, så får resten av teamet dem ved
+neste `./sync.sh`.
 
 Ny i teamet? Start med [onboarding-sjekklisten](docs/onboarding/sjekkliste.md).
 

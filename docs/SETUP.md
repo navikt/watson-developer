@@ -2,8 +2,42 @@
 
 Detaljert guide for å sette opp Watson-porteføljens lokale utviklingsmiljø.
 
-> 💡 **Automatisk oppsett:** Aktiver Copilot-skillen `watson-setup`
-> (`@.github/skills/watson-setup/SKILL.md`) for å automatisere hele prosessen.
+> 💡 **Automatisk oppsett:** Kjør `./scripts/bootstrap.sh` (se «Helt ny Mac»
+> under) og be agenten kjøre skillen `watson-setup`.
+
+---
+
+## Helt ny Mac
+
+Klon repoet og kjør bootstrap-skriptet i en vanlig terminal (ikke i cplt):
+
+```bash
+xcode-select --install   # bare på helt ny Mac, vent til installasjonen er ferdig
+mkdir -p ~/code/nav/holmes/watson && cd ~/code/nav/holmes/watson
+git clone https://github.com/navikt/watson-developer.git
+cd watson-developer
+./scripts/bootstrap.sh
+```
+
+`xcode-select --install` trengs bare på en helt ny Mac. Uten Xcode Command
+Line Tools åpner `git clone` en installasjonsdialog i stedet for å klone. Skriptet installerer Homebrew, git,
+gh og agenten du velger, logger deg inn på GitHub og starter agenten. Be
+agenten kjøre skillen `watson-setup`. Bruk `./scripts/bootstrap.sh --no-start`
+hvis du ikke vil starte agenten med en gang.
+
+### Velg agent
+
+| Agent | Valg | Installeres med |
+| --- | --- | --- |
+| [opencode](https://opencode.ai/v2/docs) 2 (standard) | `--agent opencode` | `curl -fsSL https://opencode.ai/v2/install \| bash` |
+| [GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli) | `--agent copilot` | `brew install copilot-cli` |
+| [pi](https://www.npmjs.com/package/@earendil-works/pi-coding-agent) | `--agent pi` | `npm install -g @earendil-works/pi-coding-agent` |
+
+Valget lagres i `~/.config/watson-developer/agent` og brukes av
+`setup-harness.sh`, `doctor.sh` og `setup-mcp.sh`. Overstyr med `--agent` eller
+miljøvariabelen `WATSON_AGENT`. Kjør `./scripts/setup-harness.sh --agent <navn>`
+for å bytte agent senere. `nav-pilot mcp` støtter ikke pi, så med pi blir
+MCP-serverne ikke satt opp.
 
 ---
 
@@ -11,9 +45,13 @@ Detaljert guide for å sette opp Watson-porteføljens lokale utviklingsmiljø.
 
 | Verktøy                                                              | Installasjon                        | Brukes til                                                    |
 | -------------------------------------------------------------------- | ----------------------------------- | ------------------------------------------------------------- |
+| Xcode Command Line Tools                                             | `xcode-select --install`            | git og kompilatorer på macOS                                  |
+| [Homebrew](https://brew.sh)                                          | `./scripts/bootstrap.sh`            | Pakkebehandler for resten av verktøyene                       |
+| git og [gh](https://cli.github.com)                                  | `brew install git gh`               | Kloning og GitHub-innlogging (`gh auth login`)                |
+| KI-agent (opencode, Copilot CLI eller pi)                            | `./scripts/bootstrap.sh`            | Kjører skillen `watson-setup`                                 |
+| [Docker Desktop](https://www.docker.com/products/docker-desktop/)    | `brew install --cask docker`        | Container-runtime for kind                                    |
 | [cplt](https://github.com/navikt/cplt)                               | `brew install navikt/tap/cplt`      | Kernel-sandbox for AI-agenter                                 |
-| [nav-pilot](https://ki-utvikling.nav.no/nav-pilot/docs)              | `brew install navikt/tap/nav-pilot` | Nav-kunnskap for GitHub Copilot                               |
-| [rtk](https://github.com/rtk-ai/rtk)                                 | `brew install rtk`                  | Komprimerer terminaloutput — reduserer tokenforbruk i Copilot |
+| [nav-pilot](https://ki-utvikling.nav.no/nav-pilot/docs)              | `brew install navikt/tap/nav-pilot` | Nav-kunnskap for agenten                                      |
 | [kind](https://kind.sigs.k8s.io/docs/user/quick-start/#installation) | `brew install kind`                 | Lokal Kubernetes-kluster                                      |
 | [tilt](https://docs.tilt.dev/install.html)                           | `brew install tilt`                 | Lokal utviklingsserver                                        |
 | [kubectl](https://kubernetes.io/docs/tasks/tools/)                   | `brew install kubectl`              | Kubernetes-klient                                             |
@@ -22,7 +60,7 @@ Detaljert guide for å sette opp Watson-porteføljens lokale utviklingsmiljø.
 | Java 21                                                              | `brew install --cask temurin@21`    | watson-admin-api, nav-persondata-api                          |
 | Node.js LTS                                                          | `brew install node`                 | watson-sak-frontend, watson-sok                               |
 | [pnpm](https://pnpm.io/installation)                                 | `corepack enable`                   | Pakkebehandler for frontend                                   |
-| Python 3.11+                                                         | `brew install python@3.12`          | `tomllib` — leser/oppdaterer cplt-config i setup-copilot.sh   |
+| Python 3.11+                                                         | `brew install python@3.12`          | `tomllib` — leser/oppdaterer cplt-config i setup-harness.sh   |
 
 Kjør `./scripts/doctor.sh` for å se hva som mangler — skriptet installerer
 manglende verktøy automatisk med Homebrew (`corepack enable` for pnpm) der det
@@ -36,17 +74,16 @@ ikke er tilgjengelig eller installasjonen feiler.
 ### 1. Sett opp AI-verktøy (cplt + nav-pilot)
 
 ```bash
-./scripts/setup-copilot.sh
+./scripts/setup-harness.sh
 ```
 
 Installerer [cplt](https://github.com/navikt/cplt) (kernel-sandbox for AI-agenter) og
-[nav-pilot](https://ki-utvikling.nav.no/nav-pilot/docs) (Nav-kunnskap for Copilot).
+[nav-pilot](https://ki-utvikling.nav.no/nav-pilot/docs) (Nav-kunnskap for agenten). Legger også inn et shell-alias slik at agenten du valgte kjører i cplt-sandboxen.
 Genererer cplt-config tilpasset Watson-porteføljen. Idempotent — trygt å kjøre flere ganger.
 Scriptet krever python3.11+ (for `tomllib`) og installerer det selv automatisk
 med Homebrew hvis det mangler, siden dette steget kjøres før `doctor.sh`.
-Konfigurerer også MCP-serverne `com.figma/figma-mcp` og
-`com.jetbrains/intellij` i Copilot CLI. IntelliJ-MCP-en forutsetter at IntelliJ
-kjører lokalt med SSE-endepunktet på `http://127.0.0.1:64342/sse`.
+MCP-servere settes opp separat med `./scripts/setup-mcp.sh` i en vanlig
+terminal. Listen over servere står i `mcp-servere.txt`.
 
 Sandboxen får bevisst ikke lesetilgang til `~/.kube/config` — den inneholder
 som regel cluster-admin-credentials, og det lokale kind-klusteret trenger
@@ -54,14 +91,6 @@ ikke den eksponeringen selv om det ikke inneholder ekte hemmeligheter. Kjør
 `kubectl`/`tilt` direkte i terminalen (utenfor sandboxen), eller legg til
 tilgangen selv i `~/.config/cplt/config.toml` hvis du ønsker at agenten skal
 kunne bruke dem.
-
-Installer deretter [rtk](https://github.com/rtk-ai/rtk) for å komprimere terminaloutput (testresultater, diff, kubectl) før det når Copilots kontekstvindu:
-
-```bash
-brew install rtk && rtk init -g --copilot
-```
-
-> **Merk:** RTK prosesserer terminaloutput lokalt — ikke bruk det med output som kan inneholde sensitive data (f.eks. produksjonslogger med PII).
 
 ### 2. Sjekk at verktøyene er på plass
 

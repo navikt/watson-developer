@@ -2,7 +2,7 @@
 name: watson-setup
 description: Sett opp watson-developer lokalmiljø fra scratch — installerer verktøy, kloner repoer og oppretter kind-kluster
 license: MIT
-compatibility: macOS with Homebrew
+compatibility: macOS (fra helt ny maskin via scripts/bootstrap.sh)
 metadata:
   domain: onboarding
   tags: setup onboarding watson lokalmiljø kind tilt
@@ -18,11 +18,30 @@ utvikleren.
 ## Forutsetninger
 
 - macOS
-- Homebrew installert
-- Docker Desktop installert og kjørende
-- Python 3.11+ (`brew install python@3.12`) — kreves for `tomllib` i steg 1
 - GitHub-tilgang til navikt-repoene
 - Skillen kjøres fra watson-developer-repoets rotkatalog
+
+Alt annet (Xcode Command Line Tools, Homebrew, git, gh, KI-agenten (opencode, Copilot CLI eller pi), Docker
+Desktop, cplt, nav-pilot, Python, Java, Node, pnpm, kind, tilt, kubectl)
+installeres av `scripts/bootstrap.sh` og `scripts/doctor.sh`.
+
+## Steg 0: Helt ny Mac
+
+Brukeren kloner watson-developer og kjører bootstrap-skriptet i en vanlig
+terminal før skillen startes:
+
+```bash
+xcode-select --install   # bare på helt ny Mac, vent til installasjonen er ferdig
+git clone https://github.com/navikt/watson-developer.git
+cd watson-developer
+./scripts/bootstrap.sh
+```
+
+Uten Xcode Command Line Tools åpner `git clone` en installasjonsdialog i
+stedet for å klone. Skriptet installerer Homebrew, git, gh og agenten
+brukeren velger (opencode er standard), logger inn med `gh` og starter
+agenten med `nav-pilot --client <agent>`, slik at skillene er tilgjengelige. Kjører du
+allerede som agent i repoet, er steg 0 gjort.
 
 ## Instruksjoner til agenten
 
@@ -48,13 +67,14 @@ steg feiler, vis feilen tydelig og foreslå løsning før du fortsetter.
 ### Steg 1: AI-verktøy
 
 ```bash
-./scripts/setup-copilot.sh
+./scripts/setup-harness.sh
 ```
 
 Skriptet installerer `cplt` og `nav-pilot`, detekterer node version manager og
-genererer cplt-konfigurasjon med lesetilgang til Gradle-credentials og
-skrivetilgang til prosjektet og repoene. Det konfigurerer også MCP-serverne
-`com.figma/figma-mcp` og `com.jetbrains/intellij` i Copilot CLI. Sandboxen får bevisst ikke
+genererer cplt-konfigurasjon for den valgte agenten (`~/.config/watson-developer/agent`) med lesetilgang til Gradle-credentials og
+skrivetilgang til prosjektet og repoene. Det legger også inn et shell-alias slik at agenten alltid kjører i cplt-sandboxen. MCP-serverne i `mcp-servere.txt`
+settes opp av `bootstrap.sh` og `./sync.sh`, ikke her. Mangler noen, be
+brukeren kjøre `./scripts/setup-mcp.sh` i en vanlig terminal. Sandboxen får bevisst ikke
 lesetilgang til `~/.kube/config` (inneholder cluster-admin-credentials) —
 kjør `kubectl`/`tilt` direkte i terminalen utenfor sandboxen, eller legg til
 tilgangen selv hvis du ønsker det.
@@ -63,7 +83,8 @@ tilgangen selv hvis du ønsker det.
 
 **Hvis det feiler:**
 
-- `Homebrew er ikke installert` → Se https://brew.sh.
+- `Homebrew er ikke installert` → Be brukeren kjøre bootstrap-skriptet fra
+  steg 0 (`./scripts/bootstrap.sh`) i en vanlig terminal.
 - `Dette scriptet støtter kun macOS` → Skillen støtter bare macOS.
 - `python3 er ikke installert` eller `python3 … er for gammel` → Scriptet
   prøver å installere `python@3.12` automatisk med Homebrew (kreves for
@@ -72,10 +93,10 @@ tilgangen selv hvis du ønsker det.
 
 **Stopp her hvis skriptet varsler at cplt-tilgangene først trer i kraft etter
 restart** (meldingen «Denne økten kjører allerede inne i cplt-sandboxen …»
-eller «Restart 'copilot' …»). Den nye tilgangen til Gradle er da ikke aktiv i
+eller «Restart '<agent>' …»). Den nye tilgangen til Gradle er da ikke aktiv i
 denne økten ennå, og de neste stegene (spesielt klargjøring av `repos/`) kan
 feile med «Operation not permitted». Be
-brukeren avslutte og starte Copilot-økten på nytt, og fortsett først når en
+brukeren avslutte og starte agenten på nytt, og fortsett først når en
 ny økt kjører skriptet på nytt uten dette varselet.
 
 ### Steg 2: Pre-flight-sjekk
@@ -87,12 +108,15 @@ ny økt kjører skriptet på nytt uten dette varselet.
 **Forventet resultat:** `✅ Alt er på plass`.
 
 Utenfor cplt-sandboxen installerer skriptet manglende verktøy automatisk via
-Homebrew der det er mulig (kind, tilt, kubectl, gcloud, k9s, java, node,
-pnpm, python). **Kjører denne skillen inni cplt-sandboxen** (som er det
+Homebrew der det er mulig (git, gh, Docker Desktop, cplt,
+nav-pilot, kind, tilt, kubectl, gcloud, k9s, java, node, pnpm, python).
+Xcode Command Line Tools og Homebrew selv installeres ikke av doctor, de
+kommer fra bootstrap-skriptet. Doctor sjekker også at `gh` er innlogget og at
+Docker kjører. **Kjører denne skillen inni cplt-sandboxen** (som er det
 vanlige), **skjer ingen auto-installasjon** — Homebrew skriver til
 `/opt/homebrew`/`/usr/local`, utenfor det sandboxen har skrivetilgang til.
 Skriptet varsler om dette og lister opp hva som mangler; be brukeren
-installere de manglende verktøyene i en vanlig terminal utenfor Copilot-økten
+installere de manglende verktøyene i en vanlig terminal utenfor agenten
 (eller kjøre `./scripts/doctor.sh` der selv), og fortsett når `./scripts/doctor.sh`
 rapporterer `✅ Alt er på plass` i denne sandboxen.
 
@@ -111,9 +135,9 @@ frontend-avhengighetene er installert.
 
 **Hvis det feiler:**
 
-- `Repository not found` eller `403` → Avslutt cplt/Copilot, kjør `gh auth login`
+- `Repository not found` eller `403` → Avslutt agenten, kjør `gh auth login`
   i en vanlig terminal utenfor sandboxen, og kontroller at du har tilgang til
-  navikt-organisasjonen. Start deretter Copilot på nytt og kjør kloningen igjen.
+  navikt-organisasjonen. Start deretter agenten på nytt og kjør kloningen igjen.
 - `Kloning feilet` → Kontroller tilgang til repoet og kjør skriptet på nytt.
 - `pnpm install` feiler → Kontroller Node.js/pnpm-versjon og kjør installasjonen
   på nytt i det aktuelle frontend-repoet.
@@ -131,7 +155,7 @@ Hvis det feiler, start Docker Desktop, vent 10–15 sekunder og prøv igjen.
 ### Steg 5: Opprett kind-kluster
 
 **Dette steget må kjøres i en vanlig terminal utenfor cplt-sandboxen** —
-`setup-copilot.sh` (steg 1) gir bevisst ikke sandboxen lese-/skrivetilgang til
+`setup-harness.sh` (steg 1) gir bevisst ikke sandboxen lese-/skrivetilgang til
 `~/.kube/config` (se steg 1), og `kind create cluster`/
 `kubectl config use-context` må kunne opprette og skrive til den filen. Be
 brukeren kjøre kommandoen selv i et vanlig terminalvindu, og fortsett først
@@ -168,7 +192,7 @@ Neste steg:
   • Spør i Slack:           #team-holmes
 
 Tips:
-  • Start Copilot med sandbox: copilot
+  • Start agenten med sandbox: opencode, copilot eller pi
   • Restart shell først for å aktivere cplt-alias
 ────────────────────────────────────────
 ```

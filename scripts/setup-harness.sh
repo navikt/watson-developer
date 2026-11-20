@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Setter opp cplt (sandbox) og nav-pilot for watson-utviklere.
+# Setter opp agent-harnessen (cplt-sandbox, nav-pilot og valgt agent) for watson-utviklere.
 # Idempotent — trygt å kjøre flere ganger.
 set -euo pipefail
 
@@ -14,6 +14,51 @@ skip() { echo -e "  ${YELLOW}⟳${NC}  $1"; }
 fail() { echo -e "  ${RED}✗${NC}  $1"; exit 1; }
 info() { echo -e "  ${BOLD}ℹ${NC}  $1"; }
 
+AGENT_ARG=""
+AGENT_FLAG_SET=false
+while [[ "$#" -gt 0 ]]; do
+    case "$1" in
+        --agent)
+            [[ "$#" -ge 2 ]] || fail "Mangler verdi etter --agent. Gyldige verdier: opencode, copilot, pi."
+            AGENT_ARG="$2"
+            AGENT_FLAG_SET=true
+            shift
+            ;;
+        *) fail "Ukjent argument: $1. Bruk --agent <navn>." ;;
+    esac
+    shift
+done
+
+resolve_agent() {
+    local agent_file
+    agent_file="$HOME/.config/watson-developer/agent"
+    if [[ "$AGENT_FLAG_SET" == true ]]; then
+        AGENT="$AGENT_ARG"
+        AGENT_SOURCE="flag"
+    elif [[ -n "${WATSON_AGENT:-}" ]]; then
+        AGENT="$WATSON_AGENT"
+        AGENT_SOURCE="env"
+    elif [[ -f "$agent_file" ]]; then
+        IFS= read -r AGENT < "$agent_file" || AGENT=""
+        AGENT_SOURCE="file"
+    else
+        AGENT="opencode"
+        AGENT_SOURCE="default"
+    fi
+
+    case "$AGENT" in
+        opencode|copilot|pi) ;;
+        *) fail "Ugyldig agent '$AGENT'. Gyldige verdier: opencode, copilot, pi." ;;
+    esac
+}
+
+resolve_agent
+if [[ "$AGENT_SOURCE" == "flag" || "$AGENT_SOURCE" == "env" ]]; then
+    AGENT_CONFIG_DIR="$HOME/.config/watson-developer"
+    mkdir -p "$AGENT_CONFIG_DIR"
+    printf '%s\n' "$AGENT" > "$AGENT_CONFIG_DIR/agent"
+fi
+
 # ─── Plattformsjekk ──────────────────────────────────────────────────────────
 
 if [[ "$(uname -s)" != "Darwin" ]]; then
@@ -25,7 +70,7 @@ if ! command -v brew &>/dev/null; then
 fi
 
 echo ""
-echo -e "${BOLD}🔒 Watson — oppsett av cplt og nav-pilot${NC}"
+echo -e "${BOLD}🔒 Watson: oppsett av cplt og $AGENT${NC}"
 echo "────────────────────────────────────────"
 
 # ─── Installer cplt ──────────────────────────────────────────────────────────
@@ -220,8 +265,7 @@ READ_PATHS="$READ_PATHS]"
 #   prosjektroten), og en eventuell tidligere kubeconfig-lesetilgang (fra en
 #   tidligere versjon av dette scriptet) fjernes siden den ikke lenger gis
 #   automatisk — se begrunnelse ovenfor.
-RTK_PATH="$HOME/Library/Application Support/rtk"
-FRESH_WRITE_PATHS='["'"$WATSON_ROOT"'", "'"$RTK_PATH"'"]'
+FRESH_WRITE_PATHS='["'"$WATSON_ROOT"'"]'
 FRESH_CACHE_EXEC='["ms-playwright"]'
 PORTS_JSON='[5174]'
 REQUIRED_WRITE='["'"$WATSON_ROOT"'"]'
@@ -282,7 +326,7 @@ except ModuleNotFoundError:
 
 (config_file, fresh_read_raw, fresh_write_raw, fresh_cache_exec_raw,
  ports_raw, required_write_raw, required_ports_raw,
- legacy_kubeconfig_path) = sys.argv[1:9]
+ legacy_kubeconfig_path, agent) = sys.argv[1:10]
 
 config_file = Path(config_file)
 fresh_read = json.loads(fresh_read_raw)
@@ -297,7 +341,7 @@ required_ports = json.loads(required_ports_raw)
 # nå kreves:
 # - ~/.kube (hele katalogen) og selve kubeconfig-filen — en tidligere versjon
 #   av dette scriptet ga lesetilgang til kubeconfig automatisk, men det er
-#   ikke lenger tilfelle (se begrunnelse i setup-copilot.sh om cluster-admin-
+#   ikke lenger tilfelle (se begrunnelse i setup-harness.sh om cluster-admin-
 #   credentials). Fjernes hvis funnet fra en tidligere kjøring.
 # - foreldrekatalogen til watson-root — brukt av en eldre generasjon av dette
 #   scriptet (før repoer ble klonet til `repos/` under prosjektroten), og gir
@@ -448,7 +492,7 @@ if not config_file.exists():
         f"localhost = {serialize_array([5173, 5174, 8080, 8081])}",
         "",
         "[sandbox]",
-        'agent = "copilot"',
+        f'agent = {json.dumps(agent)}',
         "validate = false",
         "yes = true",
         "allow_gpg_signing = true",
@@ -508,7 +552,7 @@ desired_allow = {
     "localhost": [5173, 5174, 8080, 8081],
 }
 desired_sandbox = {
-    "agent": "copilot",
+    "agent": agent,
     "validate": False,
     "allow_env_files": True,
     "allow_localhost_any": True,
@@ -608,7 +652,7 @@ PY
 set +e
 MERGE_RESULT="$("$PYTHON_BIN" "$MERGE_SCRIPT_FILE" \
     "$CONFIG_FILE" "$READ_PATHS" "$FRESH_WRITE_PATHS" "$FRESH_CACHE_EXEC" "$PORTS_JSON" \
-    "$REQUIRED_WRITE" "$REQUIRED_PORTS" "$LEGACY_KUBECONFIG_PATH")"
+    "$REQUIRED_WRITE" "$REQUIRED_PORTS" "$LEGACY_KUBECONFIG_PATH" "$AGENT")"
 set -e
 rm -f "$MERGE_SCRIPT_FILE"
 trap - EXIT
@@ -645,41 +689,7 @@ esac
 # ─── MCP-servere ─────────────────────────────────────────────────────────────
 
 echo ""
-echo -e "${BOLD}MCP-servere:${NC}"
-
-MCP_CHANGED=false
-
-ensure_mcp_server() {
-    local name="$1"
-    local url="$2"
-    local transport="$3"
-    local details
-
-    if ! command -v copilot &>/dev/null; then
-        info "Fant ikke 'copilot' — hopper over $name. Kjør setup-scriptet på nytt etter at Copilot CLI er installert."
-        return
-    fi
-
-    if details="$(copilot mcp get "$name" 2>/dev/null)" \
-        && grep -Fq "URL: $url" <<<"$details"; then
-        skip "$name er allerede konfigurert"
-        return
-    fi
-
-    if copilot mcp add --transport "$transport" "$name" "$url" >/dev/null; then
-        MCP_CHANGED=true
-        ok "Konfigurerte $name"
-    else
-        fail "Kunne ikke konfigurere MCP-serveren $name"
-    fi
-}
-
-ensure_mcp_server "com.figma/figma-mcp" "https://mcp.figma.com/mcp" "http"
-ensure_mcp_server "com.jetbrains/intellij" "http://127.0.0.1:64342/sse" "sse"
-
-if [[ "$MCP_CHANGED" == true ]]; then
-    info "Start Copilot CLI på nytt for at de nye MCP-serverne skal bli tilgjengelige."
-fi
+info "MCP-servere settes opp med ./scripts/setup-mcp.sh (se mcp-servere.txt)"
 
 # ─── Restart-sjekk ────────────────────────────────────────────────────────────
 # cplt-sandboxen leser config ved oppstart av den sandboxede prosessen.
@@ -692,10 +702,10 @@ if [[ "$CONFIG_CHANGED" == true ]]; then
     if [[ -n "${__CPLT_WRAPPED:-}" ]]; then
         echo -e "${YELLOW}⚠${NC}  Denne økten kjører allerede inne i cplt-sandboxen med den forrige konfigurasjonen."
         echo "   De nye tilgangene trer først i kraft i en ny økt."
-        echo "   Avslutt denne Copilot-økten og start den på nytt før du fortsetter,"
+        echo "   Avslutt denne $AGENT-økten og start den på nytt før du fortsetter,"
         echo "   ellers vil kommandoer som tilt/kubectl/gradle sannsynligvis feile."
     else
-        info "Restart 'copilot' (eller åpne en ny terminal) for at de nye cplt-tilgangene skal tre i kraft."
+        info "Restart '$AGENT' (eller åpne en ny terminal) for at de nye cplt-tilgangene skal tre i kraft."
     fi
 fi
 
@@ -704,10 +714,10 @@ fi
 echo ""
 echo -e "${BOLD}Shell-alias:${NC}"
 
-if cplt --shell-install 2>&1 | grep -q "already"; then
+if cplt --shell-install --agent "$AGENT" 2>&1 | grep -q "already"; then
     skip "Shell-alias var allerede konfigurert"
 else
-    ok "'copilot' kjører nå gjennom cplt-sandboxen"
+    ok "'$AGENT' kjører nå gjennom cplt-sandboxen"
 fi
 
 # ─── Oppsummering ────────────────────────────────────────────────────────────
@@ -719,5 +729,5 @@ echo ""
 echo "  Neste steg:"
 echo "    1. Restart shell (eller: source ~/.zshrc)"
 echo "    2. Kjør: cplt doctor"
-echo "    3. Start Copilot med sandbox: copilot"
+echo "    3. Start $AGENT med sandbox: $AGENT"
 echo ""

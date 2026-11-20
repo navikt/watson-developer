@@ -3,9 +3,13 @@
   "version": "2026.11.17-100342-ea00381",
   "scope": "repo",
   "source_repo": "navikt/watson-agentpakke",
-  "source_sha": "cf73ce274ccc7467cf21fc4722b5a962fcfa8264",
+  "source_sha": "8bd9a93a7c3dc60b13923e4f49a8e7dbb4195014",
   "installed_at": "2026-11-18T12:56:33Z",
   "files": [
+    {
+      "path": ".github/agents/accessibility.agent.md",
+      "hash": "03d2ec6ccc4a2101"
+    },
     {
       "path": ".github/agents/aksel.agent.md",
       "hash": "c14ba829b924f33c",
@@ -85,6 +89,10 @@
     {
       "path": ".github/instructions/database.instructions.md",
       "hash": "9fc5267c1dc9dd01"
+    },
+    {
+      "path": ".github/instructions/deliberate-ai-use.instructions.md",
+      "hash": "c323e57324694374"
     },
     {
       "path": ".github/instructions/docker.instructions.md",
@@ -206,6 +214,10 @@
       "hash": "0c21beaedabd1e39"
     },
     {
+      "path": ".github/skills/deliberate-ai-use/",
+      "hash": "c329412b61d8f8c1"
+    },
+    {
       "path": ".github/skills/dependency-upgrade/",
       "hash": "9082af528312cc13"
     },
@@ -229,6 +241,10 @@
     {
       "path": ".github/skills/java-to-kotlin/",
       "hash": "52cd8180b93a846b"
+    },
+    {
+      "path": ".github/skills/kafka/",
+      "hash": "312ab4de91a246fa"
     },
     {
       "path": ".github/skills/klarsprak/",
@@ -320,6 +336,10 @@
       "hash": "e809030f7e8253ea"
     },
     {
+      "path": ".github/skills/security-owasp/",
+      "hash": "c020e45389dad61d"
+    },
+    {
       "path": ".github/skills/security-review/",
       "hash": "09af5a47b658c7fe",
       "status": "conflict"
@@ -350,8 +370,8 @@
     },
     {
       "path": ".github/skills/watson-setup/",
-      "hash": "72d2b0705d40261e",
-      "revision": "cf73ce274ccc7467cf21fc4722b5a962fcfa8264"
+      "hash": "40a5470a29898853",
+      "revision": "8bd9a93a7c3dc60b13923e4f49a8e7dbb4195014"
     },
     {
       "path": ".github/skills/web-design-reviewer/",

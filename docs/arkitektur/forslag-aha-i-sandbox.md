@@ -1,6 +1,6 @@
 # Forslag: lesetilgang til Aha! fra cplt-sandboxen
 
-Status: forslag. Ingenting er endret i `setup-copilot.sh` eller i noens cplt-config.
+Status: forslag. Ingenting er endret i `setup-harness.sh` eller i noens cplt-config.
 
 ## Problemet
 
@@ -19,7 +19,7 @@ Gi sandboxen lesetilgang til én smal fil som bare har Aha-verdiene.
    AHA_DOMAIN=nav1
    AHA_API_KEY=<personlig nøkkel fra Aha: Settings, Personal, Developer, API keys>
    ```
-2. `setup-copilot.sh` legger stien til `allow.read` i `~/.config/cplt/config.toml`, men bare når filen finnes. Det
+2. `setup-harness.sh` legger stien til `allow.read` i `~/.config/cplt/config.toml`, men bare når filen finnes. Det
    følger samme mønster som `~/.gradle/gradle.properties`.
 3. `aha-watson` leser `~/.config/watson/aha.env` først, med `.env.personal` som reserve for kjøring utenfor sandbox.
 4. Nettverk: cplt tillater allerede port 443. Med `--with-proxy` og `--allowed-domains` bør `nav1.aha.io` stå på listen.

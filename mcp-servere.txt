@@ -1,0 +1,6 @@
+# Sentral liste over MCP-servere som scripts/setup-mcp.sh konfigurerer.
+# Legg nye servere til her, ett registernavn per linje.
+# Figma: design til kode (utviklere og designere)
+com.figma/figma-mcp
+# Aha!: saker, status og tildeling
+io.aha/aha-mcp

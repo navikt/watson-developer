@@ -3,8 +3,8 @@
 Velkommen til Team Holmes! Følg denne sjekklisten for å komme i gang med Watson-porteføljen.
 Spør en kollega dersom noe er uklart — vi hjelper gjerne.
 
-> 💡 **Tips:** Aktiver Copilot-skillen `watson-setup` (`@.github/skills/watson-setup/SKILL.md`)
-> for å automatisere hele oppsettet.
+> 💡 **Tips:** Følg «Kom i gang» i [README](../../README.md): klon repoet, kjør
+> `./scripts/bootstrap.sh` og be agenten kjøre skillen `watson-setup`.
 
 ---
 
@@ -24,7 +24,11 @@ Kjør `./scripts/doctor.sh` — det sjekker hva som mangler automatisk.
 
 Manuell sjekkliste:
 
+- [ ] Xcode Command Line Tools — `xcode-select --install`
 - [ ] [Homebrew](https://brew.sh) er installert (`/opt/homebrew/bin/brew` eller `/usr/local/bin/brew`)
+- [ ] `git` og `gh` — `brew install git gh`, logg inn med `gh auth login`
+- [ ] KI-agent (opencode, Copilot CLI eller pi) — `./scripts/bootstrap.sh`
+- [ ] Docker Desktop — `brew install --cask docker`, start den én gang og godta lisensen
 - [ ] `kind` — `brew install kind`
 - [ ] `tilt` — `brew install tilt`
 - [ ] `kubectl` — `brew install kubectl`
@@ -38,7 +42,9 @@ Manuell sjekkliste:
 
 ## 📂 Lokal oppsett
 
-- [ ] Klon `watson-developer`: `git clone git@github.com:navikt/watson-developer.git`
+- [ ] Klon `watson-developer`: `git clone https://github.com/navikt/watson-developer.git`
+- [ ] Kjør `./scripts/bootstrap.sh` i en vanlig terminal
+- [ ] Sett opp MCP-serverne i `mcp-servere.txt`: `./scripts/setup-mcp.sh` (gjøres av bootstrap)
 - [ ] Klon alle Watson-repoer: `./scripts/clone-repos.sh`
 - [ ] Opprett kind-kluster: `./scripts/setup-kind.sh`
 - [ ] Start lokalmiljøet: `./start`
