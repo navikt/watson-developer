@@ -307,8 +307,18 @@ else
 fi
 
 echo ""
-echo -e "${BOLD}fnr-guard (pre-commit mot fødselsnumre):${NC}"
+echo -e "${BOLD}MCP-servere:${NC}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if mcp_missing="$("$SCRIPT_DIR/setup-mcp.sh" --check 2>/dev/null)"; then
+    :
+else
+    while IFS= read -r mcp_name; do
+        [[ -z "$mcp_name" ]] || warn "$mcp_name mangler. Kjør: ./scripts/setup-mcp.sh"
+    done <<< "$mcp_missing"
+fi
+
+echo ""
+echo -e "${BOLD}fnr-guard (pre-commit mot fødselsnumre):${NC}"
 if ! "$SCRIPT_DIR/install-git-hooks.sh" --status; then
     ERRORS=$((ERRORS + 1))
 fi

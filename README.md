@@ -50,6 +50,19 @@ kind-klusteret. Start lokalmiljøet med `./start` når den er ferdig.
 
 For manuelt oppsett, se [docs/SETUP.md](docs/SETUP.md).
 
+### MCP-servere
+
+MCP-serverne teamet bruker står i [`mcp-servere.txt`](mcp-servere.txt).
+`bootstrap.sh` og `./sync.sh` setter opp de som mangler med
+`nav-pilot mcp enable`. Du kan også kjøre det selv i en vanlig terminal:
+
+```bash
+./scripts/setup-mcp.sh
+```
+
+Legg nye servere til i `mcp-servere.txt`, så får resten av teamet dem ved
+neste `./sync.sh`.
+
 Ny i teamet? Start med [onboarding-sjekklisten](docs/onboarding/sjekkliste.md).
 
 ---

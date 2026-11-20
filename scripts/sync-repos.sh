@@ -109,4 +109,19 @@ fi
 
 "$SCRIPT_DIR/install-git-hooks.sh"
 
+echo ""
+echo "🔌 MCP-servere"
+if [[ -n "${__CPLT_WRAPPED:-}" ]]; then
+  if missing_mcp="$("$ROOT_REPO_DIR/scripts/setup-mcp.sh" --check 2>/dev/null)"; then
+    :
+  else
+    missing_mcp_list="$(printf '%s\n' "$missing_mcp" | tr '\n' ' ' | sed 's/[[:space:]]*$//')"
+    echo -e "  ${YELLOW}⚠${NC}  Mangler MCP-servere: $missing_mcp_list. Kjør ./scripts/setup-mcp.sh i en vanlig terminal"
+  fi
+else
+  if ! "$ROOT_REPO_DIR/scripts/setup-mcp.sh" --missing-only; then
+    echo -e "  ${YELLOW}⚠${NC}  Kunne ikke sette opp MCP-serverne automatisk. Kjør ./scripts/setup-mcp.sh i en vanlig terminal."
+  fi
+fi
+
 echo "✅ Alle repoer er oppdatert!"

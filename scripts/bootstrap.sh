@@ -95,6 +95,14 @@ fi
 gh auth setup-git
 ok "GitHub CLI er konfigurert for Git"
 
+if command -v nav-pilot &>/dev/null; then
+    skip "nav-pilot er allerede installert"
+else
+    info "Installerer nav-pilot med Homebrew."
+    brew install navikt/tap/nav-pilot
+    ok "nav-pilot er installert"
+fi
+
 resolve_opencode() {
     if command -v opencode &>/dev/null; then
         command -v opencode
@@ -143,6 +151,10 @@ OPENCODE_MAJOR="$(get_opencode_major || true)"
 [[ -n "$OPENCODE_MAJOR" ]] || fail "Klarte ikke å lese opencode-versjonen fra $OPENCODE_BIN."
 [[ "$OPENCODE_MAJOR" -ge 2 ]] || fail "Opencode v2 eller nyere er ikke installert. Kjør bootstrap-skriptet på nytt."
 ok "opencode v$OPENCODE_MAJOR er klart ($OPENCODE_BIN)"
+
+if ! ./scripts/setup-mcp.sh --missing-only; then
+    echo -e "  ${YELLOW}⚠${NC}  Kunne ikke sette opp alle MCP-serverne. Kjør ./scripts/setup-mcp.sh i en vanlig terminal."
+fi
 
 echo ""
 echo "┌────────────────────────────────────────────────────────────┐"
