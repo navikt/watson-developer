@@ -1,7 +1,7 @@
 {
   "contractVersion": "1",
   "source": "navikt/watson-agentpakke",
-  "sha": "cf73ce274ccc7467cf21fc4722b5a962fcfa8264",
+  "sha": "8bd9a93a7c3dc60b13923e4f49a8e7dbb4195014",
   "items": {
     "accessibility": "instruction",
     "aha-oppgave": "skill",
