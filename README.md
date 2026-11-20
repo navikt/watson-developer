@@ -28,14 +28,15 @@ Inngangsport og utviklermiljø for **Team Holmes** sin Watson-portefølje.
 Kjør dette i Terminal på Macen din:
 
 ```bash
+xcode-select --install   # bare på helt ny Mac, vent til installasjonen er ferdig
 mkdir -p ~/code/nav/holmes/watson && cd ~/code/nav/holmes/watson
 git clone https://github.com/navikt/watson-developer.git
 cd watson-developer
 ./scripts/bootstrap.sh
 ```
 
-På en helt ny Mac åpner `git clone` en dialog som installerer Xcode Command
-Line Tools. Fullfør den og kjør `git clone` på nytt.
+`xcode-select --install` trengs bare på en helt ny Mac. Uten Xcode Command
+Line Tools åpner `git clone` en installasjonsdialog i stedet for å klone.
 
 `bootstrap.sh` spør hvilken agent du vil bruke: [opencode](https://opencode.ai/v2/docs)
 (standard), [GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli)

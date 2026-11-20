@@ -111,7 +111,7 @@ else
     [[ -x "$BREW_BIN" ]] || fail "Homebrew-installasjonen ble ikke funnet på $BREW_BIN."
 fi
 
-SHELLENV_LINE="eval \"\$($BREW_PREFIX/bin/brew shellenv)\""
+SHELLENV_LINE="eval \"\$($BREW_BIN shellenv)\""
 eval "$("$BREW_BIN" shellenv)"
 ZPROFILE="$HOME/.zprofile"
 touch "$ZPROFILE"
@@ -228,6 +228,8 @@ case "$AGENT" in
         ;;
 esac
 
+export PATH="$(dirname "$AGENT_BIN"):$PATH"
+
 if ! ./scripts/setup-mcp.sh --missing-only --agent "$AGENT"; then
     echo -e "  ${YELLOW}⚠${NC}  Kunne ikke sette opp alle MCP-serverne for $AGENT. Kjør ./scripts/setup-mcp.sh i en vanlig terminal."
 fi
@@ -240,7 +242,7 @@ echo "└───────────────────────�
 echo ""
 
 if [[ "$START_AGENT" == true ]]; then
-    exec "$AGENT_BIN"
+    exec nav-pilot --client "$AGENT"
 fi
 
 info "Hoppet over oppstart med --no-start."

@@ -12,14 +12,15 @@ Detaljert guide for å sette opp Watson-porteføljens lokale utviklingsmiljø.
 Klon repoet og kjør bootstrap-skriptet i en vanlig terminal (ikke i cplt):
 
 ```bash
+xcode-select --install   # bare på helt ny Mac, vent til installasjonen er ferdig
 mkdir -p ~/code/nav/holmes/watson && cd ~/code/nav/holmes/watson
 git clone https://github.com/navikt/watson-developer.git
 cd watson-developer
 ./scripts/bootstrap.sh
 ```
 
-Mangler Xcode Command Line Tools, åpner `git clone` en installasjonsdialog.
-Fullfør den og kjør `git clone` på nytt. Skriptet installerer Homebrew, git,
+`xcode-select --install` trengs bare på en helt ny Mac. Uten Xcode Command
+Line Tools åpner `git clone` en installasjonsdialog i stedet for å klone. Skriptet installerer Homebrew, git,
 gh og agenten du velger, logger deg inn på GitHub og starter agenten. Be
 agenten kjøre skillen `watson-setup`. Bruk `./scripts/bootstrap.sh --no-start`
 hvis du ikke vil starte agenten med en gang.
