@@ -377,16 +377,16 @@ fi
 echo ""
 echo -e "${BOLD}MCP-servere:${NC}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-if mcp_missing="$("$SCRIPT_DIR/setup-mcp.sh" --check 2>/dev/null)"; then
-    :
+if mcp_missing="$("$SCRIPT_DIR/setup-mcp.sh" --check --agent "$AGENT" 2>/dev/null)"; then
+    if [[ -n "$mcp_missing" ]]; then echo "$mcp_missing"; else ok "Alle MCP-servere i mcp-servere.txt er satt opp"; fi
 else
     mcp_status=$?
     if [[ "$mcp_status" -eq 1 && -n "$mcp_missing" ]]; then
         while IFS= read -r mcp_name; do
-            [[ -z "$mcp_name" ]] || warn "$mcp_name mangler. Kjør: ./scripts/setup-mcp.sh"
+            [[ -z "$mcp_name" ]] || warn "$mcp_name mangler. Kjør: ./scripts/setup-mcp.sh --agent $AGENT"
         done <<< "$mcp_missing"
     else
-        fail "MCP-sjekken feilet. Kjør ./scripts/setup-mcp.sh --check for detaljer"
+        fail "MCP-sjekken feilet. Kjør ./scripts/setup-mcp.sh --check --agent $AGENT for detaljer"
     fi
 fi
 
