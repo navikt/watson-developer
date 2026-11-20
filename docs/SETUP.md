@@ -9,18 +9,20 @@ Detaljert guide for å sette opp Watson-porteføljens lokale utviklingsmiljø.
 
 ## Helt ny Mac
 
-Mangler maskinen Homebrew, git eller Copilot CLI, kjør dette i en vanlig
-terminal (ikke i Copilot eller cplt):
+Klon repoet og kjør bootstrap-skriptet i en vanlig terminal (ikke i cplt):
 
 ```bash
-bash -c "$(curl -fsSL https://raw.githubusercontent.com/navikt/watson-developer/main/scripts/bootstrap.sh)"
+mkdir -p ~/code/nav/holmes/watson && cd ~/code/nav/holmes/watson
+git clone https://github.com/navikt/watson-developer.git
+cd watson-developer
+./scripts/bootstrap.sh
 ```
 
-Skriptet installerer Xcode Command Line Tools, Homebrew, git og gh, logger deg
-inn på GitHub, kloner repoet til `~/code/nav/holmes/watson/watson-developer`
-(overstyr med `WATSON_DIR`) og kjører `doctor.sh` og `setup-copilot.sh`.
-Åpne Docker Desktop én gang etterpå og godta lisensen. Start så `copilot` i
-repoet og be om skillen `watson-setup`.
+Mangler Xcode Command Line Tools, åpner `git clone` en installasjonsdialog.
+Fullfør den og kjør `git clone` på nytt. Skriptet installerer Homebrew, git,
+gh og opencode 2, logger deg inn på GitHub og starter opencode. Be opencode
+kjøre skillen `watson-setup`. Bruk `./scripts/bootstrap.sh --no-start` hvis du
+ikke vil starte opencode med en gang.
 
 ---
 
@@ -30,7 +32,6 @@ repoet og be om skillen `watson-setup`.
 | -------------------------------------------------------------------- | ----------------------------------- | ------------------------------------------------------------- |
 | [cplt](https://github.com/navikt/cplt)                               | `brew install navikt/tap/cplt`      | Kernel-sandbox for AI-agenter                                 |
 | [nav-pilot](https://ki-utvikling.nav.no/nav-pilot/docs)              | `brew install navikt/tap/nav-pilot` | Nav-kunnskap for GitHub Copilot                               |
-| [rtk](https://github.com/rtk-ai/rtk)                                 | `brew install rtk`                  | Komprimerer terminaloutput — reduserer tokenforbruk i Copilot |
 | [kind](https://kind.sigs.k8s.io/docs/user/quick-start/#installation) | `brew install kind`                 | Lokal Kubernetes-kluster                                      |
 | [tilt](https://docs.tilt.dev/install.html)                           | `brew install tilt`                 | Lokal utviklingsserver                                        |
 | [kubectl](https://kubernetes.io/docs/tasks/tools/)                   | `brew install kubectl`              | Kubernetes-klient                                             |
@@ -71,14 +72,6 @@ ikke den eksponeringen selv om det ikke inneholder ekte hemmeligheter. Kjør
 `kubectl`/`tilt` direkte i terminalen (utenfor sandboxen), eller legg til
 tilgangen selv i `~/.config/cplt/config.toml` hvis du ønsker at agenten skal
 kunne bruke dem.
-
-Installer deretter [rtk](https://github.com/rtk-ai/rtk) for å komprimere terminaloutput (testresultater, diff, kubectl) før det når Copilots kontekstvindu:
-
-```bash
-brew install rtk && rtk init -g --copilot
-```
-
-> **Merk:** RTK prosesserer terminaloutput lokalt — ikke bruk det med output som kan inneholde sensitive data (f.eks. produksjonslogger med PII).
 
 ### 2. Sjekk at verktøyene er på plass
 

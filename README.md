@@ -25,14 +25,28 @@ Inngangsport og utviklermiljø for **Team Holmes** sin Watson-portefølje.
 
 ## Kom i gang
 
-### Automatisk oppsett med Copilot
+Kjør dette i Terminal på Macen din:
 
-1. Installer [GitHub Copilot CLI](https://docs.github.com/en/copilot/github-copilot-in-the-cli) ved å følge dokumentasjonen.
-2. Start Copilot CLI med `copilot`.
-3. Gå ut av `/plan`-modus hvis Copilot CLI starter i denne modusen.
-4. Kjør skillen `/watson-setup`.
-5. Vent til oppsettet er ferdig. Skillen installerer verktøy, kloner repoer og oppretter kind-klusteret.
-6. Start lokalmiljøet med `./start` når skillen er ferdig.
+```bash
+mkdir -p ~/code/nav/holmes/watson && cd ~/code/nav/holmes/watson
+git clone https://github.com/navikt/watson-developer.git
+cd watson-developer
+./scripts/bootstrap.sh
+```
+
+På en helt ny Mac åpner `git clone` en dialog som installerer Xcode Command
+Line Tools. Fullfør den og kjør `git clone` på nytt.
+
+`bootstrap.sh` installerer Homebrew, git, gh og
+[opencode](https://opencode.ai/v2/docs) (versjon 2), logger deg inn på GitHub
+og starter opencode i repoet. Når opencode har startet, skriver du:
+
+```text
+Kjør skillen watson-setup
+```
+
+Skillen installerer resten av verktøyene, kloner repoene og oppretter
+kind-klusteret. Start lokalmiljøet med `./start` når den er ferdig.
 
 For manuelt oppsett, se [docs/SETUP.md](docs/SETUP.md).
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Bootstrap for en helt ny Mac. Kjøres fra en vanlig terminal.
+# Setter opp grunnverktøy og starter opencode v2 fra watson-developer.
 set -euo pipefail
 
 GREEN='\033[0;32m'
@@ -21,13 +21,24 @@ if [[ "$(uname -s)" != "Darwin" ]]; then
     fail "Dette skriptet støtter kun macOS."
 fi
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR/.."
+
 case "$(uname -m)" in
     arm64) BREW_PREFIX="/opt/homebrew" ;;
     *) BREW_PREFIX="/usr/local" ;;
 esac
 
+START_OPENCODE=true
+for arg in "$@"; do
+    case "$arg" in
+        --no-start) START_OPENCODE=false ;;
+        *) fail "Ukjent argument: $arg. Bruk --no-start for å hoppe over oppstart." ;;
+    esac
+done
+
 echo ""
-echo -e "${BOLD}Watson Developer: første oppsett på Mac${NC}"
+echo -e "${BOLD}Watson Developer: oppsett av opencode${NC}"
 echo "────────────────────────────────────────"
 
 if xcode-select -p &>/dev/null; then
@@ -84,32 +95,64 @@ fi
 gh auth setup-git
 ok "GitHub CLI er konfigurert for Git"
 
-WATSON_DIR="${WATSON_DIR:-$HOME/code/nav/holmes/watson/watson-developer}"
-if [[ -d "$WATSON_DIR" ]]; then
-    skip "Katalogen finnes allerede, hopper over kloning: $WATSON_DIR"
+resolve_opencode() {
+    if command -v opencode &>/dev/null; then
+        command -v opencode
+    elif [[ -x "$HOME/.opencode/bin/opencode" ]]; then
+        echo "$HOME/.opencode/bin/opencode"
+    else
+        return 1
+    fi
+}
+
+get_opencode_major() {
+    local version_output version major
+    version_output="$("$OPENCODE_BIN" --version 2>/dev/null)" || return 1
+    case "$version_output" in
+        "opencode v"*) version="${version_output#opencode v}" ;;
+        *) version="$version_output" ;;
+    esac
+    major="${version%%.*}"
+    case "$major" in
+        ''|*[!0-9]*) return 1 ;;
+    esac
+    printf '%s\n' "$major"
+}
+
+OPENCODE_BIN="$(resolve_opencode || true)"
+if [[ -z "$OPENCODE_BIN" ]]; then
+    info "Installerer opencode v2."
+    curl -fsSL https://opencode.ai/v2/install | bash
+    OPENCODE_BIN="$(resolve_opencode || true)"
+    [[ -n "$OPENCODE_BIN" ]] || fail "Fant ikke opencode etter installasjonen. Åpne en ny terminal og kjør skriptet på nytt."
 else
-    mkdir -p "$(dirname "$WATSON_DIR")"
-    info "Kloner watson-developer til $WATSON_DIR"
-    git clone https://github.com/navikt/watson-developer.git "$WATSON_DIR"
-    ok "watson-developer er klonet"
+    skip "Fant opencode: $OPENCODE_BIN"
+    OPENCODE_MAJOR="$(get_opencode_major || true)"
+    [[ -n "$OPENCODE_MAJOR" ]] || fail "Klarte ikke å lese opencode-versjonen fra $OPENCODE_BIN."
+    if [[ "$OPENCODE_MAJOR" -lt 2 ]]; then
+        info "Oppgraderer opencode til v2."
+        "$OPENCODE_BIN" upgrade --major
+    else
+        skip "opencode v$OPENCODE_MAJOR eller nyere er allerede installert"
+    fi
 fi
 
-cd "$WATSON_DIR"
-info "Sjekker og installerer resterende avhengigheter."
-if ! ./scripts/doctor.sh; then
-    fail "Doctor fant feil. Se meldingene over, rett problemene og kjør bootstrap-skriptet på nytt."
+OPENCODE_BIN="$(resolve_opencode || true)"
+[[ -n "$OPENCODE_BIN" ]] || fail "Fant ikke opencode etter installasjon eller oppgradering."
+OPENCODE_MAJOR="$(get_opencode_major || true)"
+[[ -n "$OPENCODE_MAJOR" ]] || fail "Klarte ikke å lese opencode-versjonen fra $OPENCODE_BIN."
+[[ "$OPENCODE_MAJOR" -ge 2 ]] || fail "Opencode v2 eller nyere er ikke installert. Kjør bootstrap-skriptet på nytt."
+ok "opencode v$OPENCODE_MAJOR er klart ($OPENCODE_BIN)"
+
+echo ""
+echo "┌────────────────────────────────────────────────────────────┐"
+echo "│ Når opencode starter, skriv: Kjør skillen watson-setup      │"
+echo "│ Nye terminaler får opencode på PATH.                        │"
+echo "└────────────────────────────────────────────────────────────┘"
+echo ""
+
+if [[ "$START_OPENCODE" == true ]]; then
+    exec "$OPENCODE_BIN"
 fi
 
-info "Setter opp Copilot, cplt og nav-pilot."
-./scripts/setup-copilot.sh
-
-echo ""
-echo "────────────────────────────────────────"
-echo -e "${GREEN}${BOLD}✅ Første oppsett er ferdig${NC}"
-echo ""
-echo "Neste steg:"
-echo "  1. Åpne Docker Desktop én gang og godta lisensen."
-echo "  2. Åpne en ny terminal, eller kjør: source ~/.zprofile"
-echo "  3. Gå til katalogen: cd \"$WATSON_DIR\""
-echo "  4. Start copilot og be den kjøre skillen watson-setup."
-echo ""
+info "Hoppet over oppstart med --no-start."

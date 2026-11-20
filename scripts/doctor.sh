@@ -23,7 +23,7 @@ info() { echo -e "  ${YELLOW}⚙${NC}  $1"; }
 # eller bevisst valgt av utvikleren).
 #
 # Kjører IKKE inni cplt-sandboxen: den gir kun skrivetilgang til
-# prosjektroten og RTK sin katalog, mens Homebrew skriver til
+# prosjektroten, mens Homebrew skriver til
 # /opt/homebrew eller /usr/local. Et forsøk der ville bare feile med en
 # forvirrende "Operation not permitted" — vi sjekker derfor $__CPLT_WRAPPED
 # og hopper rett til å be brukeren installere manuelt i en vanlig terminal.
@@ -174,6 +174,40 @@ check_python_version() {
     fi
 }
 
+check_opencode() {
+    local opencode_bin version_output version major
+    if command -v opencode &>/dev/null; then
+        opencode_bin="$(command -v opencode)"
+    elif [[ -x "$HOME/.opencode/bin/opencode" ]]; then
+        opencode_bin="$HOME/.opencode/bin/opencode"
+    else
+        fail "opencode v2 mangler. Kjør: ./scripts/bootstrap.sh"
+        return
+    fi
+
+    if ! version_output="$("$opencode_bin" --version 2>/dev/null)"; then
+        fail "Kunne ikke lese opencode-versjonen. Kjør: ./scripts/bootstrap.sh"
+        return
+    fi
+    case "$version_output" in
+        "opencode v"*) version="${version_output#opencode v}" ;;
+        *) version="$version_output" ;;
+    esac
+    major="${version%%.*}"
+    case "$major" in
+        ''|*[!0-9]*)
+            fail "Kunne ikke lese opencode-versjonen. Kjør: ./scripts/bootstrap.sh"
+            return
+            ;;
+    esac
+
+    if [[ "$major" -ge 2 ]]; then
+        ok "opencode $version (v2 eller nyere)"
+    else
+        fail "opencode $version er for gammel. Kjør: ./scripts/bootstrap.sh"
+    fi
+}
+
 echo ""
 echo -e "${BOLD}🔍 Watson Developer — pre-flight sjekk${NC}"
 echo "────────────────────────────────────────"
@@ -204,7 +238,7 @@ elif [[ -x "/usr/local/bin/brew" ]]; then
     eval "$(/usr/local/bin/brew shellenv)"
     warn "Homebrew er installert, men manglet på PATH. Legg til eval \"\$(/usr/local/bin/brew shellenv)\" i ~/.zprofile"
 else
-    fail "Homebrew mangler. Kjør: bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/navikt/watson-developer/main/scripts/bootstrap.sh)\""
+    fail "Homebrew mangler. Kjør: ./scripts/bootstrap.sh"
 fi
 check_cmd "git"  "brew install git" "git"
 check_cmd "curl" "installer curl fra macOS, eller kjør: brew install curl" "curl"
@@ -240,17 +274,9 @@ check_cmd "kubectl" "brew install kubectl" "kubectl"
 echo ""
 echo -e "${BOLD}AI-verktøy:${NC}"
 check_python_version
-check_cmd "copilot" "brew install copilot-cli" "copilot-cli"
+check_opencode
 check_cmd "cplt" "brew install navikt/tap/cplt" "navikt/tap/cplt"
 check_cmd "nav-pilot" "brew install navikt/tap/nav-pilot" "navikt/tap/nav-pilot"
-if command -v rtk &>/dev/null; then
-    ok "rtk (valgfritt, installert)"
-elif brew_install "rtk" && command -v rtk &>/dev/null; then
-    ok "rtk (valgfritt, auto-installert)"
-    INSTALLED=$((INSTALLED + 1))
-else
-    warn "rtk er ikke installert (valgfritt). Kjør: brew install rtk"
-fi
 
 echo ""
 echo -e "${BOLD}GCP og Kubernetes-administrasjon:${NC}"

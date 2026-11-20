@@ -220,8 +220,7 @@ READ_PATHS="$READ_PATHS]"
 #   prosjektroten), og en eventuell tidligere kubeconfig-lesetilgang (fra en
 #   tidligere versjon av dette scriptet) fjernes siden den ikke lenger gis
 #   automatisk — se begrunnelse ovenfor.
-RTK_PATH="$HOME/Library/Application Support/rtk"
-FRESH_WRITE_PATHS='["'"$WATSON_ROOT"'", "'"$RTK_PATH"'"]'
+FRESH_WRITE_PATHS='["'"$WATSON_ROOT"'"]'
 FRESH_CACHE_EXEC='["ms-playwright"]'
 PORTS_JSON='[5174]'
 REQUIRED_WRITE='["'"$WATSON_ROOT"'"]'
