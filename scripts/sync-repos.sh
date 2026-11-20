@@ -107,7 +107,18 @@ if [ "$failed" -gt 0 ]; then
   exit 1
 fi
 
-"$SCRIPT_DIR/install-git-hooks.sh"
+echo ""
+echo "🛡️  fnr-guard"
+if [[ -n "${__CPLT_WRAPPED:-}" ]]; then
+  # pnpm install og git config er sperret i sandboxen. Sjekk bare status.
+  if ! "$SCRIPT_DIR/install-git-hooks.sh" --status; then
+    echo -e "  ${YELLOW}⚠${NC}  fnr-guard mangler eller er ikke aktiv i alle repoer. Kjør ./scripts/install-git-hooks.sh i en vanlig terminal utenfor sandboxen"
+  fi
+elif "$SCRIPT_DIR/install-git-hooks.sh" --status >/dev/null 2>&1; then
+  echo -e "  ${GREEN}✓${NC} Installert"
+elif ! "$SCRIPT_DIR/install-git-hooks.sh"; then
+  echo -e "  ${YELLOW}⚠${NC}  Kunne ikke installere fnr-guard. Kjør ./scripts/install-git-hooks.sh på nytt"
+fi
 
 echo ""
 echo "🔌 MCP-servere"

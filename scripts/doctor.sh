@@ -397,7 +397,7 @@ if [[ -x "$SCRIPT_DIR/../node_modules/.bin/fnr-guard" ]]; then
         ERRORS=$((ERRORS + 1))
     fi
 else
-    warn "fnr-guard er ikke installert ennå. Den installeres av ./scripts/clone-repos.sh eller ./sync.sh"
+    warn "fnr-guard er ikke installert ennå. Kjør ./scripts/install-git-hooks.sh (eller ./sync.sh) utenfor sandboxen"
 fi
 
 echo ""
