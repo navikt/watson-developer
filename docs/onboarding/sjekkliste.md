@@ -4,7 +4,7 @@ Velkommen til Team Holmes! Følg denne sjekklisten for å komme i gang med Watso
 Spør en kollega dersom noe er uklart — vi hjelper gjerne.
 
 > 💡 **Tips:** Følg «Kom i gang» i [README](../../README.md): klon repoet, kjør
-> `./scripts/bootstrap.sh` og be opencode kjøre skillen `watson-setup`.
+> `./scripts/bootstrap.sh` og be agenten kjøre skillen `watson-setup`.
 
 ---
 
@@ -27,7 +27,7 @@ Manuell sjekkliste:
 - [ ] Xcode Command Line Tools — `xcode-select --install`
 - [ ] [Homebrew](https://brew.sh) er installert (`/opt/homebrew/bin/brew` eller `/usr/local/bin/brew`)
 - [ ] `git` og `gh` — `brew install git gh`, logg inn med `gh auth login`
-- [ ] opencode 2 — `./scripts/bootstrap.sh`
+- [ ] KI-agent (opencode, Copilot CLI eller pi) — `./scripts/bootstrap.sh`
 - [ ] Docker Desktop — `brew install --cask docker`, start den én gang og godta lisensen
 - [ ] `kind` — `brew install kind`
 - [ ] `tilt` — `brew install tilt`

@@ -37,9 +37,12 @@ cd watson-developer
 På en helt ny Mac åpner `git clone` en dialog som installerer Xcode Command
 Line Tools. Fullfør den og kjør `git clone` på nytt.
 
-`bootstrap.sh` installerer Homebrew, git, gh og
-[opencode](https://opencode.ai/v2/docs) (versjon 2), logger deg inn på GitHub
-og starter opencode i repoet. Når opencode har startet, skriver du:
+`bootstrap.sh` spør hvilken agent du vil bruke: [opencode](https://opencode.ai/v2/docs)
+(standard), [GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli)
+eller [pi](https://www.npmjs.com/package/@earendil-works/pi-coding-agent). Du kan
+også velge med `./scripts/bootstrap.sh --agent copilot`. Skriptet installerer
+Homebrew, git, gh og agenten, logger deg inn på GitHub og starter agenten i
+repoet. Når agenten har startet, skriver du:
 
 ```text
 Kjør skillen watson-setup

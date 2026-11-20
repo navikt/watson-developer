@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Setter opp grunnverktøy og starter opencode v2 fra watson-developer.
+# Setter opp grunnverktøy og starter valgt agent fra watson-developer.
 set -euo pipefail
 
 GREEN='\033[0;32m'
@@ -29,16 +29,63 @@ case "$(uname -m)" in
     *) BREW_PREFIX="/usr/local" ;;
 esac
 
-START_OPENCODE=true
-for arg in "$@"; do
-    case "$arg" in
-        --no-start) START_OPENCODE=false ;;
-        *) fail "Ukjent argument: $arg. Bruk --no-start for å hoppe over oppstart." ;;
+START_AGENT=true
+AGENT_ARG=""
+AGENT_FLAG_SET=false
+while [[ "$#" -gt 0 ]]; do
+    case "$1" in
+        --no-start) START_AGENT=false ;;
+        --agent)
+            [[ "$#" -ge 2 ]] || fail "Mangler verdi etter --agent. Gyldige verdier: opencode, copilot, pi."
+            AGENT_ARG="$2"
+            AGENT_FLAG_SET=true
+            shift
+            ;;
+        *) fail "Ukjent argument: $1. Bruk --agent <navn> eller --no-start." ;;
     esac
+    shift
 done
 
+resolve_agent() {
+    local agent_file
+    agent_file="$HOME/.config/watson-developer/agent"
+    if [[ "$AGENT_FLAG_SET" == true ]]; then
+        AGENT="$AGENT_ARG"
+        AGENT_SOURCE="flag"
+    elif [[ -n "${WATSON_AGENT:-}" ]]; then
+        AGENT="$WATSON_AGENT"
+        AGENT_SOURCE="env"
+    elif [[ -f "$agent_file" ]]; then
+        IFS= read -r AGENT < "$agent_file" || AGENT=""
+        AGENT_SOURCE="file"
+    else
+        AGENT="opencode"
+        AGENT_SOURCE="default"
+    fi
+
+    case "$AGENT" in
+        opencode|copilot|pi) ;;
+        *) fail "Ugyldig agent '$AGENT'. Gyldige verdier: opencode, copilot, pi." ;;
+    esac
+}
+
+resolve_agent
+if [[ "$AGENT_SOURCE" == "default" && -t 0 ]]; then
+    read -r -p "Hvilken agent vil du bruke? [1] opencode (standard) [2] copilot [3] pi: " AGENT_CHOICE
+    case "$AGENT_CHOICE" in
+        ""|1|opencode) AGENT="opencode" ;;
+        2|copilot) AGENT="copilot" ;;
+        3|pi) AGENT="pi" ;;
+        *) fail "Ugyldig valg '$AGENT_CHOICE'. Gyldige verdier: opencode, copilot, pi." ;;
+    esac
+fi
+
+AGENT_CONFIG_DIR="$HOME/.config/watson-developer"
+mkdir -p "$AGENT_CONFIG_DIR"
+printf '%s\n' "$AGENT" > "$AGENT_CONFIG_DIR/agent"
+
 echo ""
-echo -e "${BOLD}Watson Developer: oppsett av opencode${NC}"
+echo -e "${BOLD}Watson Developer: oppsett av $AGENT${NC}"
 echo "────────────────────────────────────────"
 
 if xcode-select -p &>/dev/null; then
@@ -127,44 +174,73 @@ get_opencode_major() {
     printf '%s\n' "$major"
 }
 
-OPENCODE_BIN="$(resolve_opencode || true)"
-if [[ -z "$OPENCODE_BIN" ]]; then
-    info "Installerer opencode v2."
-    curl -fsSL https://opencode.ai/v2/install | bash
-    OPENCODE_BIN="$(resolve_opencode || true)"
-    [[ -n "$OPENCODE_BIN" ]] || fail "Fant ikke opencode etter installasjonen. Åpne en ny terminal og kjør skriptet på nytt."
-else
-    skip "Fant opencode: $OPENCODE_BIN"
-    OPENCODE_MAJOR="$(get_opencode_major || true)"
-    [[ -n "$OPENCODE_MAJOR" ]] || fail "Klarte ikke å lese opencode-versjonen fra $OPENCODE_BIN."
-    if [[ "$OPENCODE_MAJOR" -lt 2 ]]; then
-        info "Oppgraderer opencode til v2."
-        "$OPENCODE_BIN" upgrade --major
-    else
-        skip "opencode v$OPENCODE_MAJOR eller nyere er allerede installert"
-    fi
-fi
+case "$AGENT" in
+    opencode)
+        OPENCODE_BIN="$(resolve_opencode || true)"
+        if [[ -z "$OPENCODE_BIN" ]]; then
+            info "Installerer opencode v2."
+            curl -fsSL https://opencode.ai/v2/install | bash
+            OPENCODE_BIN="$(resolve_opencode || true)"
+            [[ -n "$OPENCODE_BIN" ]] || fail "Fant ikke opencode etter installasjonen. Åpne en ny terminal og kjør skriptet på nytt."
+        else
+            skip "Fant opencode: $OPENCODE_BIN"
+            OPENCODE_MAJOR="$(get_opencode_major || true)"
+            [[ -n "$OPENCODE_MAJOR" ]] || fail "Klarte ikke å lese opencode-versjonen fra $OPENCODE_BIN."
+            if [[ "$OPENCODE_MAJOR" -lt 2 ]]; then
+                info "Oppgraderer opencode til v2."
+                "$OPENCODE_BIN" upgrade --major
+            else
+                skip "opencode v$OPENCODE_MAJOR eller nyere er allerede installert"
+            fi
+        fi
+        OPENCODE_BIN="$(resolve_opencode || true)"
+        [[ -n "$OPENCODE_BIN" ]] || fail "Fant ikke opencode etter installasjon eller oppgradering."
+        OPENCODE_MAJOR="$(get_opencode_major || true)"
+        [[ -n "$OPENCODE_MAJOR" ]] || fail "Klarte ikke å lese opencode-versjonen fra $OPENCODE_BIN."
+        [[ "$OPENCODE_MAJOR" -ge 2 ]] || fail "Opencode v2 eller nyere er ikke installert. Kjør bootstrap-skriptet på nytt."
+        AGENT_BIN="$OPENCODE_BIN"
+        ok "opencode v$OPENCODE_MAJOR er klart ($AGENT_BIN)"
+        ;;
+    copilot)
+        if command -v copilot &>/dev/null; then
+            skip "copilot er allerede installert"
+        else
+            info "Installerer GitHub Copilot CLI."
+            brew install copilot-cli
+        fi
+        AGENT_BIN="$(command -v copilot || true)"
+        [[ -n "$AGENT_BIN" ]] || fail "Fant ikke copilot etter installasjonen. Kjør bootstrap-skriptet på nytt."
+        ;;
+    pi)
+        if command -v pi &>/dev/null; then
+            skip "pi er allerede installert"
+        else
+            if ! command -v node &>/dev/null; then
+                info "Installerer Node.js for pi."
+                brew install node
+            fi
+            command -v node &>/dev/null || fail "Node.js mangler. Kjør: brew install node"
+            info "Installerer pi coding agent."
+            npm install -g @earendil-works/pi-coding-agent
+        fi
+        AGENT_BIN="$(command -v pi || true)"
+        [[ -n "$AGENT_BIN" ]] || fail "Fant ikke pi etter installasjonen. Kjør bootstrap-skriptet på nytt."
+        ;;
+esac
 
-OPENCODE_BIN="$(resolve_opencode || true)"
-[[ -n "$OPENCODE_BIN" ]] || fail "Fant ikke opencode etter installasjon eller oppgradering."
-OPENCODE_MAJOR="$(get_opencode_major || true)"
-[[ -n "$OPENCODE_MAJOR" ]] || fail "Klarte ikke å lese opencode-versjonen fra $OPENCODE_BIN."
-[[ "$OPENCODE_MAJOR" -ge 2 ]] || fail "Opencode v2 eller nyere er ikke installert. Kjør bootstrap-skriptet på nytt."
-ok "opencode v$OPENCODE_MAJOR er klart ($OPENCODE_BIN)"
-
-if ! ./scripts/setup-mcp.sh --missing-only; then
-    echo -e "  ${YELLOW}⚠${NC}  Kunne ikke sette opp alle MCP-serverne. Kjør ./scripts/setup-mcp.sh i en vanlig terminal."
+if ! ./scripts/setup-mcp.sh --missing-only --agent "$AGENT"; then
+    echo -e "  ${YELLOW}⚠${NC}  Kunne ikke sette opp alle MCP-serverne for $AGENT. Kjør ./scripts/setup-mcp.sh i en vanlig terminal."
 fi
 
 echo ""
 echo "┌────────────────────────────────────────────────────────────┐"
-echo "│ Når opencode starter, skriv: Kjør skillen watson-setup      │"
-echo "│ Nye terminaler får opencode på PATH.                        │"
+echo "│ Når $AGENT starter, skriv: Kjør skillen watson-setup         │"
+echo "│ Nye terminaler får valgt agent på PATH.                      │"
 echo "└────────────────────────────────────────────────────────────┘"
 echo ""
 
-if [[ "$START_OPENCODE" == true ]]; then
-    exec "$OPENCODE_BIN"
+if [[ "$START_AGENT" == true ]]; then
+    exec "$AGENT_BIN"
 fi
 
 info "Hoppet over oppstart med --no-start."

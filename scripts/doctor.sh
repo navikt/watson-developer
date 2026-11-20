@@ -17,6 +17,51 @@ warn() { echo -e "  ${YELLOW}⚠${NC}  $1"; }
 fail() { echo -e "  ${RED}✗${NC}  $1"; ERRORS=$((ERRORS + 1)); }
 info() { echo -e "  ${YELLOW}⚙${NC}  $1"; }
 
+AGENT_ARG=""
+AGENT_FLAG_SET=false
+while [[ "$#" -gt 0 ]]; do
+    case "$1" in
+        --agent)
+            if [[ "$#" -lt 2 ]]; then
+                fail "Mangler verdi etter --agent. Gyldige verdier: opencode, copilot, pi."
+                break
+            fi
+            AGENT_ARG="$2"
+            AGENT_FLAG_SET=true
+            shift
+            ;;
+        *)
+            fail "Ukjent argument: $1. Bruk --agent <navn>."
+            break
+            ;;
+    esac
+    shift
+done
+
+resolve_agent() {
+    local agent_file
+    agent_file="$HOME/.config/watson-developer/agent"
+    if [[ "$AGENT_FLAG_SET" == true ]]; then
+        AGENT="$AGENT_ARG"
+    elif [[ -n "${WATSON_AGENT:-}" ]]; then
+        AGENT="$WATSON_AGENT"
+    elif [[ -f "$agent_file" ]]; then
+        IFS= read -r AGENT < "$agent_file" || AGENT=""
+    else
+        AGENT="opencode"
+    fi
+
+    case "$AGENT" in
+        opencode|copilot|pi) ;;
+        *)
+            fail "Ugyldig agent '$AGENT'. Gyldige verdier: opencode, copilot, pi."
+            AGENT="opencode"
+            ;;
+    esac
+}
+
+resolve_agent
+
 # Installerer en manglende avhengighet automatisk via Homebrew, hvis mulig.
 # Brukes kun når kommandoen mangler helt — feil/gammel versjon av et verktøy
 # som allerede er installert rører vi ikke ved (kan være styrt av jenv/nvm
@@ -181,12 +226,12 @@ check_opencode() {
     elif [[ -x "$HOME/.opencode/bin/opencode" ]]; then
         opencode_bin="$HOME/.opencode/bin/opencode"
     else
-        fail "opencode v2 mangler. Kjør: ./scripts/bootstrap.sh"
+        fail "opencode v2 mangler. Kjør: ./scripts/bootstrap.sh --agent opencode"
         return
     fi
 
     if ! version_output="$("$opencode_bin" --version 2>/dev/null)"; then
-        fail "Kunne ikke lese opencode-versjonen. Kjør: ./scripts/bootstrap.sh"
+        fail "Kunne ikke lese opencode-versjonen. Kjør: ./scripts/bootstrap.sh --agent opencode"
         return
     fi
     case "$version_output" in
@@ -196,7 +241,7 @@ check_opencode() {
     major="${version%%.*}"
     case "$major" in
         ''|*[!0-9]*)
-            fail "Kunne ikke lese opencode-versjonen. Kjør: ./scripts/bootstrap.sh"
+            fail "Kunne ikke lese opencode-versjonen. Kjør: ./scripts/bootstrap.sh --agent opencode"
             return
             ;;
     esac
@@ -204,8 +249,28 @@ check_opencode() {
     if [[ "$major" -ge 2 ]]; then
         ok "opencode $version (v2 eller nyere)"
     else
-        fail "opencode $version er for gammel. Kjør: ./scripts/bootstrap.sh"
+        fail "opencode $version er for gammel. Kjør: ./scripts/bootstrap.sh --agent opencode"
     fi
+}
+
+check_agent() {
+    case "$AGENT" in
+        opencode) check_opencode ;;
+        copilot)
+            if command -v copilot &>/dev/null; then
+                ok "copilot ($(command -v copilot))"
+            else
+                fail "copilot mangler. Kjør: ./scripts/bootstrap.sh --agent copilot"
+            fi
+            ;;
+        pi)
+            if command -v pi &>/dev/null; then
+                ok "pi ($(command -v pi))"
+            else
+                fail "pi mangler. Kjør: ./scripts/bootstrap.sh --agent pi"
+            fi
+            ;;
+    esac
 }
 
 echo ""
@@ -274,9 +339,12 @@ check_cmd "kubectl" "brew install kubectl" "kubectl"
 echo ""
 echo -e "${BOLD}AI-verktøy:${NC}"
 check_python_version
-check_opencode
 check_cmd "cplt" "brew install navikt/tap/cplt" "navikt/tap/cplt"
 check_cmd "nav-pilot" "brew install navikt/tap/nav-pilot" "navikt/tap/nav-pilot"
+
+echo ""
+echo -e "${BOLD}Agent ($AGENT):${NC}"
+check_agent
 
 echo ""
 echo -e "${BOLD}GCP og Kubernetes-administrasjon:${NC}"

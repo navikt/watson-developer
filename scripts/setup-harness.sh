@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Setter opp agent-harnessen (cplt-sandbox, nav-pilot og opencode) for watson-utviklere.
+# Setter opp agent-harnessen (cplt-sandbox, nav-pilot og valgt agent) for watson-utviklere.
 # Idempotent — trygt å kjøre flere ganger.
 set -euo pipefail
 
@@ -14,6 +14,51 @@ skip() { echo -e "  ${YELLOW}⟳${NC}  $1"; }
 fail() { echo -e "  ${RED}✗${NC}  $1"; exit 1; }
 info() { echo -e "  ${BOLD}ℹ${NC}  $1"; }
 
+AGENT_ARG=""
+AGENT_FLAG_SET=false
+while [[ "$#" -gt 0 ]]; do
+    case "$1" in
+        --agent)
+            [[ "$#" -ge 2 ]] || fail "Mangler verdi etter --agent. Gyldige verdier: opencode, copilot, pi."
+            AGENT_ARG="$2"
+            AGENT_FLAG_SET=true
+            shift
+            ;;
+        *) fail "Ukjent argument: $1. Bruk --agent <navn>." ;;
+    esac
+    shift
+done
+
+resolve_agent() {
+    local agent_file
+    agent_file="$HOME/.config/watson-developer/agent"
+    if [[ "$AGENT_FLAG_SET" == true ]]; then
+        AGENT="$AGENT_ARG"
+        AGENT_SOURCE="flag"
+    elif [[ -n "${WATSON_AGENT:-}" ]]; then
+        AGENT="$WATSON_AGENT"
+        AGENT_SOURCE="env"
+    elif [[ -f "$agent_file" ]]; then
+        IFS= read -r AGENT < "$agent_file" || AGENT=""
+        AGENT_SOURCE="file"
+    else
+        AGENT="opencode"
+        AGENT_SOURCE="default"
+    fi
+
+    case "$AGENT" in
+        opencode|copilot|pi) ;;
+        *) fail "Ugyldig agent '$AGENT'. Gyldige verdier: opencode, copilot, pi." ;;
+    esac
+}
+
+resolve_agent
+if [[ "$AGENT_SOURCE" == "flag" || "$AGENT_SOURCE" == "env" ]]; then
+    AGENT_CONFIG_DIR="$HOME/.config/watson-developer"
+    mkdir -p "$AGENT_CONFIG_DIR"
+    printf '%s\n' "$AGENT" > "$AGENT_CONFIG_DIR/agent"
+fi
+
 # ─── Plattformsjekk ──────────────────────────────────────────────────────────
 
 if [[ "$(uname -s)" != "Darwin" ]]; then
@@ -25,7 +70,7 @@ if ! command -v brew &>/dev/null; then
 fi
 
 echo ""
-echo -e "${BOLD}🔒 Watson — oppsett av cplt og nav-pilot${NC}"
+echo -e "${BOLD}🔒 Watson: oppsett av cplt og $AGENT${NC}"
 echo "────────────────────────────────────────"
 
 # ─── Installer cplt ──────────────────────────────────────────────────────────
@@ -281,7 +326,7 @@ except ModuleNotFoundError:
 
 (config_file, fresh_read_raw, fresh_write_raw, fresh_cache_exec_raw,
  ports_raw, required_write_raw, required_ports_raw,
- legacy_kubeconfig_path) = sys.argv[1:9]
+ legacy_kubeconfig_path, agent) = sys.argv[1:10]
 
 config_file = Path(config_file)
 fresh_read = json.loads(fresh_read_raw)
@@ -447,7 +492,7 @@ if not config_file.exists():
         f"localhost = {serialize_array([5173, 5174, 8080, 8081])}",
         "",
         "[sandbox]",
-        'agent = "opencode"',
+        f'agent = {json.dumps(agent)}',
         "validate = false",
         "yes = true",
         "allow_gpg_signing = true",
@@ -507,7 +552,7 @@ desired_allow = {
     "localhost": [5173, 5174, 8080, 8081],
 }
 desired_sandbox = {
-    "agent": "opencode",
+    "agent": agent,
     "validate": False,
     "allow_env_files": True,
     "allow_localhost_any": True,
@@ -607,7 +652,7 @@ PY
 set +e
 MERGE_RESULT="$("$PYTHON_BIN" "$MERGE_SCRIPT_FILE" \
     "$CONFIG_FILE" "$READ_PATHS" "$FRESH_WRITE_PATHS" "$FRESH_CACHE_EXEC" "$PORTS_JSON" \
-    "$REQUIRED_WRITE" "$REQUIRED_PORTS" "$LEGACY_KUBECONFIG_PATH")"
+    "$REQUIRED_WRITE" "$REQUIRED_PORTS" "$LEGACY_KUBECONFIG_PATH" "$AGENT")"
 set -e
 rm -f "$MERGE_SCRIPT_FILE"
 trap - EXIT
@@ -657,10 +702,10 @@ if [[ "$CONFIG_CHANGED" == true ]]; then
     if [[ -n "${__CPLT_WRAPPED:-}" ]]; then
         echo -e "${YELLOW}⚠${NC}  Denne økten kjører allerede inne i cplt-sandboxen med den forrige konfigurasjonen."
         echo "   De nye tilgangene trer først i kraft i en ny økt."
-        echo "   Avslutt denne opencode-økten og start den på nytt før du fortsetter,"
+        echo "   Avslutt denne $AGENT-økten og start den på nytt før du fortsetter,"
         echo "   ellers vil kommandoer som tilt/kubectl/gradle sannsynligvis feile."
     else
-        info "Restart 'opencode' (eller åpne en ny terminal) for at de nye cplt-tilgangene skal tre i kraft."
+        info "Restart '$AGENT' (eller åpne en ny terminal) for at de nye cplt-tilgangene skal tre i kraft."
     fi
 fi
 
@@ -669,10 +714,10 @@ fi
 echo ""
 echo -e "${BOLD}Shell-alias:${NC}"
 
-if cplt --shell-install --agent opencode 2>&1 | grep -q "already"; then
+if cplt --shell-install --agent "$AGENT" 2>&1 | grep -q "already"; then
     skip "Shell-alias var allerede konfigurert"
 else
-    ok "'opencode' kjører nå gjennom cplt-sandboxen"
+    ok "'$AGENT' kjører nå gjennom cplt-sandboxen"
 fi
 
 # ─── Oppsummering ────────────────────────────────────────────────────────────
@@ -684,5 +729,5 @@ echo ""
 echo "  Neste steg:"
 echo "    1. Restart shell (eller: source ~/.zshrc)"
 echo "    2. Kjør: cplt doctor"
-echo "    3. Start opencode med sandbox: opencode"
+echo "    3. Start $AGENT med sandbox: $AGENT"
 echo ""

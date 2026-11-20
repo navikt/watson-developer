@@ -3,7 +3,7 @@
 Detaljert guide for å sette opp Watson-porteføljens lokale utviklingsmiljø.
 
 > 💡 **Automatisk oppsett:** Kjør `./scripts/bootstrap.sh` (se «Helt ny Mac»
-> under) og be opencode kjøre skillen `watson-setup`.
+> under) og be agenten kjøre skillen `watson-setup`.
 
 ---
 
@@ -20,9 +20,23 @@ cd watson-developer
 
 Mangler Xcode Command Line Tools, åpner `git clone` en installasjonsdialog.
 Fullfør den og kjør `git clone` på nytt. Skriptet installerer Homebrew, git,
-gh og opencode 2, logger deg inn på GitHub og starter opencode. Be opencode
-kjøre skillen `watson-setup`. Bruk `./scripts/bootstrap.sh --no-start` hvis du
-ikke vil starte opencode med en gang.
+gh og agenten du velger, logger deg inn på GitHub og starter agenten. Be
+agenten kjøre skillen `watson-setup`. Bruk `./scripts/bootstrap.sh --no-start`
+hvis du ikke vil starte agenten med en gang.
+
+### Velg agent
+
+| Agent | Valg | Installeres med |
+| --- | --- | --- |
+| [opencode](https://opencode.ai/v2/docs) 2 (standard) | `--agent opencode` | `curl -fsSL https://opencode.ai/v2/install \| bash` |
+| [GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli) | `--agent copilot` | `brew install copilot-cli` |
+| [pi](https://www.npmjs.com/package/@earendil-works/pi-coding-agent) | `--agent pi` | `npm install -g @earendil-works/pi-coding-agent` |
+
+Valget lagres i `~/.config/watson-developer/agent` og brukes av
+`setup-harness.sh`, `doctor.sh` og `setup-mcp.sh`. Overstyr med `--agent` eller
+miljøvariabelen `WATSON_AGENT`. Kjør `./scripts/setup-harness.sh --agent <navn>`
+for å bytte agent senere. `nav-pilot mcp` støtter ikke pi, så med pi blir
+MCP-serverne ikke satt opp.
 
 ---
 
@@ -33,10 +47,10 @@ ikke vil starte opencode med en gang.
 | Xcode Command Line Tools                                             | `xcode-select --install`            | git og kompilatorer på macOS                                  |
 | [Homebrew](https://brew.sh)                                          | `./scripts/bootstrap.sh`            | Pakkebehandler for resten av verktøyene                       |
 | git og [gh](https://cli.github.com)                                  | `brew install git gh`               | Kloning og GitHub-innlogging (`gh auth login`)                |
-| [opencode](https://opencode.ai/v2/docs) 2                            | `./scripts/bootstrap.sh`            | KI-agent som kjører skillen `watson-setup`                    |
+| KI-agent (opencode, Copilot CLI eller pi)                            | `./scripts/bootstrap.sh`            | Kjører skillen `watson-setup`                                 |
 | [Docker Desktop](https://www.docker.com/products/docker-desktop/)    | `brew install --cask docker`        | Container-runtime for kind                                    |
 | [cplt](https://github.com/navikt/cplt)                               | `brew install navikt/tap/cplt`      | Kernel-sandbox for AI-agenter                                 |
-| [nav-pilot](https://ki-utvikling.nav.no/nav-pilot/docs)              | `brew install navikt/tap/nav-pilot` | Nav-kunnskap for opencode                                     |
+| [nav-pilot](https://ki-utvikling.nav.no/nav-pilot/docs)              | `brew install navikt/tap/nav-pilot` | Nav-kunnskap for agenten                                      |
 | [kind](https://kind.sigs.k8s.io/docs/user/quick-start/#installation) | `brew install kind`                 | Lokal Kubernetes-kluster                                      |
 | [tilt](https://docs.tilt.dev/install.html)                           | `brew install tilt`                 | Lokal utviklingsserver                                        |
 | [kubectl](https://kubernetes.io/docs/tasks/tools/)                   | `brew install kubectl`              | Kubernetes-klient                                             |
@@ -63,7 +77,7 @@ ikke er tilgjengelig eller installasjonen feiler.
 ```
 
 Installerer [cplt](https://github.com/navikt/cplt) (kernel-sandbox for AI-agenter) og
-[nav-pilot](https://ki-utvikling.nav.no/nav-pilot/docs) (Nav-kunnskap for opencode). Legger også inn et shell-alias slik at `opencode` kjører i cplt-sandboxen.
+[nav-pilot](https://ki-utvikling.nav.no/nav-pilot/docs) (Nav-kunnskap for agenten). Legger også inn et shell-alias slik at agenten du valgte kjører i cplt-sandboxen.
 Genererer cplt-config tilpasset Watson-porteføljen. Idempotent — trygt å kjøre flere ganger.
 Scriptet krever python3.11+ (for `tomllib`) og installerer det selv automatisk
 med Homebrew hvis det mangler, siden dette steget kjøres før `doctor.sh`.
