@@ -7,6 +7,23 @@ Detaljert guide for å sette opp Watson-porteføljens lokale utviklingsmiljø.
 
 ---
 
+## Helt ny Mac
+
+Mangler maskinen Homebrew, git eller Copilot CLI, kjør dette i en vanlig
+terminal (ikke i Copilot eller cplt):
+
+```bash
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/navikt/watson-developer/main/scripts/bootstrap.sh)"
+```
+
+Skriptet installerer Xcode Command Line Tools, Homebrew, git og gh, logger deg
+inn på GitHub, kloner repoet til `~/code/nav/holmes/watson/watson-developer`
+(overstyr med `WATSON_DIR`) og kjører `doctor.sh` og `setup-copilot.sh`.
+Åpne Docker Desktop én gang etterpå og godta lisensen. Start så `copilot` i
+repoet og be om skillen `watson-setup`.
+
+---
+
 ## Verktøykrav
 
 | Verktøy                                                              | Installasjon                        | Brukes til                                                    |

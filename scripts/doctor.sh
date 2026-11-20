@@ -40,11 +40,14 @@ brew_install() {
     local log_file status
     log_file="$(mktemp -t watson-doctor-brew.XXXXXX.log)"
     if [[ "$cask" == "true" ]]; then
-        brew install --cask "$formula" &>"$log_file"
+        if brew install --cask "$formula" &>"$log_file"; then status=0; else status=$?; fi
     else
-        brew install "$formula" &>"$log_file"
+        if brew install "$formula" &>"$log_file"; then status=0; else status=$?; fi
     fi
-    status=$?
+    if [[ "$status" -ne 0 ]]; then
+        echo -e "  ${RED}Siste linjer fra Homebrew:${NC}"
+        tail -n 20 "$log_file"
+    fi
     rm -f "$log_file"
     return $status
 }
@@ -141,19 +144,11 @@ check_node_lts() {
     fi
 }
 
-echo ""
-echo -e "${BOLD}🔍 Watson Developer — pre-flight sjekk${NC}"
-echo "────────────────────────────────────────"
-if [[ -n "${__CPLT_WRAPPED:-}" ]]; then
-    warn "Kjører inni cplt-sandboxen — auto-installasjon av manglende verktøy er slått av her (Homebrew skriver utenfor sandboxens tillatte områder). Manglende verktøy må installeres i en vanlig terminal utenfor sandboxen."
-fi
-
 check_python_version() {
     if ! command -v python3 &>/dev/null; then
         if brew_install "python@3.12"; then
             # python@3.12 er keg-only i Homebrew og legger ikke nødvendigvis en
-            # uversjonert `python3` på PATH — let derfor eksplisitt etter
-            # formelens egen binærkatalog og legg den til PATH om nødvendig.
+            # uversjonert `python3` på PATH. Let eksplisitt etter formelens binærkatalog.
             local brew_py_prefix
             brew_py_prefix="$(brew --prefix python@3.12 2>/dev/null || true)"
             if [[ -n "$brew_py_prefix" && -d "$brew_py_prefix/libexec/bin" ]]; then
@@ -180,14 +175,82 @@ check_python_version() {
 }
 
 echo ""
+echo -e "${BOLD}🔍 Watson Developer — pre-flight sjekk${NC}"
+echo "────────────────────────────────────────"
+if [[ -n "${__CPLT_WRAPPED:-}" ]]; then
+    warn "Kjører inni cplt-sandboxen — auto-installasjon av manglende verktøy er slått av her (Homebrew skriver utenfor sandboxens tillatte områder). Manglende verktøy må installeres i en vanlig terminal utenfor sandboxen."
+fi
+
+echo ""
+echo -e "${BOLD}Grunnleggende:${NC}"
+if [[ "$(uname -s)" == "Darwin" ]]; then
+    ok "macOS"
+else
+    fail "Dette skriptet støtter kun macOS"
+fi
+
+if xcode-select -p &>/dev/null; then
+    ok "Xcode Command Line Tools er installert"
+else
+    fail "Xcode Command Line Tools mangler. Kjør: xcode-select --install"
+fi
+
+if command -v brew &>/dev/null; then
+    ok "Homebrew ($(command -v brew))"
+elif [[ -x "/opt/homebrew/bin/brew" ]]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+    warn "Homebrew er installert, men manglet på PATH. Legg til eval \"\$(/opt/homebrew/bin/brew shellenv)\" i ~/.zprofile"
+elif [[ -x "/usr/local/bin/brew" ]]; then
+    eval "$(/usr/local/bin/brew shellenv)"
+    warn "Homebrew er installert, men manglet på PATH. Legg til eval \"\$(/usr/local/bin/brew shellenv)\" i ~/.zprofile"
+else
+    fail "Homebrew mangler. Kjør: bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/navikt/watson-developer/main/scripts/bootstrap.sh)\""
+fi
+check_cmd "git"  "brew install git" "git"
+check_cmd "curl" "installer curl fra macOS, eller kjør: brew install curl" "curl"
+
+echo ""
+echo -e "${BOLD}GitHub:${NC}"
+check_cmd "gh" "brew install gh" "gh"
+if command -v gh &>/dev/null; then
+    if gh auth status --active --hostname github.com &>/dev/null; then
+        ok "gh er innlogget"
+    else
+        fail "gh er ikke innlogget: gh auth login"
+    fi
+fi
+
+echo ""
+echo -e "${BOLD}Docker:${NC}"
+check_cmd "docker" "brew install --cask docker" "docker" "true"
+if command -v docker &>/dev/null; then
+    if docker info &>/dev/null; then
+        ok "Docker kjører"
+    else
+        fail "Docker kjører ikke: start Docker Desktop"
+    fi
+fi
+
+echo ""
 echo -e "${BOLD}Lokal Kubernetes:${NC}"
 check_cmd "kind"    "brew install kind   (https://kind.sigs.k8s.io)" "kind"
 check_cmd "tilt"    "brew install tilt   (https://docs.tilt.dev/install.html)" "tilt-dev/tap/tilt"
 check_cmd "kubectl" "brew install kubectl" "kubectl"
 
 echo ""
-echo -e "${BOLD}AI-verktøy (cplt-konfigurasjon):${NC}"
+echo -e "${BOLD}AI-verktøy:${NC}"
 check_python_version
+check_cmd "copilot" "brew install copilot-cli" "copilot-cli"
+check_cmd "cplt" "brew install navikt/tap/cplt" "navikt/tap/cplt"
+check_cmd "nav-pilot" "brew install navikt/tap/nav-pilot" "navikt/tap/nav-pilot"
+if command -v rtk &>/dev/null; then
+    ok "rtk (valgfritt, installert)"
+elif brew_install "rtk" && command -v rtk &>/dev/null; then
+    ok "rtk (valgfritt, auto-installert)"
+    INSTALLED=$((INSTALLED + 1))
+else
+    warn "rtk er ikke installert (valgfritt). Kjør: brew install rtk"
+fi
 
 echo ""
 echo -e "${BOLD}GCP og Kubernetes-administrasjon:${NC}"
@@ -229,9 +292,9 @@ echo "────────────────────────�
 
 if [ "$ERRORS" -eq 0 ]; then
     if [ "$INSTALLED" -gt 0 ]; then
-        echo -e "${GREEN}${BOLD}✅ Alt er på plass ($INSTALLED verktøy auto-installert) — kjør ./scripts/setup-kind.sh for å starte${NC}"
+        echo -e "${GREEN}${BOLD}✅ Alt er på plass ($INSTALLED verktøy auto-installert)${NC}"
     else
-        echo -e "${GREEN}${BOLD}✅ Alt er på plass — kjør ./scripts/setup-kind.sh for å starte${NC}"
+        echo -e "${GREEN}${BOLD}✅ Alt er på plass${NC}"
     fi
 else
     echo -e "${RED}${BOLD}❌ $ERRORS verktøy mangler — installer dem og kjør doctor.sh på nytt${NC}"
