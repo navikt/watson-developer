@@ -168,7 +168,7 @@ check_python_version() {
     local version
     version=$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
     if python3 -c 'import sys; sys.exit(0 if sys.version_info >= (3, 11) else 1)'; then
-        ok "python3 $version (≥3.11 ✓, kreves for tomllib i setup-copilot.sh)"
+        ok "python3 $version (≥3.11 ✓, kreves for tomllib i setup-harness.sh)"
     else
         fail "python3 $version er for gammel — krever 3.11+ (for tomllib). brew install python@3.12"
     fi

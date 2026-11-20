@@ -36,7 +36,7 @@ ikke vil starte opencode med en gang.
 | [opencode](https://opencode.ai/v2/docs) 2                            | `./scripts/bootstrap.sh`            | KI-agent som kjører skillen `watson-setup`                    |
 | [Docker Desktop](https://www.docker.com/products/docker-desktop/)    | `brew install --cask docker`        | Container-runtime for kind                                    |
 | [cplt](https://github.com/navikt/cplt)                               | `brew install navikt/tap/cplt`      | Kernel-sandbox for AI-agenter                                 |
-| [nav-pilot](https://ki-utvikling.nav.no/nav-pilot/docs)              | `brew install navikt/tap/nav-pilot` | Nav-kunnskap for GitHub Copilot                               |
+| [nav-pilot](https://ki-utvikling.nav.no/nav-pilot/docs)              | `brew install navikt/tap/nav-pilot` | Nav-kunnskap for opencode                                     |
 | [kind](https://kind.sigs.k8s.io/docs/user/quick-start/#installation) | `brew install kind`                 | Lokal Kubernetes-kluster                                      |
 | [tilt](https://docs.tilt.dev/install.html)                           | `brew install tilt`                 | Lokal utviklingsserver                                        |
 | [kubectl](https://kubernetes.io/docs/tasks/tools/)                   | `brew install kubectl`              | Kubernetes-klient                                             |
@@ -45,7 +45,7 @@ ikke vil starte opencode med en gang.
 | Java 21                                                              | `brew install --cask temurin@21`    | watson-admin-api, nav-persondata-api                          |
 | Node.js LTS                                                          | `brew install node`                 | watson-sak-frontend, watson-sok                               |
 | [pnpm](https://pnpm.io/installation)                                 | `corepack enable`                   | Pakkebehandler for frontend                                   |
-| Python 3.11+                                                         | `brew install python@3.12`          | `tomllib` — leser/oppdaterer cplt-config i setup-copilot.sh   |
+| Python 3.11+                                                         | `brew install python@3.12`          | `tomllib` — leser/oppdaterer cplt-config i setup-harness.sh   |
 
 Kjør `./scripts/doctor.sh` for å se hva som mangler — skriptet installerer
 manglende verktøy automatisk med Homebrew (`corepack enable` for pnpm) der det
@@ -59,11 +59,11 @@ ikke er tilgjengelig eller installasjonen feiler.
 ### 1. Sett opp AI-verktøy (cplt + nav-pilot)
 
 ```bash
-./scripts/setup-copilot.sh
+./scripts/setup-harness.sh
 ```
 
 Installerer [cplt](https://github.com/navikt/cplt) (kernel-sandbox for AI-agenter) og
-[nav-pilot](https://ki-utvikling.nav.no/nav-pilot/docs) (Nav-kunnskap for Copilot).
+[nav-pilot](https://ki-utvikling.nav.no/nav-pilot/docs) (Nav-kunnskap for opencode). Legger også inn et shell-alias slik at `opencode` kjører i cplt-sandboxen.
 Genererer cplt-config tilpasset Watson-porteføljen. Idempotent — trygt å kjøre flere ganger.
 Scriptet krever python3.11+ (for `tomllib`) og installerer det selv automatisk
 med Homebrew hvis det mangler, siden dette steget kjøres før `doctor.sh`.

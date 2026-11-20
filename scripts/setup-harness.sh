@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Setter opp cplt (sandbox) og nav-pilot for watson-utviklere.
+# Setter opp agent-harnessen (cplt-sandbox, nav-pilot og opencode) for watson-utviklere.
 # Idempotent — trygt å kjøre flere ganger.
 set -euo pipefail
 
@@ -296,7 +296,7 @@ required_ports = json.loads(required_ports_raw)
 # nå kreves:
 # - ~/.kube (hele katalogen) og selve kubeconfig-filen — en tidligere versjon
 #   av dette scriptet ga lesetilgang til kubeconfig automatisk, men det er
-#   ikke lenger tilfelle (se begrunnelse i setup-copilot.sh om cluster-admin-
+#   ikke lenger tilfelle (se begrunnelse i setup-harness.sh om cluster-admin-
 #   credentials). Fjernes hvis funnet fra en tidligere kjøring.
 # - foreldrekatalogen til watson-root — brukt av en eldre generasjon av dette
 #   scriptet (før repoer ble klonet til `repos/` under prosjektroten), og gir
@@ -447,7 +447,7 @@ if not config_file.exists():
         f"localhost = {serialize_array([5173, 5174, 8080, 8081])}",
         "",
         "[sandbox]",
-        'agent = "copilot"',
+        'agent = "opencode"',
         "validate = false",
         "yes = true",
         "allow_gpg_signing = true",
@@ -507,7 +507,7 @@ desired_allow = {
     "localhost": [5173, 5174, 8080, 8081],
 }
 desired_sandbox = {
-    "agent": "copilot",
+    "agent": "opencode",
     "validate": False,
     "allow_env_files": True,
     "allow_localhost_any": True,
@@ -657,10 +657,10 @@ if [[ "$CONFIG_CHANGED" == true ]]; then
     if [[ -n "${__CPLT_WRAPPED:-}" ]]; then
         echo -e "${YELLOW}⚠${NC}  Denne økten kjører allerede inne i cplt-sandboxen med den forrige konfigurasjonen."
         echo "   De nye tilgangene trer først i kraft i en ny økt."
-        echo "   Avslutt denne Copilot-økten og start den på nytt før du fortsetter,"
+        echo "   Avslutt denne opencode-økten og start den på nytt før du fortsetter,"
         echo "   ellers vil kommandoer som tilt/kubectl/gradle sannsynligvis feile."
     else
-        info "Restart 'copilot' (eller åpne en ny terminal) for at de nye cplt-tilgangene skal tre i kraft."
+        info "Restart 'opencode' (eller åpne en ny terminal) for at de nye cplt-tilgangene skal tre i kraft."
     fi
 fi
 
@@ -669,10 +669,10 @@ fi
 echo ""
 echo -e "${BOLD}Shell-alias:${NC}"
 
-if cplt --shell-install 2>&1 | grep -q "already"; then
+if cplt --shell-install --agent opencode 2>&1 | grep -q "already"; then
     skip "Shell-alias var allerede konfigurert"
 else
-    ok "'copilot' kjører nå gjennom cplt-sandboxen"
+    ok "'opencode' kjører nå gjennom cplt-sandboxen"
 fi
 
 # ─── Oppsummering ────────────────────────────────────────────────────────────
@@ -684,5 +684,5 @@ echo ""
 echo "  Neste steg:"
 echo "    1. Restart shell (eller: source ~/.zshrc)"
 echo "    2. Kjør: cplt doctor"
-echo "    3. Start Copilot med sandbox: copilot"
+echo "    3. Start opencode med sandbox: opencode"
 echo ""
