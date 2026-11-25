@@ -1,5 +1,5 @@
 PID;FNR;PROSJEKTIDENT;SAKSKOMPLEKS;SVMOTTATT;SVRES;SVDATO;POLDOMRES;SAK;Expr1009;POLITIDISTRIKT;STONADTYPE;STRBELOP;ARSAKSV;SAKSBEHANDLER;TYPEMISBRUK;NAVIDENT;Kategori;Misbrukstype;Kilde;POLSAKNR;POLITIDISTRIKT2;ENHET
-967211;01010050205;Vest-2;;7.11.2019 00.00.00;Anmeldt;12.2.2020 00.00.00;;Dagpenger;96721101;VEST PD;Dagpenger;250000,00;;L900004;Hvit inntekt;L900004;arbeid;Hvit inntekt;;96721101;Vest politidistrikt;su685d
-967212;01010050205;Vest-2;;25.11.2019 00.00.00;Anmeldt;2.3.2020 00.00.00;;Dagpenger;96721201;⍰st PD;Dagpenger;85000, 00;;;Hvit inntekt;;arbeid;Hvit inntekt;;96721201;⍰st politidistrikt;su685d
-967213;01010050205;Vest-2;;1.12.2019 00.00.00;Anmeldt;3.3.2020 00.00.00;;AAP;;VEST PD;AAP;;;L900005;Hvit inntekt;L900005;arbeid;Hvit inntekt;;;Vest politidistrikt;su685d
-967214;01010050205;Vest-2;;2.12.2019 00.00.00;Anmeldt;4.3.2020 00.00.00;;AAP;;;AAP;100,00;;L900004;Hvit inntekt;L900004;arbeid;Hvit inntekt;;96721401;;su685d
+967211;02509310583;Vest-2;;7.11.2019 00.00.00;Anmeldt;12.2.2020 00.00.00;;Dagpenger;96721101;VEST PD;Dagpenger;250000,00;;Z993376;Hvit inntekt;Z993376;arbeid;Hvit inntekt;;96721101;Vest politidistrikt;su685d
+967212;12528526290;Vest-2;;25.11.2019 00.00.00;Anmeldt;2.3.2020 00.00.00;;Dagpenger;96721201;⍰st PD;Dagpenger;85000, 00;;;Hvit inntekt;;arbeid;Hvit inntekt;;96721201;⍰st politidistrikt;su685d
+967213;13437301632;Vest-2;;1.12.2019 00.00.00;Anmeldt;3.3.2020 00.00.00;;AAP;;VEST PD;AAP;;;Z994531;Hvit inntekt;Z994531;arbeid;Hvit inntekt;;;Vest politidistrikt;su685d
+967214;31529211743;Vest-2;;2.12.2019 00.00.00;Anmeldt;4.3.2020 00.00.00;;AAP;;;AAP;100,00;;Z993376;Hvit inntekt;Z993376;arbeid;Hvit inntekt;;96721401;;su685d
