@@ -262,7 +262,7 @@ Start backend med `MIGRERING_VEST_POLITI_IDENT=<ident>` for å teste politisaker
 
 Restanser (steget Strafferettslig vurdering) uten NAVIDENT blir ufordelte, for det er tillatt i det steget. Politisaker
 kan ikke være ufordelte, fordi Watson Sak ikke tillater det i Politi-steget. Raden får derfor `MIGRERING_VEST_POLITI_IDENT`, og
-uten den blir den et avvik (`MANGLER_IDENT`). Identen er `D101803` (Hanne Dommersnes, samme som Vest i SAK-67-1), bekreftet av Snorri.
+uten den blir den et avvik (`MANGLER_IDENT`). Identen er `D101803` (Hanne Dommersnes). Den er ikke endelig bekreftet ennå.
 
 Variabelen settes i Nais-configen `watson-migrering-import` i Nais Console, per miljø, ikke i repoet. Den configen kommer allerede inn
 som `envFrom`, så `nais.yaml` trenger ingen endring. Poden må restartes etter at verdien er satt. Identen må finnes i NOM i miljøet,
