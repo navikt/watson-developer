@@ -270,7 +270,7 @@ ellers gir radene `UKJENT_SAKSBEHANDLER`.
    prod: `watson-migrering-import-prod-gcp`. Fnr i dev-filene må være Dolly-fnr.
 2. **Dry-run.** Kjør «Deploy to dev» (eller «Deploy release til prod») med «Kjør Vest-migrering» avhuket og «dry-run» avhuket.
    Loggen viser filnavn, oppdateringstid, størrelse og **SHA-256** for hver fil, og tellerne (`opprettet`, `alleredeOpprettet`,
-   `avvik`, `feil`, `tomtBelop`, `skjermet`, `gjenstaar`). Dry-run oppretter ingenting og skriver ingenting til bucketen.
+   `avvik`, `feil`, `tomtBelop`, `skjermet`, `arkivsakFeilet`, `gjenstaar`). Dry-run oppretter ingenting og skriver ingenting til bucketen.
 3. **Ekte kjøring.** Kjør workflowen på nytt med «dry-run» avhuket **av**, og fyll inn `vest_restanser_fil` og `vest_restanser_sha256`
    (og tilsvarende for politi) med verdiene fra dry-run-loggen. Jobben kjører bare de filene du har oppgitt, og avbryter hele
    kjøringen hvis en SHA-256 ikke stemmer. I prod venter en ekte kjøring på godkjenning i environmentet `prod-migreringsimport`.
@@ -282,14 +282,21 @@ ellers gir radene `UKJENT_SAKSBEHANDLER`.
   `nav-persondata-api` med M2M-token (`persondataSystemClient`, samme klient som `KontrollobjektOppdateringScheduler`).
   Skjerming tolkes fail closed: manglende `adressebeskyttelse` regnes som skjermet, og blankt navn gir `PERSON_IKKE_FUNNET`.
   Antall opprettede saker med skjerming står som `skjermet` i loggen.
+- **Arkivsak:** Etter at en sak er lagret, oppretter jobben arkivsaken i Sak-API-et med appens egen identitet (M2M, registreringen
+  `sak-m2m`) og aktør-ID-en den allerede har hentet fra persondata. Den vanlige veien (`SakOpprettelseListener` med brukertoken) kan
+  ikke brukes, fordi jobben ikke har innlogget bruker. Feiler arkivsaken, er saken likevel lagret og hoppes over i senere kjøringer.
+  Antallet står som `arkivsakFeilet` i loggen, og sakId og PID logges per sak, så de kan følges opp manuelt. Sak-API-et må godta
+  app-token fra `watson-admin-api`. Test det i dev før prod.
 - **Én kjøring om gangen:** en advisory lock i Postgres (egen nøkkel) hindrer at flere pods kjører samtidig. Prod og dev har to replikaer.
 - **Pinnet fil:** ekte kjøring bruker filnavn og SHA-256 du har oppgitt, aldri «nyeste fil». Dry-run velger nyeste fil per type.
 - **Radtak:** `MIGRERING_VEST_MAKSRADER` (standard 1000) stopper en fil som har flere rader enn forventet.
 - **Revisjon:** loggen har kjørings-id, hvem som startet (`github.actor`), filnavn, SHA-256, dry-run og tellere. Aldri fnr eller navn.
   Hvem som godkjente prod-kjøringen står i GitHub Actions.
-- **Avvik:** rader med feil i filen skrives ved ekte kjøring til `avvik/vest/<kjørings-id>/<FIL>.csv` i bucketen (har fnr, ligger bare i den
+- **Avvik:** rader med feil i filen skrives ved ekte kjøring til `avvik/vest/<kjørings-id>/<FIL>.csv` i bucketen (CSV med feltene `LINJENUMMER`, `AARSAK` og `RAALINJE`, der rålinjen er sitert og har fnr. Ligger bare i den
   private bucketen). Rader som feiler under opprettelse (`feil`) prøves på nytt neste gang. Samme fil kan kjøres flere ganger:
   rader med kilde `SV` og samme PID hoppes over.
+- **Workflow-input:** Filnavn og SHA-256 valideres (tegnsett og lengde) ved alle manuelle kjøringer, også når Vest ikke er på, siden verdiene
+  sendes som kommaseparerte variabler til deploy-steget. Filnavn og hash kreves bare ved ekte Vest-kjøring.
 - **Retensjon:** importbucketen i prod slettes etter 90 dager (`lifecycleCondition` i `nais.yaml`).
 - **Transaksjoner:** hver sak opprettes i egen transaksjon. En feil på én rad stopper ikke de andre.
 
