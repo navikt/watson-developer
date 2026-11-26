@@ -240,8 +240,9 @@ DRY_RUN=true IMPORT_KATALOG=build/import-testfiler \
 ## Vest-migrering (SAK-67-2)
 
 To Access-filer fra Vest (`M_SV_RESTANSER_VEST2.txt` og `M_SV_VENTER_POL_DOM_VEST2.txt`) oppretter ferdige
-kontrollsaker, ikke kandidater. En leder sender filen til `POST /api/v1/migrering/vest/{SV_RESTANSER|SV_VENTER_POL_DOM}`
-i `watson-admin-api`. Filnavn med `_vest2` plukkes ikke opp av den ordinære importen.
+kontrollsaker, ikke kandidater. Kjøringen følger samme mønster som importen: filene ligger i importbucketen, og en
+flagg-styrt kjøring i `watson-admin-api` (`VestOppstart`) leser dem. Det finnes ikke lenger noe HTTP-endepunkt, så ingen
+fnr sendes over nettet eller ligger på en laptop. Filnavn med `_vest2` plukkes ikke opp av den ordinære importen.
 
 | Fil | Steg | Ansvarlig | Ytelse fra | Dato fra |
 | --- | --- | --- | --- | --- |
@@ -252,11 +253,69 @@ Felles: kategori Arbeid, misbrukstype Hvit inntekt, kilde Access migrering, enhe
 Politisaker får anmeldt beløp fra `STRBELOP` (komma som desimaltegn, tom blir 0), politidistrikt fra `POLITIDISTRIKT2`
 (`?` først blir `Ø`, tom gir avvik) og saksreferanse fra `POLSAKNR`.
 
-Parametere: `dryRun` (standard `true`), `maks` (standard 100, høyst 200) og `fra`. Send samme fil på nytt til `gjenstaar`
-er 0. Rader med kilde `SV` og samme PID hoppes over. Svaret har tellere og radnummer med årsakskode, aldri fnr.
+### Ansvarlig for saker uten NAVIDENT
 
-Test lokalt med `./scripts/vest-lokalt.sh` (egne filer med `FILER=<katalog>`, bare tørrkjøring med `OPPRETT=false`).
-Start backend med `MIGRERING_VEST_POLITI_IDENT=<ident>` for å teste politisaker uten NAVIDENT.
+Restanser (steget Strafferettslig vurdering) uten NAVIDENT blir ufordelte, for det er tillatt i det steget. Politisaker
+kan ikke være ufordelte, fordi Watson Sak ikke tillater det i Politi-steget. Raden får derfor `MIGRERING_VEST_POLITI_IDENT`, og
+uten den blir den et avvik (`MANGLER_IDENT`). Identen er `E176098` (Tord) i prod og testbrukeren hans, `Z993368`, i dev. Det er
+personen som skal ha sakene i prod (Aha SAK-67-2).
+
+Variabelen settes i Nais-configen `watson-migrering-import` i Nais Console, per miljø, ikke i repoet. Den configen kommer allerede inn
+som `envFrom`, så `nais.yaml` trenger ingen endring. Poden må restartes etter at verdien er satt. Identen må finnes i NOM i miljøet,
+ellers gir radene `UKJENT_SAKSBEHANDLER`.
+
+### Slik kjører du den
+
+1. **Last opp filene** til importbucketen (roten, samme bucket og prefiks som importen). Dev: `watson-migrering-import-dev-gcp`,
+   prod: `watson-migrering-import-prod-gcp`. Fnr i dev-filene må være Dolly-fnr.
+2. **Dry-run.** Kjør «Deploy to dev» (eller «Deploy release til prod») med «Kjør Vest-migrering» avhuket og «dry-run» avhuket.
+   Loggen viser filnavn, oppdateringstid, størrelse og **SHA-256** for hver fil, og tellerne (`opprettet`, `alleredeOpprettet`,
+   `avvik`, `feil`, `tomtBelop`, `skjermet`, `arkivsakFeilet`, `gjenstaar`). Dry-run oppretter ingenting og skriver ingenting til bucketen.
+3. **Ekte kjøring.** Kjør workflowen på nytt med «dry-run» avhuket **av**, og fyll inn `vest_restanser_fil` og `vest_restanser_sha256`
+   (og tilsvarende for politi) med verdiene fra dry-run-loggen. Jobben kjører bare de filene du har oppgitt, og avbryter hele
+   kjøringen hvis en SHA-256 ikke stemmer. I prod venter en ekte kjøring på godkjenning i environmentet `prod-migreringsimport`.
+4. **Kontroller** loggen (`Vest-migreringen avsluttes …`) og avviksfilene. Send ikke filer med fnr andre steder.
+
+### Sikkerhet og oppførsel
+
+- **Persondata:** Jobben har ingen innlogget bruker. Den henter navn, adressebeskyttelse og historiske identer fra
+  `nav-persondata-api` med M2M-token (`persondataSystemClient`, samme klient som `KontrollobjektOppdateringScheduler`).
+  Skjerming tolkes fail closed: manglende `adressebeskyttelse` regnes som skjermet, og blankt navn gir `PERSON_IKKE_FUNNET`.
+  Antall opprettede saker med skjerming står som `skjermet` i loggen.
+- **Arkivsak:** Etter at en sak er lagret, oppretter jobben arkivsaken i Sak-API-et med appens egen identitet (M2M, registreringen
+  `sak-m2m`) og aktør-ID-en den allerede har hentet fra persondata. Den vanlige veien (`SakOpprettelseListener` med brukertoken) kan
+  ikke brukes, fordi jobben ikke har innlogget bruker. Feiler arkivsaken, er saken likevel lagret og hoppes over i senere kjøringer.
+  Antallet står som `arkivsakFeilet` i loggen, og sakId og PID logges per sak, så de kan følges opp manuelt. Sak-API-et må godta
+  app-token fra `watson-admin-api`. Test det i dev før prod.
+- **Én kjøring om gangen:** en advisory lock i Postgres (egen nøkkel) hindrer at flere pods kjører samtidig. Prod og dev har to replikaer.
+- **Pinnet fil:** ekte kjøring bruker filnavn og SHA-256 du har oppgitt, aldri «nyeste fil». Dry-run velger nyeste fil per type.
+- **Radtak:** `MIGRERING_VEST_MAKSRADER` (standard 1000) stopper en fil som har flere rader enn forventet.
+- **Revisjon:** loggen har kjørings-id, hvem som startet (`github.actor`), filnavn, SHA-256, dry-run og tellere. Aldri fnr eller navn.
+  Hvem som godkjente prod-kjøringen står i GitHub Actions.
+- **Avvik:** rader med feil i filen skrives ved ekte kjøring til `avvik/vest/<kjørings-id>/<FIL>.csv` i bucketen (CSV med feltene `LINJENUMMER`, `AARSAK` og `RAALINJE`, der rålinjen er sitert og har fnr. Ligger bare i den
+  private bucketen). Rader som feiler under opprettelse (`feil`) prøves på nytt neste gang. Samme fil kan kjøres flere ganger:
+  rader med kilde `SV` og samme PID hoppes over.
+- **Workflow-input:** Filnavn og SHA-256 valideres (tegnsett og lengde) ved alle manuelle kjøringer, også når Vest ikke er på, siden verdiene
+  sendes som kommaseparerte variabler til deploy-steget. Filnavn og hash kreves bare ved ekte Vest-kjøring.
+- **Retensjon:** importbucketen i prod slettes etter 90 dager (`lifecycleCondition` i `nais.yaml`).
+- **Transaksjoner:** hver sak opprettes i egen transaksjon. En feil på én rad stopper ikke de andre.
+
+### Variabler
+
+Alle er av eller tomme som standard, og settes av workflowen. Bucket og prefiks deles med importen (`MIGRERING_IMPORT_BUCKET`, `_PREFIKS`, `_AVVIKPREFIKS`).
+
+| Variabel | Betydning |
+| --- | --- |
+| `MIGRERING_VEST_AKTIV` | `true` starter kjøringen etter oppstart |
+| `MIGRERING_VEST_DRYRUN` | `false` gir ekte kjøring. Alt annet gir dry-run |
+| `MIGRERING_VEST_KJORINGID` | `github.run_id`. Påkrevd ved ekte kjøring |
+| `MIGRERING_VEST_STARTETAV` | `github.actor`, bare til revisjonslogg |
+| `MIGRERING_VEST_RESTANSER_FIL`, `MIGRERING_VEST_POLITI_FIL` | Filnavn som skal kjøres (påkrevd ved ekte kjøring) |
+| `MIGRERING_VEST_RESTANSER_SHA256`, `MIGRERING_VEST_POLITI_SHA256` | Forventet SHA-256 (påkrevd ved ekte kjøring) |
+| `MIGRERING_VEST_MAKSRADER` | Maks rader per fil, standard 1000 |
+| `MIGRERING_VEST_POLITI_IDENT` | Ansvarlig for politisaker uten NAVIDENT (i Nais-configen `watson-migrering-import`) |
+
+Lokal test: enhetstestene (`VestMigreringServiceTest`, `VestOppstartTest`) dekker logikken. Ende-til-ende test skjer i dev.
 
 ## Viktig om migrasjonene
 
