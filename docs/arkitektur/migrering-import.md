@@ -258,6 +258,16 @@ er 0. Rader med kilde `SV` og samme PID hoppes over. Svaret har tellere og radnu
 Test lokalt med `./scripts/vest-lokalt.sh` (egne filer med `FILER=<katalog>`, bare tørrkjøring med `OPPRETT=false`).
 Start backend med `MIGRERING_VEST_POLITI_IDENT=<ident>` for å teste politisaker uten NAVIDENT.
 
+### Ansvarlig for saker uten NAVIDENT
+
+Restanser (steget Strafferettslig vurdering) uten NAVIDENT blir ufordelte, for det er tillatt i det steget. Politisaker
+kan ikke være ufordelte, fordi Watson Sak ikke tillater det i Politi-steget. Raden får derfor `MIGRERING_VEST_POLITI_IDENT`, og
+uten den blir den et avvik (`MANGLER_IDENT`). Identen er `D101803` (Hanne Dommersnes, samme som Vest i SAK-67-1), bekreftet av Snorri.
+
+Variabelen settes i Nais-configen `watson-migrering-import` i Nais Console, per miljø, ikke i repoet. Den configen kommer allerede inn
+som `envFrom`, så `nais.yaml` trenger ingen endring. Poden må restartes etter at verdien er satt. Identen må finnes i NOM i miljøet,
+ellers gir radene `UKJENT_SAKSBEHANDLER`.
+
 ## Viktig om migrasjonene
 
 V13–V17 er anvendt i dev (og senere prod). **Ikke endre dem**, heller ikke kommentarer: Flyway sjekker innholdet, og en
