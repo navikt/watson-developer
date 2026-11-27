@@ -1,7 +1,7 @@
 {
   "contractVersion": "1",
   "source": "navikt/watson-agentpakke",
-  "sha": "8bd9a93a7c3dc60b13923e4f49a8e7dbb4195014",
+  "sha": "c40ea0fe41c64e1ec520e54a4aea743671c026ef",
   "items": {
     "accessibility": "instruction",
     "aha-oppgave": "skill",
@@ -38,6 +38,7 @@
     "kotlin-app-config": "skill",
     "ktor-endpoint": "prompt",
     "ktor-scaffold": "skill",
+    "mcp-server-authoring": "skill",
     "nais": "skill",
     "nais-manifest": "prompt",
     "nav-architecture-review": "skill",
