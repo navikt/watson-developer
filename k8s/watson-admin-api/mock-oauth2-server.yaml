@@ -14,6 +14,42 @@ data:
       "httpServer": "NettyWrapper",
       "tokenCallbacks": [
         {
+          "issuerId": "dsop-azure",
+          "requestMappings": [
+            {
+              "requestParam": "client_id",
+              "match": "dsop-local",
+              "claims": {
+                "aud": ["dsop-local"],
+                "azp": "dsop-local",
+                "sub": "dsop-local-caseworker",
+                "NAVident": "Z000001",
+                "name": "Syntetisk Saksbehandler",
+                "given_name": "Syntetisk",
+                "family_name": "Saksbehandler",
+                "preferred_username": "saksbehandler@example.invalid",
+                "ipaddr": "127.0.0.1",
+                "groups": ["dsop-local"]
+              }
+            }
+          ]
+        },
+        {
+          "issuerId": "dsop-tokenx",
+          "requestMappings": [
+            {
+              "requestParam": "client_id",
+              "match": "dsop-local",
+              "claims": {
+                "aud": ["dsop-local"],
+                "sub": "dsop-local-bank",
+                "pid": "00000000000",
+                "acr": "Level4"
+              }
+            }
+          ]
+        },
+        {
           "issuerId": "azuread",
           "requestMappings": [
             {
@@ -204,7 +240,7 @@ spec:
         app: mock-oauth2-server
       annotations:
         # Bump config-version når JSON_CONFIG endres for å tvinge pod-restart
-        config-version: "12"
+        config-version: "13"
     spec:
       containers:
         - name: mock-oauth2-server

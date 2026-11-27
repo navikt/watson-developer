@@ -1,0 +1,28 @@
+%PDF-1.5
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>
+endobj
+4 0 obj
+<< /Length 59 >>
+stream
+BT /F1 16 Tf 72 720 Td (Syntetisk testdokument DSOP) Tj ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+6 0 obj
+<< /Type /XRef /Size 7 /Root 1 0 R /W [1 4 2] /Index [0 7] /Length 99 /Filter /ASCIIHexDecode >>
+stream
+0000000000ffff01000000090000010000003a00000100000073000001000000f10000010000015d000001000001a30000>
+endstream
+endobj
+startxref
+419
+%%EOF

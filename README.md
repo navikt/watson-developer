@@ -13,6 +13,10 @@ Inngangsport og utviklermiljø for **Team Holmes** sin Watson-portefølje.
 
 | Repo                                                                 | Teknologi               | Beskrivelse                                            | Dokumentasjon                                                                         |
 | -------------------------------------------------------------------- | ----------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------- |
+| [dsop-kontroll](https://github.com/navikt/dsop-kontroll) | Ktor + Kotlin | Backend for bankforespørsler | [Lokalmiljø](docs/LOKALMILJO.md#dsop) |
+| [dsop-kontroll-frontend](https://github.com/navikt/dsop-kontroll-frontend) | React + Express | Saksbehandlergrensesnitt for DSOP (Argus) | |
+| [dsop-kontroll-pdf-generator](https://github.com/navikt/dsop-kontroll-pdf-generator) | Node.js + React + pdfgen | Brev og PDF-er for DSOP | |
+| [dsop-kontroll-bank-frontend](https://github.com/navikt/dsop-kontroll-bank-frontend) | Next.js + Aksel | Bankens svarskjema | |
 | [holmes-brain](https://github.com/navikt/holmes-brain)               | TypeScript              | KI-drevet internwiki for Team Holmes                   |                                                                                       |
 | [nav-persondata-api](https://github.com/navikt/nav-persondata-api)   | Spring Boot + Kotlin    | Persondata, ytelser og arbeidsforhold                  | [Confluence](https://confluence.adeo.no/spaces/THLMS/pages/720908266/Watson+S%C3%B8k) |
 | [watson-admin-api](https://github.com/navikt/watson-admin-api)       | Spring Boot 4 + Kotlin  | Kjernebackend — kontrollsaker, tilgangskontroll, Kafka |                                                                                       |
@@ -22,6 +26,36 @@ Inngangsport og utviklermiljø for **Team Holmes** sin Watson-portefølje.
 | [watson-sok](https://github.com/navikt/watson-sok)                   | React Router v7 + Aksel | Oppslag på brukere (fnr / d-nummer)                    | [Confluence](https://confluence.adeo.no/spaces/THLMS/pages/720908266/Watson+S%C3%B8k) |
 
 ---
+
+## Lokale apper og porter
+
+Dette er de konfigurerte adressene når du starter lokalmiljøet med `./start`.
+
+### Frontend
+
+| App | Adresse |
+| --- | --- |
+| Watson Søk | <http://localhost:5173> |
+| Watson Sak | <http://localhost:5174> |
+| DSOP Kontroll (Argus) | <http://127.0.0.1:8000> |
+| DSOP Bank | <http://127.0.0.1:3000/samarbeidspartner/kontoopplysninger/skjema> |
+
+Bankskjemaet trenger `?skjemaid=…` i adressen. Etter at du har opprettet en
+forespørsel, viser `bash scripts/dsop-status.sh` banklenken.
+
+### Backend og PDF
+
+| Tjeneste | Port |
+| --- | ---: |
+| `watson-admin-api` | 8080 |
+| `nav-persondata-api` | 8081 |
+| `watson-pdfgen` | 8082 |
+| `watson-gotenberg` | 8083 |
+| `dsop-kontroll` | 8100 |
+| `dsop-kontroll-pdf-generator` | 9000 |
+| DSOP `pdfgen`-renderer | 8070 |
+
+Se [lokalmiljøoversikten](docs/LOKALMILJO.md) for oppstart og verifisering.
 
 ## Kom i gang
 

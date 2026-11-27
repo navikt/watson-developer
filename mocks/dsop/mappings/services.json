@@ -1,0 +1,344 @@
+{
+  "mappings": [
+    {
+      "name": "PDL hentIdenter: synthetic test person",
+      "priority": 1,
+      "request": {
+        "method": "POST",
+        "urlPath": "/pdl/graphql",
+        "bodyPatterns": [
+          { "matches": "(?s).*hentIdenter.*" }
+        ]
+      },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": {
+          "data": {
+            "hentIdenter": { "identer": [{ "ident": "00000000000" }] },
+            "hentPerson": null,
+            "hentPersonBolk": null
+          },
+          "errors": null
+        }
+      }
+    },
+    {
+      "name": "PDL hentPerson: synthetic test person",
+      "priority": 1,
+      "request": {
+        "method": "POST",
+        "urlPath": "/pdl/graphql",
+        "bodyPatterns": [
+          { "matches": "(?s).*hentPerson\\(.*" }
+        ]
+      },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": {
+          "data": {
+            "hentIdenter": null,
+            "hentPerson": {
+              "navn": [
+                {
+                  "fornavn": "Syntetisk",
+                  "mellomnavn": null,
+                  "etternavn": "Testperson",
+                  "metadata": { "master": "FREG" }
+                }
+              ],
+              "adressebeskyttelse": []
+            },
+            "hentPersonBolk": null
+          },
+          "errors": null
+        }
+      }
+    },
+    {
+      "name": "PDL hentPersonBolk: synthetic test person",
+      "priority": 1,
+      "request": {
+        "method": "POST",
+        "urlPath": "/pdl/graphql",
+        "bodyPatterns": [
+          { "matches": "(?s).*hentPersonBolk.*" }
+        ]
+      },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": {
+          "data": {
+            "hentIdenter": null,
+            "hentPerson": null,
+            "hentPersonBolk": [
+              {
+                "ident": "00000000000",
+                "code": "ok",
+                "person": {
+                  "navn": [
+                    {
+                      "fornavn": "Syntetisk",
+                      "mellomnavn": null,
+                      "etternavn": "Testperson",
+                      "metadata": { "master": "FREG" }
+                    }
+                  ],
+                  "adressebeskyttelse": []
+                }
+              }
+            ]
+          },
+          "errors": null
+        }
+      }
+    },
+    {
+      "name": "SAF journalpost for local incoming journalpost",
+      "priority": 1,
+      "request": {
+        "method": "POST",
+        "urlPath": "/saf/graphql",
+        "bodyPatterns": [
+          { "matches": "(?s).*900000001.*" }
+        ]
+      },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": {
+          "data": {
+            "journalpost": {
+              "journalpostId": "900000001",
+              "tittel": "Syntetisk journalpost",
+              "journalposttype": "I",
+              "tema": "KTR",
+              "bruker": { "id": "00000000000", "type": "FNR" },
+              "avsenderMottaker": { "id": "000000000", "type": "ORGNR", "navn": "Syntetisk Bank" },
+              "journalfoerendeEnhet": "9999",
+              "kanal": "ALTINN",
+              "relevanteDatoer": [{ "dato": "2026-01-01T00:00:00", "datotype": "DATO_REGISTRERT" }],
+              "eksternReferanseId": "dsop-local",
+              "dokumenter": [
+                {
+                  "dokumentInfoId": "dsop-local",
+                  "tittel": "Syntetisk dokument",
+                  "brevkode": "dsop-local",
+                  "dokumentvarianter": [{ "filtype": "PDF", "variantformat": "ARKIV" }]
+                }
+              ],
+              "tilleggsopplysninger": null,
+              "journalstatus": "FERDIGSTILT"
+            }
+          },
+          "errors": null
+        }
+      }
+    },
+    {
+      "name": "SAF journalpost for local outgoing journalpost",
+      "priority": 1,
+      "request": {
+        "method": "POST",
+        "urlPath": "/saf/graphql",
+        "bodyPatterns": [
+          { "matches": "(?s).*900000002.*" }
+        ]
+      },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": {
+          "data": {
+            "journalpost": {
+              "journalpostId": "900000002",
+              "tittel": "Syntetisk journalpost",
+              "journalposttype": "U",
+              "tema": "KTR",
+              "bruker": { "id": "00000000000", "type": "FNR" },
+              "avsenderMottaker": { "id": "000000000", "type": "ORGNR", "navn": "Syntetisk Bank" },
+              "journalfoerendeEnhet": "9999",
+              "kanal": "ALTINN",
+              "relevanteDatoer": [{ "dato": "2026-01-01T00:00:00", "datotype": "DATO_REGISTRERT" }],
+              "eksternReferanseId": "dsop-local",
+              "dokumenter": [
+                {
+                  "dokumentInfoId": "dsop-local",
+                  "tittel": "Syntetisk dokument",
+                  "brevkode": "dsop-local",
+                  "dokumentvarianter": [{ "filtype": "PDF", "variantformat": "ARKIV" }]
+                }
+              ],
+              "tilleggsopplysninger": null,
+              "journalstatus": "FERDIGSTILT"
+            }
+          },
+          "errors": null
+        }
+      }
+    },
+    {
+      "name": "SAF document download: synthetic PDF",
+      "priority": 1,
+      "request": {
+        "method": "GET",
+        "urlPathPattern": "/saf/rest/hentdokument/[^/]+/dsop-local/ARKIV"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/pdf",
+          "Content-Disposition": "inline; filename=syntetisk.pdf"
+        },
+        "bodyFileName": "syntetisk.pdf"
+      }
+    },
+    {
+      "name": "Dokarkiv creates local incoming journalpost",
+      "priority": 1,
+      "request": {
+        "method": "POST",
+        "urlPath": "/dokarkiv/rest/journalpostapi/v1/journalpost",
+        "queryParameters": { "forsoekFerdigstill": { "equalTo": "true" } },
+        "bodyPatterns": [
+          { "matchesJsonPath": { "expression": "$.journalpostType", "equalTo": "INNGAAENDE" } }
+        ]
+      },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": { "journalpostId": "900000001", "journalpostferdigstilt": true }
+      }
+    },
+    {
+      "name": "Dokarkiv creates local outgoing journalpost",
+      "priority": 1,
+      "request": {
+        "method": "POST",
+        "urlPath": "/dokarkiv/rest/journalpostapi/v1/journalpost",
+        "queryParameters": { "forsoekFerdigstill": { "equalTo": "true" } },
+        "bodyPatterns": [
+          { "matchesJsonPath": { "expression": "$.journalpostType", "equalTo": "UTGAAENDE" } }
+        ]
+      },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": { "journalpostId": "900000002", "journalpostferdigstilt": true }
+      }
+    },
+    {
+      "name": "Dokarkiv marks local journalpost exported",
+      "priority": 1,
+      "request": {
+        "method": "PATCH",
+        "urlPathPattern": "/dokarkiv/rest/journalpostapi/v1/journalpost/(900000001|900000002)/oppdaterDistribusjonsinfo"
+      },
+      "response": { "status": 200 }
+    },
+    {
+      "name": "Altinn access for synthetic bank and local resource",
+      "priority": 1,
+      "request": { "method": "POST", "urlPath": "/altinn/altinn-tilganger" },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": {
+          "isError": false,
+          "hierarki": [
+            {
+              "orgnr": "000000000",
+              "altinn3Tilganger": ["dsop-local"],
+              "altinn2Tilganger": [],
+              "underenheter": [],
+              "navn": "Syntetisk Bank",
+              "organisasjonsform": "AS",
+              "erSlettet": false
+            }
+          ],
+          "orgNrTilTilganger": { "000000000": ["dsop-local"] },
+          "tilgangTilOrgNr": { "dsop-local": ["000000000"] }
+        }
+      }
+    },
+    {
+      "name": "ClamAV scan accepts local synthetic files",
+      "priority": 1,
+      "request": { "method": "POST", "urlPath": "/clamav/scan" },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": [{ "Filename": "file0", "Result": "OK" }]
+      }
+    },
+    {
+      "name": "Microsoft Graph sendMail accepted locally",
+      "priority": 1,
+      "request": { "method": "POST", "urlPathPattern": "/graph/v1.0/users/[^/]+/sendMail" },
+      "response": { "status": 202 }
+    },
+    {
+      "name": "Microsoft Graph returns the synthetic NAV user",
+      "priority": 1,
+      "request": { "method": "GET", "urlPathPattern": "/graph/v1.0/users/[^/]+" },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": {
+          "givenName": "Syntetisk",
+          "surname": "Testperson",
+          "mail": "syntetisk@example.invalid",
+          "userPrincipalName": "Z000001@example.invalid"
+        }
+      }
+    },
+    {
+      "name": "Microsoft Graph returns one synthetic group member",
+      "priority": 1,
+      "request": { "method": "GET", "urlPathPattern": "/graph/v1.0/groups/[^/]+/members" },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": {
+          "value": [
+            {
+              "displayName": "Syntetisk Testperson",
+              "mail": "syntetisk@example.invalid",
+              "givenName": "Syntetisk",
+              "userPrincipalName": "Z000001@example.invalid",
+              "surname": "Testperson"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Microsoft Graph checkMemberGroups reports no extra group matches",
+      "priority": 1,
+      "request": { "method": "POST", "urlPathPattern": "/graph/v1.0/users/[^/]+/checkMemberGroups" },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": { "value": [] }
+      }
+    },
+    {
+      "name": "Azure token endpoint returns a non-secret local token",
+      "priority": 1,
+      "request": { "method": "POST", "urlPath": "/azure/token" },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": { "access_token": "local-downstream", "token_type": "Bearer", "expires_in": 300 }
+      }
+    },
+    {
+      "name": "Unmatched local dependency requests fail closed",
+      "priority": 100,
+      "request": { "method": "ANY", "urlPattern": ".*" },
+      "response": { "status": 502 }
+    }
+  ]
+}

@@ -9,6 +9,10 @@ REPOS_DIR="$(cd "$REPOS_DIR" && pwd)"
 
 # Watson repos to clone
 REPOS=(
+  "https://github.com/navikt/dsop-kontroll.git"
+  "https://github.com/navikt/dsop-kontroll-frontend.git"
+  "https://github.com/navikt/dsop-kontroll-pdf-generator.git"
+  "https://github.com/navikt/dsop-kontroll-bank-frontend.git"
   "https://github.com/navikt/holmes-brain.git"
   "https://github.com/navikt/nav-persondata-api.git"
   "https://github.com/navikt/watson-admin-api.git"
@@ -37,6 +41,11 @@ clone_repo() {
   repo_path="$REPOS_DIR/$repo_name"
 
   if [ -d "$repo_path" ]; then
+    if [ ! -e "$repo_path/.git" ] || ! git -C "$repo_path" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+      echo -e "  ${RED}✗${NC} $repo_name finnes som mappe, men er ikke et Git-repo."
+      echo "  Flytt mappen til en backup utenfor repos/ og kjør skriptet på nytt. Lar mappen stå urørt."
+      return 1
+    fi
     echo -e "${YELLOW}⟳${NC} $repo_name eksisterer allerede — oppdaterer..."
     if git -C "$repo_path" pull --ff-only --quiet 2>/dev/null; then
       echo -e "  ${GREEN}✓${NC} Oppdatert"
@@ -62,6 +71,14 @@ clone_repo() {
   if [[ "$repo_name" == "watson-sak-frontend" || "$repo_name" == "watson-sok" ]]; then
     echo -e "  ${YELLOW}📦${NC} Installerer frontend-avhengigheter..."
     (cd "$repo_path" && pnpm install --frozen-lockfile)
+  fi
+
+  if [[ "$repo_name" == "dsop-kontroll-frontend" ]]; then
+    echo -e "  ${YELLOW}📦${NC} Installerer frontend-avhengigheter..."
+    (cd "$repo_path" && npm ci --legacy-peer-deps)
+  elif [[ "$repo_name" == "dsop-kontroll-bank-frontend" || "$repo_name" == "dsop-kontroll-pdf-generator" ]]; then
+    echo -e "  ${YELLOW}📦${NC} Installerer Node-avhengigheter..."
+    (cd "$repo_path" && npm ci)
   fi
 }
 

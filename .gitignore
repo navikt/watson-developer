@@ -4,3 +4,4 @@
 /.pnpm-store/
 /repos/
 node_modules/
+/.local/
