@@ -142,8 +142,12 @@ async function main() {
         assert(outgoingRecords.flatMap(pdfVariants).some((variant) => startsWithPdf(variant.fysiskDokument)),
             'Utgående Dokarkiv-request mangler base64-PDF med PDF-bytes');
         const incomingPdfs = incomingRecords.flatMap(pdfVariants);
-        assert(incomingPdfs.some((variant) => startsWithPdf(variant.fysiskDokument)), 'Inngående Dokarkiv-request mangler base64-PDF med PDF-bytes');
-        assert(incomingPdfs.some((variant) => Buffer.from(variant.fysiskDokument, 'base64').equals(readFileSync(attachment))),
+        const uploadedPdf = readFileSync(attachment);
+        assert(incomingPdfs.some((variant) => {
+            const pdf = Buffer.from(variant.fysiskDokument, 'base64');
+            return startsWithPdf(variant.fysiskDokument) && !pdf.equals(uploadedPdf);
+        }), 'Inngående journalføring mangler et eget svarbrev i PDF-format');
+        assert(incomingPdfs.some((variant) => Buffer.from(variant.fysiskDokument, 'base64').equals(uploadedPdf)),
             'Inngående Dokarkiv-request mangler opplastet syntetisk PDF');
 
         const database = dbRow(skjemaId);
