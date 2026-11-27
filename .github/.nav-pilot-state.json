@@ -1,9 +1,9 @@
 {
   "collection": "watson-agentpakke",
-  "version": "2026.11.17-100342-ea00381",
+  "version": "2026.11.26-212607-aa4bfa8",
   "scope": "repo",
   "source_repo": "navikt/watson-agentpakke",
-  "source_sha": "8bd9a93a7c3dc60b13923e4f49a8e7dbb4195014",
+  "source_sha": "c40ea0fe41c64e1ec520e54a4aea743671c026ef",
   "installed_at": "2026-11-18T12:56:33Z",
   "files": [
     {
@@ -30,12 +30,13 @@
     },
     {
       "path": ".github/agents/nav-pilot-opus.agent.md",
-      "hash": "9589574e7c94010a"
+      "hash": "c2cfb4f3122115e0",
+      "revision": "c40ea0fe41c64e1ec520e54a4aea743671c026ef"
     },
     {
       "path": ".github/agents/nav-pilot.agent.md",
-      "hash": "eb9b71a3f1eb461a",
-      "revision": "cf73ce274ccc7467cf21fc4722b5a962fcfa8264"
+      "hash": "2be174bb6e53853b",
+      "revision": "c40ea0fe41c64e1ec520e54a4aea743671c026ef"
     },
     {
       "path": ".github/agents/research.agent.md",
@@ -118,7 +119,8 @@
     },
     {
       "path": ".github/instructions/norwegian-text.instructions.md",
-      "hash": "25ee167a83661c64"
+      "hash": "9c7edf11317102f4",
+      "revision": "c40ea0fe41c64e1ec520e54a4aea743671c026ef"
     },
     {
       "path": ".github/instructions/output-style.instructions.md",
@@ -178,8 +180,8 @@
     },
     {
       "path": ".github/prompts/spring-boot-endpoint.prompt.md",
-      "hash": "3804da163fe6fb78",
-      "status": "conflict"
+      "hash": "67606488a1368fdb",
+      "revision": "c40ea0fe41c64e1ec520e54a4aea743671c026ef"
     },
     {
       "path": ".github/skills/aha-oppgave/",
@@ -202,8 +204,8 @@
     },
     {
       "path": ".github/skills/api-design/",
-      "hash": "cc11f76f432c6df8",
-      "status": "conflict"
+      "hash": "7dfca5f96b5ce231",
+      "revision": "c40ea0fe41c64e1ec520e54a4aea743671c026ef"
     },
     {
       "path": ".github/skills/appsec-advisory/",
@@ -248,8 +250,8 @@
     },
     {
       "path": ".github/skills/klarsprak/",
-      "hash": "618a0dbf98be8b11",
-      "status": "conflict"
+      "hash": "9f7800ba6bd013c1",
+      "revision": "c40ea0fe41c64e1ec520e54a4aea743671c026ef"
     },
     {
       "path": ".github/skills/kotlin-app-config/",
@@ -258,6 +260,10 @@
     {
       "path": ".github/skills/ktor-scaffold/",
       "hash": "68b1ffff9f769c0a"
+    },
+    {
+      "path": ".github/skills/mcp-server-authoring/",
+      "hash": "8b05d3e8aa2e35b7"
     },
     {
       "path": ".github/skills/nais/",
@@ -286,8 +292,8 @@
     },
     {
       "path": ".github/skills/nav-plan/",
-      "hash": "acf7f52bf9dd29b0",
-      "status": "conflict"
+      "hash": "e91cf87f8ef2d7ff",
+      "revision": "c40ea0fe41c64e1ec520e54a4aea743671c026ef"
     },
     {
       "path": ".github/skills/nav-troubleshoot/",
@@ -301,8 +307,8 @@
     },
     {
       "path": ".github/skills/observability-setup/",
-      "hash": "9962327c056eda64",
-      "status": "conflict"
+      "hash": "c5caa371c68a4982",
+      "revision": "c40ea0fe41c64e1ec520e54a4aea743671c026ef"
     },
     {
       "path": ".github/skills/playwright-testing/",
@@ -337,7 +343,8 @@
     },
     {
       "path": ".github/skills/security-owasp/",
-      "hash": "c020e45389dad61d"
+      "hash": "a504870d7b15c9d1",
+      "revision": "c40ea0fe41c64e1ec520e54a4aea743671c026ef"
     },
     {
       "path": ".github/skills/security-review/",
