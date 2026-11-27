@@ -13,6 +13,10 @@ Inngangsport og utviklermiljø for **Team Holmes** sin Watson-portefølje.
 
 | Repo                                                                 | Teknologi               | Beskrivelse                                            | Dokumentasjon                                                                         |
 | -------------------------------------------------------------------- | ----------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------- |
+| [dsop-kontroll](https://github.com/navikt/dsop-kontroll) | Ktor + Kotlin | Backend for bankforespørsler | [Lokalmiljø](docs/LOKALMILJO.md#dsop) |
+| [dsop-kontroll-frontend](https://github.com/navikt/dsop-kontroll-frontend) | React + Express | Saksbehandlergrensesnitt for DSOP (Argus) | |
+| [dsop-kontroll-pdf-generator](https://github.com/navikt/dsop-kontroll-pdf-generator) | Node.js + React + pdfgen | Brev og PDF-er for DSOP | |
+| [dsop-kontroll-bank-frontend](https://github.com/navikt/dsop-kontroll-bank-frontend) | Next.js + Aksel | Bankens svarskjema | |
 | [holmes-brain](https://github.com/navikt/holmes-brain)               | TypeScript              | KI-drevet internwiki for Team Holmes                   |                                                                                       |
 | [nav-persondata-api](https://github.com/navikt/nav-persondata-api)   | Spring Boot + Kotlin    | Persondata, ytelser og arbeidsforhold                  | [Confluence](https://confluence.adeo.no/spaces/THLMS/pages/720908266/Watson+S%C3%B8k) |
 | [watson-admin-api](https://github.com/navikt/watson-admin-api)       | Spring Boot 4 + Kotlin  | Kjernebackend — kontrollsaker, tilgangskontroll, Kafka |                                                                                       |
