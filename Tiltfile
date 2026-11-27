@@ -153,3 +153,98 @@ local_resource(
     ],
     labels=['backend'],
 )
+
+# WireMock for det lokale DSOP-integrasjonsmiljøet.
+local_resource(
+    'dsop-wiremock',
+    serve_cmd='export JAVA_HOME="$(/usr/libexec/java_home -v 21)" && export PATH="$JAVA_HOME/bin:$PATH" && java -jar ' + wiremock_jar + ' --port 7165 --bind-address 127.0.0.1 --root-dir mocks/dsop --disable-request-logging',
+    readiness_probe=probe(
+        http_get=http_get_action(port=7165, path='/__admin/health'),
+        period_secs=3,
+        failure_threshold=20,
+    ),
+    links=[
+        link('http://127.0.0.1:7165/__admin/mappings', 'DSOP WireMock mappings'),
+    ],
+    labels=['infra'],
+)
+
+# DSOP PDF-renderer.
+local_resource(
+    'dsop-pdfgen',
+    cmd='docker build --tag dsop-pdfgen:local repos/dsop-kontroll-pdf-generator/pdf',
+    serve_cmd='docker run --rm --name dsop-pdfgen -p 127.0.0.1:8070:8080 dsop-pdfgen:local',
+    readiness_probe=probe(
+        http_get=http_get_action(port=8070, path='/internal/is_alive'),
+        period_secs=5,
+        failure_threshold=30,
+    ),
+    links=[
+        link('http://127.0.0.1:8070/internal/is_alive', 'DSOP PDF renderer health'),
+    ],
+    labels=['backend'],
+)
+
+# Node-tjenesten for DSOP PDF-generatoren.
+local_resource(
+    'dsop-kontroll-pdf-generator',
+    serve_cmd='bash scripts/start-dsop-pdf.sh',
+    resource_deps=['dsop-pdfgen'],
+    readiness_probe=probe(
+        http_get=http_get_action(port=9000, path='/isReady'),
+        period_secs=5,
+        failure_threshold=30,
+    ),
+    links=[
+        link('http://127.0.0.1:9000/isReady', 'DSOP PDF generator health'),
+    ],
+    labels=['backend'],
+)
+
+# DSOP-backend med lokale mock-tjenester og lokal PDF-generering.
+local_resource(
+    'dsop-kontroll',
+    serve_cmd='bash scripts/start-dsop-backend.sh',
+    resource_deps=['dsop-wiremock', 'mock-oauth2-server', 'dsop-kontroll-pdf-generator'],
+    readiness_probe=probe(
+        http_get=http_get_action(port=8100, path='/internal/is_ready'),
+        period_secs=5,
+        failure_threshold=30,
+    ),
+    links=[
+        link('http://127.0.0.1:8100/internal/is_ready', 'DSOP backend health'),
+    ],
+    labels=['backend'],
+)
+
+# DSOP-kontrollfrontend.
+local_resource(
+    'dsop-kontroll-frontend',
+    serve_cmd='bash scripts/start-dsop-frontend.sh',
+    resource_deps=['dsop-kontroll', 'mock-oauth2-server'],
+    readiness_probe=probe(
+        http_get=http_get_action(port=8000, path='/'),
+        period_secs=5,
+        failure_threshold=30,
+    ),
+    links=[
+        link('http://127.0.0.1:8000', 'DSOP kontroll'),
+    ],
+    labels=['frontend'],
+)
+
+# DSOP-bankfrontend.
+local_resource(
+    'dsop-kontroll-bank-frontend',
+    serve_cmd='bash scripts/start-dsop-bank-frontend.sh',
+    resource_deps=['dsop-kontroll', 'mock-oauth2-server'],
+    readiness_probe=probe(
+        http_get=http_get_action(port=3000, path='/samarbeidspartner/kontoopplysninger/skjema'),
+        period_secs=5,
+        failure_threshold=30,
+    ),
+    links=[
+        link('http://127.0.0.1:3000/samarbeidspartner/kontoopplysninger/skjema', 'DSOP bank frontend'),
+    ],
+    labels=['frontend'],
+)

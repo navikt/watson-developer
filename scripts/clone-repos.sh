@@ -9,6 +9,10 @@ REPOS_DIR="$(cd "$REPOS_DIR" && pwd)"
 
 # Watson repos to clone
 REPOS=(
+  "https://github.com/navikt/dsop-kontroll.git"
+  "https://github.com/navikt/dsop-kontroll-frontend.git"
+  "https://github.com/navikt/dsop-kontroll-pdf-generator.git"
+  "https://github.com/navikt/dsop-kontroll-bank-frontend.git"
   "https://github.com/navikt/holmes-brain.git"
   "https://github.com/navikt/nav-persondata-api.git"
   "https://github.com/navikt/watson-admin-api.git"
@@ -62,6 +66,14 @@ clone_repo() {
   if [[ "$repo_name" == "watson-sak-frontend" || "$repo_name" == "watson-sok" ]]; then
     echo -e "  ${YELLOW}📦${NC} Installerer frontend-avhengigheter..."
     (cd "$repo_path" && pnpm install --frozen-lockfile)
+  fi
+
+  if [[ "$repo_name" == "dsop-kontroll-frontend" ]]; then
+    echo -e "  ${YELLOW}📦${NC} Installerer frontend-avhengigheter..."
+    (cd "$repo_path" && npm ci --legacy-peer-deps)
+  elif [[ "$repo_name" == "dsop-kontroll-bank-frontend" || "$repo_name" == "dsop-kontroll-pdf-generator" ]]; then
+    echo -e "  ${YELLOW}📦${NC} Installerer Node-avhengigheter..."
+    (cd "$repo_path" && npm ci)
   fi
 }
 
