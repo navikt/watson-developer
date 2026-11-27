@@ -41,6 +41,11 @@ clone_repo() {
   repo_path="$REPOS_DIR/$repo_name"
 
   if [ -d "$repo_path" ]; then
+    if [ ! -e "$repo_path/.git" ] || ! git -C "$repo_path" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+      echo -e "  ${RED}✗${NC} $repo_name finnes som mappe, men er ikke et Git-repo."
+      echo "  Flytt mappen til en backup utenfor repos/ og kjør skriptet på nytt. Lar mappen stå urørt."
+      return 1
+    fi
     echo -e "${YELLOW}⟳${NC} $repo_name eksisterer allerede — oppdaterer..."
     if git -C "$repo_path" pull --ff-only --quiet 2>/dev/null; then
       echo -e "  ${GREEN}✓${NC} Oppdatert"
